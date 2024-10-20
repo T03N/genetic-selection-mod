@@ -129,10 +129,30 @@ Tamed wolves have 10 hearts of health, while untamed wolves have 8 hearts. They 
 
 Wolves can attack hostile mobs, such as skeletons and zombies, and will defend their owners if they are attacked. When they take damage, they may howl, and their tails indicate their health level—lower tails mean less health.
 
-## Cats
+## Cat
 Cats can spawn in villages or swamp huts. They can be tamed using raw fish, such as raw salmon or raw cod. Once tamed, cats become loyal companions and can follow players or be commanded to sit, just like wolves. 
 
 Tamed cats have unique behaviors, including the ability to sleep on beds and occasionally bring gifts to their owners, such as feathers or raw fish. They can also scare away creepers.
 
 Cats come in various breeds and color patterns, and their appearance is determined by random generation. When breeding, two tamed cats can produce a kitten, which will inherit some characteristics from its parents.
 
+## Ocelot
+To tame an ocelot, players must use raw fish, such as raw salmon or raw cod. Once tamed, ocelots transform into domesticated cats, which can be commanded to sit or follow the player. Ocelots can breed with each other, resulting in kittens that inherit traits from their parents. However, they remain wild and do not become fully tame like domestic cats. Tamed ocelots behave like tamed cats, like the ability to sit on beds and occasionally bring gifts to their owners. 
+
+## Farm animals
+### Cow
+They are bred using wheat and their offspring, a calf, follows adult cows. They wander aimlessly but tend to stay in well-lit and grassy areas. When hit, they will flee and are 25% faster for a few seconds. 
+
+### Goat
+Goats tend to ram every 30 to 300 seconds. Ramming is when a goat speeds towards an unmoving target to deal 1 to 3 hearts of damage. Goats are also able to jump 10 blocks vertically and 5 blocks laterally. Goats are also bred using wheat. When breeding a normal goat with a screaming goat (goat that screams and rams more often), there’s a 50% chance the offspring will be a screaming goat as well. There is a 2% spawn rate chance of a screaming goats as well. 
+
+### Sheep
+The majority of sheep are born white, with a spawn rate of approximately 81.836%. Other color variations include black, gray, and light gray (each at 5%), brown (3%), and pink (0.164%). 
+
+When breeding (using wheat), if the parent sheep have compatible wool colors, the offspring will inherit a mix of those colors. For example, breeding a blue sheep with a white sheep can result in a light blue sheep. Sheep are also known for their ability to be sheared for wool, which can be dyed in various colors. This makes them useful for crafting and decoration in the game. 
+
+### Pig
+Pigs can be bred using carrots, potatoes, or beetroot. They can be ridden with a saddle using a carrot on a stick to control it. 
+
+### Chicken
+Chickens can be bred using seeds, such as wheat seeds, melon seeds, or beetroot seeds to spawn a chick. Players can also throw eggs, which are randomly dropped by chickens, to spawn chicks with a 1/8 chance. If an egg is thrown, there’s a 1/32 chance of spawning three additional baby chickens, resulting in a 1/256 overall chance for a total of four chicks.
