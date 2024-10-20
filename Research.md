@@ -94,3 +94,16 @@ Mules do not spawn naturally but they can be bred using a horse and a donkey. Pl
 ## Llama
 All llamas have a set number of 15 hearts and half a heart of-attack strength. They cannot be ridden by players, but there are trader llamas. They are bred using hay bales. A baby llama takes a coat of one parent at random. Strength is randomly chosen between 1 and the strength of the stronger parent, with a 3% chance of increasing strength by 1 (capped at 5). Taming is easier with a higher temper value, which ranges from 0 to 99.
 
+## Bee
+Bee nests generate three bees. They hover a few blocks above the ground rather than flying. They can "fly" horizontally and vertically upward through scaffolding but do can not "fly" downward. Bees are attracted to flowers and can pollinate wither roses, although they die as a result. When a bee circles a flower or berry bush for 30 seconds, it collects pollen, which changes the texture of its abdomen to include pollen spots. Pollinated plants grow faster. Bees return to their hives to produce honey and go back to their nests at night. Homeless bees wander in search of empty beehives. 
+
+Bees nearby become angry if one is attacked or if the beehive is destroyed. A bee loses its stinger after attacking a player and dies one minute later. To breed bees, use flowers, flowering azalea, cherry leaves, flowering azalea leaves, or mangrove propagule. It is possible to breed at least one angered bee with another.
+
+## Frog
+Frogs naturally spawn in swamps and mangrove swamps and can be spawned by growing from tadpoles. There are three frog variants based on the biome where the tadpole grew up: temperate, warm, and cold. Differences can be seen physically through their color. Frogs can jump up to 8 blocks high and take less damage from falling than other mobs. They prefer jumping on lily pads and big drip leaves, swim upwards, and can croak while inflating their vocal sac.
+
+Breeding requires slimeballs.  One frog will become pregnant and search for a water block that has at least one adjacent water block with air above. Once this condition is met, they will lay frogspawn, which eventually hatches into tadpoles.
+
+## Rabbit
+Different biomes spawn rabbits of various colors. Wild wolves, foxes, and stray cats tend to kill/attack rabbits. Breed rabbits using carrots, golden carrots, or dandelions. Offspring usually inherit the same fur type as one of the parents (47.5% chance per parent), with a 5% chance of matching the current biome. Killer bunnies can breed with other rabbits and may produce another killer bunny, which is hostile to players, foxes, and wolves. Killer bunnies have pure white fur and blood-red eyes and can only be spawned using commands. Toast, a special rabbit, can be created with a name tag.
+
