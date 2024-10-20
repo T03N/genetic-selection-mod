@@ -107,3 +107,32 @@ Breeding requires slimeballs.  One frog will become pregnant and search for a wa
 ## Rabbit
 Different biomes spawn rabbits of various colors. Wild wolves, foxes, and stray cats tend to kill/attack rabbits. Breed rabbits using carrots, golden carrots, or dandelions. Offspring usually inherit the same fur type as one of the parents (47.5% chance per parent), with a 5% chance of matching the current biome. Killer bunnies can breed with other rabbits and may produce another killer bunny, which is hostile to players, foxes, and wolves. Killer bunnies have pure white fur and blood-red eyes and can only be spawned using commands. Toast, a special rabbit, can be created with a name tag.
 
+## Camel
+Players can ride camels using a saddle. They can walk slowly, sprint, and perform a special "dashing charge" when ridden. They are tall enough that most mobs can not reach the player riding it. Camels heal when fed cacti. It is also used to breed 2 adult camels. 
+
+## Axolotl
+Axolotls are bred using buckets of tropical fish and inherit the color of one parent at random. There are five possible colors: pink, brown, gold, cyan, and blue. There is a 1/2000 chance of a baby spawning with a blue variant.
+
+Axolotls are passive toward players and can be attached to leads. In combat, each axolotl provides Regeneration I for 5 seconds per axolotl, up to 2 minutes, and removes Mining Fatigue when a player defeats a mob engaged with an axolotl. They will attack all other aquatic mobs except for turtles, dolphins, and frogs. They deal 2 damage per attack. If they take damage while underwater, there is a 1/3 chance that they play dead for 10 seconds and gain Regeneration I. This chance is higher if they suffer a significant amount of damage or if they are less than 50% healthy. They are also able to go on land, as long as they are in a 16-block radius of deep water. They die after 5 minutes of not being in the water.
+
+## Mooshroom
+Mooshrooms are a special variant of cows found in the Mushroom Fields biome. They come in two colors: red and brown. The red mooshroom can transform into a brown mooshroom if struck by lightning. To breed mooshrooms, the player needs to feed them wheat.
+
+Unlike regular cows, mooshrooms can’t breed with normal cows unless they have been sheared first. When two red mooshrooms breed, there is a 1/1024 chance of producing a brown baby. If a red mooshroom breeds with a brown one, there’s a 50% chance of the offspring being red or brown.
+
+Mooshrooms have unique abilities, including the ability to be milked for mushroom stew. When sheared, they drop mushrooms and revert to a regular cow form. 
+
+## Wolf
+Wolves are neutral mobs that can be found in forests and taiga biomes. They can be tamed using bones, with the number needed varying randomly. Once tamed, wolves become loyal companions and can be commanded to sit or follow the player.
+
+Tamed wolves have 10 hearts of health, while untamed wolves have 8 hearts. They can enter love mode and breed when fed meat items, producing a pup that trusts the player. If two different players own the parents, the pup will randomly follow one of them.
+
+Wolves can attack hostile mobs, such as skeletons and zombies, and will defend their owners if they are attacked. When they take damage, they may howl, and their tails indicate their health level—lower tails mean less health.
+
+## Cats
+Cats can spawn in villages or swamp huts. They can be tamed using raw fish, such as raw salmon or raw cod. Once tamed, cats become loyal companions and can follow players or be commanded to sit, just like wolves. 
+
+Tamed cats have unique behaviors, including the ability to sleep on beds and occasionally bring gifts to their owners, such as feathers or raw fish. They can also scare away creepers.
+
+Cats come in various breeds and color patterns, and their appearance is determined by random generation. When breeding, two tamed cats can produce a kitten, which will inherit some characteristics from its parents.
+
