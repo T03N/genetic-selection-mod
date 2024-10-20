@@ -82,3 +82,15 @@ Foxes can carry items in their mouths (shows up physically in their mouths). If 
 Another behavior foxes have are attacking other mobs. They will attack chickens, rabbits, cod, salmon, tropical fish, and turtles. They will also attack wolves if they are attacked by them first. Interestingly, red foxes prefer to attack chickens, rabbits, and baby turtles. Baby foxes typically follow their parent however they are not able to swim. So if the parent goes to a body of water, the baby fox can drown. 
 
 For breeding, use sweet berries or glow berries. Breeding a red fox with a white fox will result in either a red fox or a snow fox with a 50% chance for either. The offspring will trust the player and can be tamed by leading it away from the parent foxes. 
+
+## Donkey
+Donkeys have set attributes that are the same for all donkeys. Their speed is set to 0.175 (about 7.38 blocks/sec) and their jump strength is 0.5 (1 and 9/16 blocks). Their health can range from 15-30 hearts.  
+
+Similar to horses, the player must tame the donkey by repeatedly getting on its back. Once tamed, donkeys can be bred by entering love mode using golden apples, enchanted golden apples, and golden carrots. The offspring will spawn as untamed and can only be tamed when they are adults. 
+
+## Mule
+Mules do not spawn naturally but they can be bred using a horse and a donkey. Players can not breed two mules together. If spawned using commands or a spawn egg, the mule will have assigned stats according to their horse type. If created by breeding, the mule will have stats that are the average of parent donkey and parent horse. All mules have a speed of 0.175 and a jump strength of 0.5. Just like its parents, players can ride mules.
+
+## Llama
+All llamas have a set number of 15 hearts and half a heart of-attack strength. They cannot be ridden by players, but there are trader llamas. They are bred using hay bales. A baby llama takes a coat of one parent at random. Strength is randomly chosen between 1 and the strength of the stronger parent, with a 3% chance of increasing strength by 1 (capped at 5). Taming is easier with a higher temper value, which ranges from 0 to 99.
+
