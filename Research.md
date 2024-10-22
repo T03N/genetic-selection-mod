@@ -57,7 +57,7 @@ Outbreeding creates genetically diverse populations, which is ideal for fitness 
 ## General
 To breed two animals of the same species in Minecraft, both must be in "love mode," which is indicated by hearts appearing around them. Once in love mode, the animals will find a path toward each other, and an offspring will spawn. To enter love mode, animals need to be fed specific foods that vary by species. Some animals also require taming before they can breed. An animal will exit love mode after 30 seconds if it does not breed, and once they have bred, the parents cannot breed again for 5 minutes. 
 
-This information is for the Java edition; there may be differences between the Bedrock edition and Minecraft Education. As of Minecraft version 12.1, some of the animals with the most interesting behaviors and breeding properties include horses, pandas, turtles, and foxes.
+This information is for the Java edition; there may be differences between the Bedrock edition and Minecraft Education. As of Minecraft version 1.21.1, some of the animals with the most interesting behaviors and breeding properties include horses, pandas, turtles, and foxes.
 
 ## Horse
 To breed horses they first need to be tamed. This is done by repeatedly getting on the horse's back until the horse relaxes and lets the player stay on its back. To enter love mode, use a golden apple, enchanted golden apple, or golden carrot. 
