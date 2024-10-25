@@ -4,6 +4,7 @@ import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.CowEntity;
 
@@ -25,12 +26,14 @@ public class MobIndividualAttributes {
             individualAttributes.put(cow, attributes);
             applyAttributes(cow, attributes);
         }
+        // TODO: Add similar blocks for other animals
     }
 
     private static void onEntityUnload(Entity entity, net.minecraft.world.World world) {
         if (entity instanceof CowEntity) {
             individualAttributes.remove(entity);
         }
+        // TODO: Add similar blocks for other animals
     }
 
     private static MobAttributes initializeAttributes(CowEntity cow) {
@@ -41,10 +44,16 @@ public class MobIndividualAttributes {
     }
 
     private static void applyAttributes(CowEntity cow, MobAttributes attributes) {
-        Objects.requireNonNull(cow.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED))
-                .setBaseValue(attributes.getMovementSpeed());
-        Objects.requireNonNull(cow.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH))
-                .setBaseValue(attributes.getMaxHealth());
+        var speedAttribute = cow.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        if (speedAttribute != null) {
+            speedAttribute.setBaseValue(attributes.getMovementSpeed());
+        }
+
+        var healthAttribute = cow.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH);
+        if (healthAttribute != null) {
+            healthAttribute.setBaseValue(attributes.getMaxHealth());
+        }
+
         cow.setHealth((float) attributes.getMaxHealth());
     }
 
@@ -54,6 +63,9 @@ public class MobIndividualAttributes {
 
     public static void setAttributes(Entity entity, MobAttributes attributes) {
         individualAttributes.put(entity, attributes);
-        applyAttributes((CowEntity) entity, attributes);
+        if (entity instanceof CowEntity cow) {
+            applyAttributes(cow, attributes);
+        }
+        // TODO: Add similar blocks for other animals
     }
 }
