@@ -41,8 +41,13 @@ public class GlobalAttributesManager {
     }
 
     public static void load(NbtCompound tag) {
+        globalAttributes.clear(); // Clear existing data before loading
         for (String key : tag.getKeys()) {
-            EntityType<?> type = Registries.ENTITY_TYPE.get(Identifier.of(key));
+            Identifier id = Identifier.tryParse(key);
+            if (id == null) {
+                continue; // Skip invalid identifiers
+            }
+            EntityType<?> type = Registries.ENTITY_TYPE.get(id);
             if (type != null) {
                 NbtCompound mobTag = tag.getCompound(key);
                 MobAttributes attributes = new MobAttributes(

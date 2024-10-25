@@ -4,6 +4,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.PersistentState;
+import net.minecraft.world.PersistentStateManager;
 
 public class GlobalAttributesSavedData extends PersistentState {
     private static final String KEY = "geneticselection";
@@ -28,18 +29,22 @@ public class GlobalAttributesSavedData extends PersistentState {
     }
 
     public static GlobalAttributesSavedData fromWorld(ServerWorld world) {
-        return world.getPersistentStateManager().getOrCreate(
-                new Type<>(
-                        GlobalAttributesSavedData::new,
-                        (nbt, state) -> {
-                            GlobalAttributesSavedData data = new GlobalAttributesSavedData();
-                            data.fromTag(nbt);
-                            return data;
-                        },
-                        null
-                ),
-                KEY
-        );
+        PersistentStateManager manager = world.getPersistentStateManager();
+        return manager.getOrCreate(new Type<>(
+                GlobalAttributesSavedData::new,
+                (nbt, registryLookup) -> {
+                    GlobalAttributesSavedData data = new GlobalAttributesSavedData();
+                    data.fromTag(nbt);
+                    return data;
+                },
+                null
+        ), KEY);
+    }
+
+    public static void save(ServerWorld world) {
+        PersistentStateManager manager = world.getPersistentStateManager();
+        GlobalAttributesSavedData data = fromWorld(world);
+        data.markDirty();
     }
 }
 
