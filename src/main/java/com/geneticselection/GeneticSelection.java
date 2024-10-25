@@ -1,5 +1,8 @@
 package com.geneticselection;
 
+import com.geneticselection.attributes.GlobalAttributesManager;
+import com.geneticselection.individual.MobIndividualAttributes;
+import com.geneticselection.mobs.cow.CowGeneticsInitializer;
 import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
@@ -11,10 +14,18 @@ public class GeneticSelection implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
+		LOGGER.info("Initializing Genetic Selection Mod");
 
-		LOGGER.info("Hello Fabric world!");
+		// Initialize global attributes
+		GlobalAttributesManager.initialize();
+
+		// Register genetics for mobs
+		CowGeneticsInitializer.initialize();
+		// TODO: Initialize other mob genetics similarly
+
+		// Register individual attribute handlers
+		MobIndividualAttributes.register();
+
+		LOGGER.info("Genetic Selection Mod Initialized");
 	}
 }
