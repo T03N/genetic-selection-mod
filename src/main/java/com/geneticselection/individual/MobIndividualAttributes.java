@@ -2,17 +2,21 @@ package com.geneticselection.individual;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.interfaces.IGeneticEntity;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.CowEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class MobIndividualAttributes {
+    private static final Logger LOGGER = LoggerFactory.getLogger("GeneticSelection");
     private static final Map<Entity, MobAttributes> individualAttributes = new HashMap<>();
 
     public static void register() {
@@ -22,7 +26,18 @@ public class MobIndividualAttributes {
 
     private static void onEntityLoad(Entity entity, net.minecraft.world.World world) {
         if (entity instanceof CowEntity cow) {
-            MobAttributes attributes = initializeAttributes(cow);
+            IGeneticEntity geneticCow = (IGeneticEntity) cow;
+            MobAttributes attributes = geneticCow.getMobAttributes();
+
+            if (attributes == null) {
+                // Attributes not loaded from NBT, initialize them
+                attributes = initializeAttributes(cow);
+                geneticCow.setMobAttributes(attributes);
+                LOGGER.info("Initialized attributes for cow ID={}", cow.getId());
+            } else {
+                LOGGER.info("Loaded attributes from NBT for cow ID={}", cow.getId());
+            }
+
             individualAttributes.put(cow, attributes);
             applyAttributes(cow, attributes);
         }
@@ -32,6 +47,7 @@ public class MobIndividualAttributes {
     private static void onEntityUnload(Entity entity, net.minecraft.world.World world) {
         if (entity instanceof CowEntity) {
             individualAttributes.remove(entity);
+            LOGGER.info("Removed attributes for cow ID={}", entity.getId());
         }
         // TODO: Add similar blocks for other animals
     }
@@ -55,6 +71,8 @@ public class MobIndividualAttributes {
         }
 
         cow.setHealth((float) attributes.getMaxHealth());
+        LOGGER.info("Applied attributes to cow ID={}: Speed={}, Health={}",
+                cow.getId(), attributes.getMovementSpeed(), attributes.getMaxHealth());
     }
 
     public static MobAttributes getAttributes(Entity entity) {
@@ -65,6 +83,8 @@ public class MobIndividualAttributes {
         individualAttributes.put(entity, attributes);
         if (entity instanceof CowEntity cow) {
             applyAttributes(cow, attributes);
+            LOGGER.info("Set new attributes for cow ID={}: Speed={}, Health={}",
+                    cow.getId(), attributes.getMovementSpeed(), attributes.getMaxHealth());
         }
         // TODO: Add similar blocks for other animals
     }
