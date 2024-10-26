@@ -11,7 +11,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomCowRenderer extends MobEntityRenderer<CustomCowEntity, CowEntityModel<CustomCowEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/cow/cow.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/minecraft-cow.png");
 
     public CustomCowRenderer(EntityRendererFactory.Context context) {
         super(context, new CowEntityModel<>(context.getPart(ModModleLayers.CUSTOM_COW)), 0.6f);
