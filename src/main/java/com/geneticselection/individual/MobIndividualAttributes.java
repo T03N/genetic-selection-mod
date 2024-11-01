@@ -54,8 +54,8 @@ public class MobIndividualAttributes {
 
     private static MobAttributes initializeAttributes(CowEntity cow) {
         MobAttributes global = GlobalAttributesManager.getAttributes(cow.getType());
-        double speed = global.getMovementSpeed() * (0.9 + Math.random() * 0.2);
-        double health = global.getMaxHealth() * (0.9 + Math.random() * 0.2);
+        double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
+        double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
         return new MobAttributes(speed, health);
     }
 
