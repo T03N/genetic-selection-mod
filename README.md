@@ -24,6 +24,112 @@ If you already have Minecraft and/or you just want to play with this mod, you ca
 ##### *Installation Guide for Windows and MacOS:*
 [Installing Fabric Mods](https://minecrafthopper.net/help/guides/installing-mods/fabric/#:~:text=Installing%20Mods,-In%20this%20tutorial&text=First%2C%20launch%20the%20Fabric%20loader,minecraft%20folder)
 
+
+## How to Implement Your Own Mobs
+
+Currently, the mod includes an implementation for cows. To add a new mob, which we'll refer to as "NewMob", follow these steps:
+
+### Step 1: Create a New Mob Directory
+
+1. **Navigate to** the `mobs` directory.
+2. **Create a new directory** for "NewMob":
+	***main/java/com/geneticselection/mobs/newmob***
+
+### Step 2: Implement NewMob Genetics Logic
+
+#### 1. Create Genetics Initializer
+
+Create a file named `NewMobGeneticsInitializer.java` in `com/geneticselection/mobs/newmob`:
+```java
+package com.geneticselection.mobs.newmob;
+
+public class NewMobGeneticsInitializer {
+ public static void initialize() {
+     GeneticsRegistry.register(EntityType.NEWMOB, new NewMobGenetics());
+ }
+}
+
+```
+#### 2. Create Genetics Logic
+Create a file named `NewMobGenetics.java` in the `newmob` directory:
+```java
+package com.geneticselection.mobs.newmob;
+
+public class NewMobGenetics implements Genetics {
+    @Override
+    public AnimalEntity breed(AnimalEntity parent1, AnimalEntity parent2, ServerWorld world) {
+        if (isValidBreedingPair(parent1, parent2)) {
+            return NewMobBreedingLogic.breed((NewMobEntity) parent1, (NewMobEntity) parent2, world);
+        }
+        return null;
+    }
+
+    private boolean isValidBreedingPair(AnimalEntity parent1, AnimalEntity parent2) {
+        return parent1 instanceof NewMobEntity && parent2 instanceof NewMobEntity;
+    }
+}
+```
+#### 3. Implement Breeding Logic
+
+Create a file named `NewMobBreedingLogic.java`:
+```java
+package com.geneticselection.mobs.newmob;
+
+public class NewMobBreedingLogic {
+    public static NewMobEntity breed(NewMobEntity parent1, NewMobEntity parent2, ServerWorld world) {
+        NewMobEntity offspring = (NewMobEntity) EntityType.NEWMOB.create(world);
+        if (offspring != null) {
+            // Calculate position for the offspring and set its traits...
+            applyInheritedAttributes(offspring, parent1.getAttributes(), parent2.getAttributes());
+        }
+        return offspring;
+    }
+
+    private static void applyInheritedAttributes(NewMobEntity offspring, MobAttributes attr1, MobAttributes attr2) {
+        MobAttributes childAttributes = NewMobGenetics.getMobAttributes(attr1, attr2);
+        offspring.setAttributes(childAttributes);
+    }
+}
+```
+### Step 3: Modify Main Mod to Initialize NewMob
+
+In `GeneticSelection.java`, modify the `onInitialize` method:
+```java
+@Override
+public void onInitialize() {
+    LOGGER.info("Initializing Genetic Selection Mod");
+    
+    // Initialize global attributes
+    GlobalAttributesManager.initialize();
+
+    // Register genetics for cows
+    CowGeneticsInitializer.initialize();
+    
+    // Register genetics for NewMob
+    NewMobGeneticsInitializer.initialize();
+
+    // Register individual attribute handlers
+    MobIndividualAttributes.register();
+}
+```
+### Step 4: Update Global Attributes Management
+
+In **`GlobalAttributesManager.java`**, ensure to initialize attributes for NewMob:
+```java
+public static void initialize() {
+    globalAttributes.put(EntityType.COW, new MobAttributes(0.2, 10.0));
+    
+    // Initialize attributes for NewMob
+    globalAttributes.put(EntityType.NEWMOB, new MobAttributes(0.3, 8.0)); // Example attributes
+}
+```
+### Step 5: Test the Implementation
+
+1. **Compile and run the mod** in Minecraft.
+2. **Test breeding NewMob** to verify that the attributes are inherited correctly.
+3. **Check that global attributes** update as expected.
+   
+
 ## Credits
 <a href="https://github.com/T03N/genetic-selection-mod/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=T03N/genetic-selection-mod" />
