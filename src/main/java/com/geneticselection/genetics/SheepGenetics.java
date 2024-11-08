@@ -21,5 +21,4 @@ public class SheepGenetics implements Genetics {
     private boolean isValidBreedingPair(AnimalEntity parent1, AnimalEntity parent2) {
         return parent1 instanceof SheepEntity && parent2 instanceof SheepEntity;
     }
-
 }
