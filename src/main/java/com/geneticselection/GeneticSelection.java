@@ -5,11 +5,14 @@ import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.*;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
@@ -20,8 +23,19 @@ public class GeneticSelection implements ModInitializer {
 	public static final String MOD_ID = "genetic-selection";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
+	private ActionResult onEntitySpawn(Entity entity, World world, double x, double y, double z) {
+		// Check if the entity is a vanilla cow
+		if (entity.getType() == EntityType.COW) {
+			// Cancel the cow spawn event
+			return ActionResult.FAIL;
+		}
+		// Allow other entities to spawn normally
+		return ActionResult.PASS;
+	}
+
 	public void cowMethod(){
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_COW, CustomCowEntity.createCowAttributes());
+
 		BiomeModifications.addSpawn(
 				BiomeSelectors.foundInOverworld(),
 				SpawnGroup.CREATURE,
@@ -34,7 +48,7 @@ public class GeneticSelection implements ModInitializer {
 				BiomeSelectors.foundInOverworld(),
 				SpawnGroup.CREATURE,
 				ModEntities.CUSTOM_COW, // Add custom cow
-				100, // Spawn weight (higher = more frequent)
+				20, // Spawn weight (higher = more frequent)
 				2,  // Minimum group size
 				4   // Maximum group size
 		);
@@ -51,7 +65,8 @@ public class GeneticSelection implements ModInitializer {
 	public void onInitialize() {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
 		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution
+		// Proceed with mild caution.
+
 		cowMethod();
 		LOGGER.info("Hello Fabric world!");
 	}
