@@ -4,6 +4,7 @@ import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.GlobalAttributesSavedData;
 import com.geneticselection.individual.MobIndividualAttributes;
 import com.geneticselection.mobs.cow.CowGeneticsInitializer;
+import com.geneticselection.mobs.sheep.SheepGeneticsInitializer;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
@@ -26,6 +27,8 @@ public class GeneticSelection implements ModInitializer {
 		// Register genetics for mobs
 		CowGeneticsInitializer.initialize();
 		// TODO: Initialize other mob genetics similarly
+
+		SheepGeneticsInitializer.initialize();
 
 		// Register individual attribute handlers
 		MobIndividualAttributes.register();
