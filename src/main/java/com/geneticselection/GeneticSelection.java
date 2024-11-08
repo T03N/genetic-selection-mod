@@ -20,11 +20,7 @@ public class GeneticSelection implements ModInitializer {
 	public static final String MOD_ID = "genetic-selection";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	@Override
-	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution
+	public void cowMethod(){
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_COW, CustomCowEntity.createCowAttributes());
 		BiomeModifications.addSpawn(
 				BiomeSelectors.foundInOverworld(),
@@ -47,8 +43,16 @@ public class GeneticSelection implements ModInitializer {
 				SpawnLocationTypes.ON_GROUND,
 				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
 				(entityType, world, spawnReason, pos, random) ->
-				world.getBlockState(pos.down()).isOf(Blocks.GRASS_BLOCK)
+						world.getBlockState(pos.down()).isOf(Blocks.GRASS_BLOCK)
 		);
+	}
+
+	@Override
+	public void onInitialize() {
+		// This code runs as soon as Minecraft is in a mod-load-ready state.
+		// However, some things (like resources) may still be uninitialized.
+		// Proceed with mild caution
+		cowMethod();
 		LOGGER.info("Hello Fabric world!");
 	}
 }

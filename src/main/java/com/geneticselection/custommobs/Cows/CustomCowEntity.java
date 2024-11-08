@@ -1,15 +1,19 @@
 package com.geneticselection.custommobs.Cows;
 
+import com.geneticselection.ModEntities;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.CowEntity;
+import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsage;
 import net.minecraft.item.Items;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
@@ -19,16 +23,38 @@ import java.util.Random;
 
 public class CustomCowEntity extends CowEntity {
     private int MaxHp;
-    private double Speed;
+    private int MinMeat;
+    private int MaxMeat;
+    private int MinLeather;
+    private int MaxLeather;
 
     public CustomCowEntity(EntityType<? extends CowEntity> entityType, World world) {
         super(entityType, world);
         Random random = new Random();
+
         this.MaxHp = 5 + random.nextInt(11);
-        this.Speed = 0.15 + (0.1 * random.nextDouble());
+        this.MinMeat = 1+ random.nextInt(2);
+        this.MaxMeat = MinMeat + random.nextInt(3);
+        this.MinLeather = random.nextInt(2);
+        this.MaxLeather = MinLeather + random.nextInt(2);
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+
     }
+
+    public static CustomCowEntity createChildWithAttributes(ServerWorld world, int maxHp, int MinMeat, int MaxMeat, int MinLeather, int MaxLeather) {
+        CustomCowEntity child = new CustomCowEntity(ModEntities.CUSTOM_COW, world);
+
+        // Set specific attributes for offspring
+        child.MaxHp = maxHp;
+        child.MinMeat = MinMeat;
+        child.MaxMeat = MaxMeat;
+        child.MinLeather = MinLeather;
+        child.MaxLeather = MaxLeather;
+        child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
+
+        return child;
+    }
+
 
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
@@ -39,15 +65,14 @@ public class CustomCowEntity extends CowEntity {
             player.setStackInHand(hand, itemStack2);
             return ActionResult.success(this.getWorld().isClient);
         }
-        else if (itemStack.isEmpty()) { // Check if the hand is empty
-            // Retrieve the cow's current health and speed attributes
-            double currentHealth = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).getValue();
-            double currentSpeed = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).getValue();
-
-            // Send the stats to the player
-            player.sendMessage(Text.literal("Custom Cow Stats:"), false);
-            player.sendMessage(Text.literal("Health: " + currentHealth), false);
-            player.sendMessage(Text.literal("Speed: " + currentSpeed), false);
+        else if (itemStack.isEmpty()) {
+            player.sendMessage(Text.literal("Custom Cow Stats:"));
+            player.sendMessage(Text.literal("Max Health: " + MaxHp));
+            player.sendMessage(Text.literal("Min Meat: " + MinMeat));
+            player.sendMessage(Text.literal("Max Meat: " + MaxMeat));
+            player.sendMessage(Text.literal("Min Leather: " + MinLeather));
+            player.sendMessage(Text.literal("Max Leather: " + MaxLeather));
+            player.sendMessage(Text.literal("----------------------------------------------"));
 
             return ActionResult.success(this.getWorld().isClient);
         }
@@ -60,11 +85,30 @@ public class CustomCowEntity extends CowEntity {
     public void onDeath(DamageSource source) {
         super.onDeath(source);
         if (!this.getWorld().isClient) {
-            this.dropStack(new ItemStack(Items.BEEF, 2 + this.getWorld().random.nextInt(3))); // Drop between 2 and 4 beef
+            // Calculate the amount of meat to drop between MinMeat and MaxMeat
+            int meatAmount = MinMeat + this.getWorld().random.nextInt((MaxMeat - MinMeat) + 1);
+            this.dropStack(new ItemStack(Items.BEEF, meatAmount));
+
+            // Calculate the amount of leather to drop between MinLeather and MaxLeather
+            int leatherAmount = MinLeather + this.getWorld().random.nextInt((MaxLeather - MinLeather) + 1);
+            this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
         }
     }
+    @Override
+    public CustomCowEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
+        if (!(mate instanceof CustomCowEntity)) {
+            return (CustomCowEntity) EntityType.COW.create(serverWorld);
+        }
 
-    public static DefaultAttributeContainer.Builder createCowAttributes() {
-        return MobEntity.createMobAttributes().add(EntityAttributes.GENERIC_MAX_HEALTH, 10.0).add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.20000000298023224);
+        CustomCowEntity parent1 = this;
+        CustomCowEntity parent2 = (CustomCowEntity) mate;
+
+        int childMaxHp = (parent1.MaxHp + parent2.MaxHp) / 2;
+        int childMinMeat = (parent1.MinMeat + parent2.MinMeat) / 2;
+        int childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
+        int childMinLeather = (parent1.MinLeather + parent2.MinLeather) / 2;
+        int childMaxLeather = (parent1.MaxLeather + parent2.MaxLeather) / 2;
+
+        return CustomCowEntity.createChildWithAttributes(serverWorld, childMaxHp,childMinMeat,childMaxMeat,childMinLeather,childMaxLeather);
     }
 }
