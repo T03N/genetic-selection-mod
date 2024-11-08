@@ -8,7 +8,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.CowEntity;
-import net.minecraft.entity.passive.SheepEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,22 +41,6 @@ public class MobIndividualAttributes {
             individualAttributes.put(cow, attributes);
             applyAttributes(cow, attributes);
         }
-        if (entity instanceof SheepEntity sheep) {
-            IGeneticEntity geneticSheep = (IGeneticEntity) sheep;
-            MobAttributes attributes = geneticSheep.getMobAttributes();
-
-            if (attributes == null) {
-                // Attributes not loaded from NBT, initialize them
-                attributes = initializeAttributes(sheep);
-                geneticSheep.setMobAttributes(attributes);
-                LOGGER.info("Initialized attributes for sheep ID={}", sheep.getId());
-            } else {
-                LOGGER.info("Loaded attributes from NBT for sheep ID={}", sheep.getId());
-            }
-
-            individualAttributes.put(sheep, attributes);
-            applyAttributes(sheep, attributes);
-        }
         // TODO: Add similar blocks for other animals
     }
 
@@ -65,10 +48,6 @@ public class MobIndividualAttributes {
         if (entity instanceof CowEntity) {
             individualAttributes.remove(entity);
             LOGGER.info("Removed attributes for cow ID={}", entity.getId());
-        }
-        if (entity instanceof SheepEntity) {
-            individualAttributes.remove(entity);
-            LOGGER.info("Removed attributes for sheep ID={}", entity.getId());
         }
         // TODO: Add similar blocks for other animals
     }
@@ -96,29 +75,6 @@ public class MobIndividualAttributes {
                 cow.getId(), attributes.getMovementSpeed(), attributes.getMaxHealth());
     }
 
-    private static MobAttributes initializeAttributes(SheepEntity sheep) {
-        MobAttributes global = GlobalAttributesManager.getAttributes(sheep.getType());
-        double speed = global.getMovementSpeed() * (0.9 + Math.random() * 0.2);
-        double health = global.getMaxHealth() * (0.9 + Math.random() * 0.2);
-        return new MobAttributes(speed, health);
-    }
-
-    private static void applyAttributes(SheepEntity sheep, MobAttributes attributes) {
-        var speedAttribute = sheep.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        if (speedAttribute != null) {
-            speedAttribute.setBaseValue(attributes.getMovementSpeed());
-        }
-
-        var healthAttribute = sheep.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH);
-        if (healthAttribute != null) {
-            healthAttribute.setBaseValue(attributes.getMaxHealth());
-        }
-
-        sheep.setHealth((float) attributes.getMaxHealth());
-        LOGGER.info("Applied attributes to sheep ID={}: Speed={}, Health={}",
-                sheep.getId(), attributes.getMovementSpeed(), attributes.getMaxHealth());
-    }
-
     public static MobAttributes getAttributes(Entity entity) {
         return individualAttributes.getOrDefault(entity, GlobalAttributesManager.getAttributes(entity.getType()));
     }
@@ -129,11 +85,6 @@ public class MobIndividualAttributes {
             applyAttributes(cow, attributes);
             LOGGER.info("Set new attributes for cow ID={}: Speed={}, Health={}",
                     cow.getId(), attributes.getMovementSpeed(), attributes.getMaxHealth());
-        }
-        if (entity instanceof SheepEntity sheep) {
-            applyAttributes(sheep, attributes);
-            LOGGER.info("Set new attributes for sheep ID={}: Speed={}, Health={}",
-                    sheep.getId(), attributes.getMovementSpeed(), attributes.getMaxHealth());
         }
         // TODO: Add similar blocks for other animals
     }
