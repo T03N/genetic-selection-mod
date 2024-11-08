@@ -33,7 +33,7 @@ public class SheepBreedingLogic {
             ((IGeneticEntity) offspring).setMobAttributes(childAttributes);
             applyAttributes(offspring, childAttributes);
 
-            LOGGER.info("Breeding sheeps: Parent1 ID={}, Parent2 ID={}", parent1.getId(), parent2.getId());
+            LOGGER.info("Breeding sheep: Parent1 ID={}, Parent2 ID={}", parent1.getId(), parent2.getId());
 
             // Spawn the offspring into the world
             world.spawnEntity(offspring);
@@ -45,7 +45,7 @@ public class SheepBreedingLogic {
     }
 
     private static MobAttributes inheritAttributes(MobAttributes a, MobAttributes b) {
-        double speed = Math.random() < 0.5 ? a.getMovementSpeed() : b.getMovementSpeed();
+        double speed = (Math.random() < 0.5 ? a.getMovementSpeed() : b.getMovementSpeed());
         double health = Math.random() < 0.5 ? a.getMaxHealth() : b.getMaxHealth();
         if (Math.random() < 0.1) speed *= 1.05;  // Mutation
         if (Math.random() < 0.1) health *= 1.05; // Mutation
