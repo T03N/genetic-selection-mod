@@ -1,8 +1,7 @@
-package com.geneticselection.custommobs.Cows;
-
+package com.geneticselection.mobs.Cows;
 
 import com.geneticselection.GeneticSelection;
-import net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents;
+import com.geneticselection.mobs.ModModleLayers;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
@@ -16,12 +15,10 @@ public class CustomCowRenderer extends MobEntityRenderer<CustomCowEntity, CowEnt
     public CustomCowRenderer(EntityRendererFactory.Context context) {
         super(context, new CowEntityModel<>(context.getPart(ModModleLayers.CUSTOM_COW)), 0.6f);
     }
-
     @Override
     public Identifier getTexture(CustomCowEntity entity) {
         return TEXTURE;
     }
-
     @Override
     public void render(CustomCowEntity livingEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
         super.render(livingEntity, f, g, matrixStack, vertexConsumerProvider, i);

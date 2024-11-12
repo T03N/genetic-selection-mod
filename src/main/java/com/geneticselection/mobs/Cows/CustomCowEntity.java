@@ -1,12 +1,9 @@
-package com.geneticselection.custommobs.Cows;
+package com.geneticselection.mobs.Cows;
 
-import com.geneticselection.ModEntities;
+import com.geneticselection.mobs.ModEntities;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.CowEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -30,8 +27,8 @@ public class CustomCowEntity extends CowEntity {
 
     public CustomCowEntity(EntityType<? extends CowEntity> entityType, World world) {
         super(entityType, world);
-        Random random = new Random();
 
+        Random random = new Random();
         this.MaxHp = 5 + random.nextInt(11);
         this.MinMeat = 1+ random.nextInt(2);
         this.MaxMeat = MinMeat + random.nextInt(3);
@@ -39,7 +36,6 @@ public class CustomCowEntity extends CowEntity {
         this.MaxLeather = MinLeather + random.nextInt(2);
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
     }
-
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
@@ -60,16 +56,15 @@ public class CustomCowEntity extends CowEntity {
                 player.sendMessage(Text.literal("Max Leather: " + MaxLeather));
                 player.sendMessage(Text.literal("----------------------------------------------"));
             }
-
             return ActionResult.success(this.getWorld().isClient);
         } else {
             return super.interactMob(player, hand);
         }
     }
-
     @Override
     public void onDeath(DamageSource source) {
         super.onDeath(source);
+
         if (!this.getWorld().isClient) {
             // Calculate the amount of meat to drop between MinMeat and MaxMeat
             int meatAmount = MinMeat + this.getWorld().random.nextInt((MaxMeat - MinMeat) + 1);
@@ -80,7 +75,6 @@ public class CustomCowEntity extends CowEntity {
             this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
         }
     }
-
     @Override
     public CustomCowEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
         if (!(mate instanceof CustomCowEntity)) {
