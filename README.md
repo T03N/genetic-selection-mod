@@ -147,7 +147,7 @@ public class CustomCowEntity extends CowEntity {
 ```
 Your attributes, breeding logic, calculations, and drops will be done mostly in this file. Override default minecraft functions to how you see fit. For now, just create the basic super class and mess with the logic once you got everything set up.
 
-### Step 2: Register your custom mob
+### Step 3: Register your custom mob
 
 Navagate to `main\java\com\geneticselection\mobs\ModEntities.java`, to register your custom mob. Do not create a new file, simply just add onto the commented section:
 ```java
@@ -176,7 +176,7 @@ public class ModEntities{
 ```
 Copy the format of the provided example and change the variables as you need.
 
-### Step 3: Add a mod model layer for your custom mob
+### Step 4: Add a mod model layer for your custom mob
 
 Navagate to `main\java\com\geneticselection\mobs\ModModleLayers.java`, to add your custom mobs model layer. Do not create a new file, simply just add onto the commented section:
 ```java
@@ -194,7 +194,7 @@ public class ModModleLayers {
 Copy the format of the provided example and change the variables as you need.
 
 
-### Step 4: Create your renderer
+### Step 5: Create your renderer
 
 Navagate to `main\java\com\geneticselection\mobs\newmob` and create a file named `NewmobRenderer.java`.
 example below: `main\java\com\geneticselection\mobs\Cows\CustomCowRenderer.java`
@@ -227,7 +227,7 @@ public class CustomCowRenderer extends MobEntityRenderer<CustomCowEntity, CowEnt
 ```
 For your textures in "textures/entity/minecraft-cow.png", navagate to your `main\resources\assets\genetic-selection\textures\entity` and drop a png file of a texture you want for your mob. For example, the cow one `main\resources\assets\genetic-selection\textures\entity\minecraft-cow.png`. For the rest, copy the format of the provided example and change the variables as you need.
 
-### Step 5: Edit the server side
+### Step 6: Edit the server side
 
 1. Navagate to `main\java\com\geneticselection\GeneticSelection.java`
 2. Create a method that pertains to your mob
@@ -271,7 +271,7 @@ public void cowMethod(){
 }
 ```
 
-### Step 6: Edit the client side
+### Step 7: Edit the client side
 1. Navagate to `main\java\com\geneticselection\GeneticSelectionClient.java`
 2. Create a method that pertains to your mob
 3. Register your mob
