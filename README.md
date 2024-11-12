@@ -35,11 +35,10 @@ Currently, the mod includes an implementation for cows. To add a new mob, which 
 2. **Create a new directory** for "NewMob":
 	***main/java/com/geneticselection/mobs/newmob***
 
-### Step 2: Inside your `com/geneticselection/mobs/newmob`
+### Step 2: Create your Custom Mob Superclass
 
-#### 1. Create your Custom Mob Superclass
-
-Create a file named `CustomMobEntity.java` (replace Mob with your animal name) in `com/geneticselection/mobs/newmob` example below:
+In your `main/java/com/geneticselection/mobs/newmob` create a file named `CustomMobEntity.java` (replace Mob with your animal name). 
+Example below: `main/java/com/geneticselection/mobs/Cows/CustomCowEntity.java`
 ```java
 package com.geneticselection.mobs.Cows;
 
@@ -146,9 +145,59 @@ public class CustomCowEntity extends CowEntity {
     }
 }
 ```
-Your attributes, breeding logic, calculations, and drops will be done mostly in this file
-#### 2. Create your renderer
-Create a file named `NewmobRenderer.java` in `com/geneticselection/mobs/newmob` example below:
+Your attributes, breeding logic, calculations, and drops will be done mostly in this file. Override default minecraft functions to how you see fit. For now, just create the basic super class and mess with the logic once you got everything set up.
+
+### Step 2: Register your custom mob
+
+Navagate to `main\java\com\geneticselection\mobs\ModEntities.java`, to register your custom mob. Do not create a new file, simply just add onto the commented section:
+```java
+package com.geneticselection.mobs;
+
+import com.geneticselection.GeneticSelection;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
+import net.minecraft.entity.EntityDimensions;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnGroup;
+import net.minecraft.util.Identifier;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.Registries;
+
+public class ModEntities{
+    public static final EntityType<CustomCowEntity> CUSTOM_COW = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_cow"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomCowEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
+                    .build()
+    );
+    //register new mobs here by using the above format
+}
+```
+Copy the format of the provided example and change the variables as you need.
+
+### Step 3: Add a mod model layer for your custom mob
+
+Navagate to `main\java\com\geneticselection\mobs\ModModleLayers.java`, to add your custom mobs model layer. Do not create a new file, simply just add onto the commented section:
+```java
+package com.geneticselection.mobs;
+
+import com.geneticselection.GeneticSelection;
+import net.minecraft.client.render.entity.model.EntityModelLayer;
+import net.minecraft.util.Identifier;
+
+public class ModModleLayers {
+    public static final EntityModelLayer CUSTOM_COW = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_cow"), "main");
+    //add your new mobs here by using the above format
+}
+```
+Copy the format of the provided example and change the variables as you need.
+
+
+### Step 4: Create your renderer
+
+Navagate to `main\java\com\geneticselection\mobs\newmob` and create a file named `NewmobRenderer.java`.
+example below: `main\java\com\geneticselection\mobs\Cows\CustomCowRenderer.java`
 ```java
 package com.geneticselection.mobs.Cows;
 
@@ -176,57 +225,69 @@ public class CustomCowRenderer extends MobEntityRenderer<CustomCowEntity, CowEnt
     }
 }
 ```
-For your textures in "textures/entity/minecraft-cow.png", navagate to your `main/resources/assets/genetic-selection/textures/entity` and drop a png file of a texture you want for your mob. For the rest, copy the format of the provided example and replace the variables as you need.
+For your textures in "textures/entity/minecraft-cow.png", navagate to your `main\resources\assets\genetic-selection\textures\entity` and drop a png file of a texture you want for your mob. For example, the cow one `main\resources\assets\genetic-selection\textures\entity\minecraft-cow.png`. For the rest, copy the format of the provided example and change the variables as you need.
 
-### Step 3: Register your custom mob
+### Step 5: Edit the server side
 
-Navagate to `main\java\com\geneticselection\mobs\ModEntities.java`, to register your custom mob:
-```java
-package com.geneticselection.mobs;
-
-import com.geneticselection.GeneticSelection;
-import com.geneticselection.mobs.Cows.CustomCowEntity;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.Registries;
-
-public class ModEntities{
-    public static final EntityType<CustomCowEntity> CUSTOM_COW = Registry.register(
-            Registries.ENTITY_TYPE,
-            Identifier.of(GeneticSelection.MOD_ID, "custom_cow"),
-            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomCowEntity::new)
-                    .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
-                    .build()
-    );
-    //register new mobs here by using the above format
-}
-```
-
-### Step 4: Add a mod model layer for your custom mob
-
-Navagate to `main\java\com\geneticselection\mobs\ModModleLayers.java`, to add your custom mobs model layer:
-```java
-package com.geneticselection.mobs;
-
-import com.geneticselection.GeneticSelection;
-import net.minecraft.client.render.entity.model.EntityModelLayer;
-import net.minecraft.util.Identifier;
-
-public class ModModleLayers {
-    public static final EntityModelLayer CUSTOM_COW = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_cow"), "main");
-    //add your new mobs here by using the above format
-}
-```
-### Step 5: Test the Implementation
-
-1. **Compile and run the mod** in Minecraft.
-2. **Test breeding NewMob** to verify that the attributes are inherited correctly.
-3. **Check that global attributes** update as expected.
+1. Navagate to `main\java\com\geneticselection\GeneticSelection.java`
+2. Create a method that pertains to your mob
+3. Register the default attibutes to your mob
+4. Lower the spawn rate of the vanilla mobs and allow your custom mobs to spawn
+5. Set the spawning requirements for your mob if neede
+6. Call your method in onInitialize
    
+Copy the format of the provided example and change the variables as you need.
+ex: `main\java\com\geneticselection\GeneticSelection.java`
+```java
+public void cowMethod(){
+	//Register the default attibutes to your mob
+	FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_COW, CustomCowEntity.createCowAttributes());
+	//lowers the spawn rate of default vanilla cows
+	BiomeModifications.addSpawn(
+		BiomeSelectors.foundInOverworld(),
+		SpawnGroup.CREATURE,
+		EntityType.COW, // Remove the original cow
+		0, // Spawn weight (higher = more frequent)
+		0, // No minimum group size
+		0  // No maximum group size
+	);
+	//adds custom cow to natural spawn
+	BiomeModifications.addSpawn(
+		BiomeSelectors.foundInOverworld(),
+		SpawnGroup.CREATURE,
+		ModEntities.CUSTOM_COW, // Add custom cow
+		20, // Spawn weight (higher = more frequent)
+		2,  // Minimum group size
+		4   // Maximum group size
+	);
+	//restricts the cow spawn to grass blocks on the ground
+	SpawnRestriction.register(
+		ModEntities.CUSTOM_COW,
+		SpawnLocationTypes.ON_GROUND,
+		Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+		(entityType, world, spawnReason, pos, random) ->
+			world.getBlockState(pos.down()).isOf(Blocks.GRASS_BLOCK)
+	);
+}
+```
+
+### Step 6: Edit the client side
+1. Navagate to `main\java\com\geneticselection\GeneticSelectionClient.java`
+2. Create a method that pertains to your mob
+3. Register your mob
+4. register the model layer for your mob
+5. Call your method in onInitializeClient
+
+Copy the format of the provided example and change the variables as you need.
+ex: `main\java\com\geneticselection\GeneticSelectionClient.java`
+```java
+public void cowMethod(){
+        //register your cow
+        EntityRendererRegistry.register(ModEntities.CUSTOM_COW, CustomCowRenderer::new);
+        //register your model layer for your cow
+        EntityModelLayerRegistry.registerModelLayer(ModModleLayers.CUSTOM_COW, CowEntityModel::getTexturedModelData);
+}
+```
 
 ## Credits
 <a href="https://github.com/T03N/genetic-selection-mod/graphs/contributors">
