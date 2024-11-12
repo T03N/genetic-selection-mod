@@ -14,7 +14,10 @@ public class GlobalAttributesManager {
     public static void initialize() {
         // Initialize default attributes for cows
         globalAttributes.put(EntityType.COW, new MobAttributes(0.2, 10.0));
-        // Initialize other passive mobs similarly when added
+        globalAttributes.put(EntityType.PIG, new MobAttributes(0.1, 8.0)); // Example attributes
+    }
+
+    // Initialize other passive mobs similarly when added
     }
 
     public static MobAttributes getAttributes(EntityType<?> type) {
