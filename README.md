@@ -35,184 +35,190 @@ Currently, the mod includes an implementation for cows. To add a new mob, which 
 2. **Create a new directory** for "NewMob":
 	***main/java/com/geneticselection/mobs/newmob***
 
-### Step 2: Implement NewMob Genetics Logic
+### Step 2: Inside your `com/geneticselection/mobs/newmob`
 
-#### 1. Create Genetics Initializer
+#### 1. Create your Custom Mob Superclass
 
-Create a file named `NewMobGeneticsInitializer.java` in `com/geneticselection/mobs/newmob`:
+Create a file named `CustomMobEntity.java` (replace Mob with your animal name) in `com/geneticselection/mobs/newmob` example below:
 ```java
-package com.geneticselection.mobs.newmob;
+package com.geneticselection.mobs.Cows;
 
-public class NewMobGeneticsInitializer {
- public static void initialize() {
-     GeneticsRegistry.register(EntityType.NEWMOB, new NewMobGenetics());
- }
-}
+import com.geneticselection.ModEntities;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.passive.CowEntity;
+import net.minecraft.entity.passive.PassiveEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsage;
+import net.minecraft.item.Items;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.world.World;
+import java.util.Random;
 
-```
-#### 2. Create Genetics Logic
-Create a file named `NewMobGenetics.java` in the `genetics` directory:
-```java
-package com.geneticselection.mobs.newmob;
+public class CustomCowEntity extends CowEntity {
+    private int MaxHp;
+    private int MinMeat;
+    private int MaxMeat;
+    private int MinLeather;
+    private int MaxLeather;
 
-    @Override
-    public AnimalEntity breed(AnimalEntity parent1, AnimalEntity parent2, ServerWorld world) {
-        if (world.isClient()) return null; // Server-side only
-
-        // Ensure both parents are instances of CowEntity
-        if (parent1 instanceof NewMobEntity mob1 && parent2 instanceof NewMobEntity mob2) {
-            return CowBreedingLogic.breed(mob1, mob2, world);
-        }
-        return null;
-    }
-
-    // Custom logic to inherit mob attributes
-    private MobAttributes inheritAttributes(MobAttributes a, MobAttributes b) {
-        return getMobAttributes(a, b);
-    }
-
-    @NotNull
-    public static MobAttributes getMobAttributes(MobAttributes a, MobAttributes b) {
-        double speed = Math.random() < 0.5 ? a.getMovementSpeed() : b.getMovementSpeed();
-        double health = Math.random() < 0.5 ? a.getMaxHealth() : b.getMaxHealth();
-        if (Math.random() < 0.1) speed *= 1.05;  // Mutation
-        if (Math.random() < 0.1) health *= 1.05; // Mutation
-        return new MobAttributes(speed, health);
-    }
-```
-#### 3. Implement Breeding Logic
-
-Create a file named `NewMobBreedingLogic.java`:
-```java
-package com.geneticselection.mobs.newmob;
-
-public class NewMobBreedingLogic {
-    public static NewMobEntity breed(NewMobEntity parent1, NewMobEntity parent2, ServerWorld world) {
-        MobAttributes attr1 = ((IGeneticEntity) parent1).getMobAttributes();
-        MobAttributes attr2 = ((IGeneticEntity) parent2).getMobAttributes();
-
-        // Calculate heritability (H^2) as a constant, which in real life depends on how much of the variation in a trait is due to genetic differences
-        double heritability = 0.5; // This is a chosen value; in real populations it's often less than 1
-
-        // Create the offspring entity
-        NewMobEntity offspring = (NewMobEntity) EntityType.NewMob.create(world);
-
-        if (offspring != null) {
-            // Calculate position near parents
-            double x = (parent1.getX() + parent2.getX()) / 2;
-            double y = Math.min(parent1.getY(), parent2.getY()) + 1; // Slight offset to avoid spawn issues
-            double z = (parent1.getZ() + parent2.getZ()) / 2;
-            offspring.refreshPositionAndAngles(x, y, z, parent1.getYaw(), parent1.getPitch());
-
-            // Optional: Set the offspring as a baby
-            offspring.setBaby(true);
-
-            // Apply inherited attributes using the breeder's equation
-            MobAttributes childAttributes = inheritAttributes(attr1, attr2, heritability);
-            ((IGeneticEntity) offspring).setMobAttributes(childAttributes);
-            applyAttributes(offspring, childAttributes);
-
-            LOGGER.info("Breeding NewMobs: Parent1 ID={}, Parent2 ID={}", parent1.getId(), parent2.getId());
-
-            // Spawn the offspring into the world
-            world.spawnEntity(offspring);
-        }
-
-        // Influence global attributes based on the offspring
-        influenceGlobalAttributes(offspring);
-        return offspring;
-    }
-
-    private static MobAttributes inheritAttributes(MobAttributes a, MobAttributes b, double heritability) {
-        // Calculate selection differential as the average difference between the two parent traits
-        double selectionDifferentialSpeed = (a.getMovementSpeed() - b.getMovementSpeed()) / 2;
-        double selectionDifferentialHealth = (a.getMaxHealth() - b.getMaxHealth()) / 2;
-
-        // Calculate new trait values using the breeder's equation (R = h^2 * S)
-        double newSpeed = (a.getMovementSpeed() + b.getMovementSpeed()) / 2 + heritability * selectionDifferentialSpeed;
-        double newHealth = (a.getMaxHealth() + b.getMaxHealth()) / 2 + heritability * selectionDifferentialHealth;
-
-        // Add a small mutation factor to simulate genetic drift
+    public CustomCowEntity(EntityType<? extends CowEntity> entityType, World world) {
+        super(entityType, world);
+        
         Random random = new Random();
-        double mutationFactor = 0.99; // was 0.1
-        if (random.nextDouble() < mutationFactor) {
-            newSpeed += random.nextGaussian() * 0.09; // was 0.01
-            newHealth += random.nextGaussian() * 0.9; // was 0.1
-        }
-
-        // Ensure trait values are within reasonable bounds
-        newSpeed = Math.max(0.1, Math.min(newSpeed, 1.0));
-        newHealth = Math.max(1, Math.min(newHealth, 20));
-
-        return new MobAttributes(newSpeed, newHealth);
+        this.MaxHp = 5 + random.nextInt(11);
+        this.MinMeat = 1+ random.nextInt(2);
+        this.MaxMeat = MinMeat + random.nextInt(3);
+        this.MinLeather = random.nextInt(2);
+        this.MaxLeather = MinLeather + random.nextInt(2);
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
     }
-
-    private static void applyAttributes(NewMobEntity NewMob, MobAttributes attributes) {
-        var speedAttribute = NewMob.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        if (speedAttribute != null) {
-            speedAttribute.setBaseValue(attributes.getMovementSpeed());
-        }
-
-        var healthAttribute = NewMob.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH);
-        if (healthAttribute != null) {
-            healthAttribute.setBaseValue(attributes.getMaxHealth());
-        }
-
-        NewMob.setHealth((float) attributes.getMaxHealth());
-    }
-
-    private static void influenceGlobalAttributes(NewMobEntity offspring) {
-        if (offspring != null) {
-            MobAttributes childAttributes = ((IGeneticEntity) offspring).getMobAttributes();
-            if (childAttributes != null) {
-                MobAttributes globalAttributes = GlobalAttributesManager.getAttributes(EntityType.NewMob);
-
-                // Update global attributes using a moving average
-                double updateRate = 0.01;
-                double newMovementSpeed = globalAttributes.getMovementSpeed() * (1 - updateRate) + childAttributes.getMovementSpeed() * updateRate;
-                double newMaxHealth = globalAttributes.getMaxHealth() * (1 - updateRate) + childAttributes.getMaxHealth() * updateRate;
-
-                globalAttributes.setMovementSpeed(newMovementSpeed);
-                globalAttributes.setMaxHealth(newMaxHealth);
-
-                GlobalAttributesManager.updateGlobalAttributes(EntityType.NewMob, globalAttributes);
-                LOGGER.info("Updated global NewMob attributes: Speed={}, Health={}",
-                        globalAttributes.getMovementSpeed(), globalAttributes.getMaxHealth());
+    @Override
+    public ActionResult interactMob(PlayerEntity player, Hand hand) {
+        ItemStack itemStack = player.getStackInHand(hand);
+        
+        if (itemStack.isOf(Items.BUCKET) && !this.isBaby()) {
+            player.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
+            ItemStack itemStack2 = ItemUsage.exchangeStack(itemStack, player, Items.MILK_BUCKET.getDefaultStack());
+            player.setStackInHand(hand, itemStack2);
+            return ActionResult.success(this.getWorld().isClient);
+        } else if (itemStack.isEmpty()) { // Check if the hand is empty
+            // Only display the stats on the server side to avoid duplication
+            if (!this.getWorld().isClient) {
+                player.sendMessage(Text.literal("Custom Cow Stats:"));
+                player.sendMessage(Text.literal("Max Health: " + MaxHp));
+                player.sendMessage(Text.literal("Min Meat: " + MinMeat));
+                player.sendMessage(Text.literal("Max Meat: " + MaxMeat));
+                player.sendMessage(Text.literal("Min Leather: " + MinLeather));
+                player.sendMessage(Text.literal("Max Leather: " + MaxLeather));
+                player.sendMessage(Text.literal("----------------------------------------------"));
             }
+            return ActionResult.success(this.getWorld().isClient);
+        } else {
+            return super.interactMob(player, hand);
         }
+    }
+    @Override
+    public void onDeath(DamageSource source) {
+        super.onDeath(source);
+        
+        if (!this.getWorld().isClient) {
+            // Calculate the amount of meat to drop between MinMeat and MaxMeat
+            int meatAmount = MinMeat + this.getWorld().random.nextInt((MaxMeat - MinMeat) + 1);
+            this.dropStack(new ItemStack(Items.BEEF, meatAmount));
+
+            // Calculate the amount of leather to drop between MinLeather and MaxLeather
+            int leatherAmount = MinLeather + this.getWorld().random.nextInt((MaxLeather - MinLeather) + 1);
+            this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
+        }
+    }
+    @Override
+    public CustomCowEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
+        if (!(mate instanceof CustomCowEntity)) {
+            return (CustomCowEntity) EntityType.COW.create(serverWorld);
+        }
+        
+        CustomCowEntity parent1 = this;
+        CustomCowEntity parent2 = (CustomCowEntity) mate;
+
+        int childMaxHp = (parent1.MaxHp + parent2.MaxHp) / 2;
+        int childMinMeat = (parent1.MinMeat + parent2.MinMeat) / 2;
+        int childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
+        int childMinLeather = (parent1.MinLeather + parent2.MinLeather) / 2;
+        int childMaxLeather = (parent1.MaxLeather + parent2.MaxLeather) / 2;
+
+        CustomCowEntity child = new CustomCowEntity(ModEntities.CUSTOM_COW, serverWorld);
+
+        child.MaxHp = childMaxHp;
+        child.MinMeat = childMinMeat;
+        child.MaxMeat = childMaxMeat;
+        child.MinLeather = childMinLeather;
+        child.MaxLeather = childMaxLeather;
+        child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
+
+        return child;
     }
 }
 ```
-### Step 3: Modify Main Mod to Initialize NewMob
-
-In `GeneticSelection.java`, modify the `onInitialize` method:
+Your attributes, breeding logic, calculations, and drops will be done mostly in this file
+#### 2. Create your renderer
+Create a file named `NewmobRenderer.java` in `com/geneticselection/mobs/newmob` example below:
 ```java
-@Override
-public void onInitialize() {
-    LOGGER.info("Initializing Genetic Selection Mod");
-    
-    // Initialize global attributes
-    GlobalAttributesManager.initialize();
+package com.geneticselection.mobs.Cows;
 
-    // Register genetics for cows
-    CowGeneticsInitializer.initialize();
-    
-    // Register genetics for NewMob
-    NewMobGeneticsInitializer.initialize();
+import com.geneticselection.GeneticSelection;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.EntityRendererFactory;
+import net.minecraft.client.render.entity.MobEntityRenderer;
+import net.minecraft.client.render.entity.model.CowEntityModel;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
 
-    // Register individual attribute handlers
-    MobIndividualAttributes.register();
+public class CustomCowRenderer extends MobEntityRenderer<CustomCowEntity, CowEntityModel<CustomCowEntity>> {
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/minecraft-cow.png");
+
+    public CustomCowRenderer(EntityRendererFactory.Context context) {
+        super(context, new CowEntityModel<>(context.getPart(ModModleLayers.CUSTOM_COW)), 0.6f);
+    }
+    @Override
+    public Identifier getTexture(CustomCowEntity entity) {
+        return TEXTURE;
+    }
+    @Override
+    public void render(CustomCowEntity livingEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
+        super.render(livingEntity, f, g, matrixStack, vertexConsumerProvider, i);
+    }
 }
 ```
-### Step 4: Update Global Attributes Management
+For your textures in "textures/entity/minecraft-cow.png", navagate to your `main/resources/assets/genetic-selection/textures/entity` and drop a png file of a texture you want for your mob. For the rest, copy the format of the provided example and replace the variables as you need.
 
-In **`GlobalAttributesManager.java`**, ensure to initialize attributes for NewMob:
+### Step 3: Register your custom mob
+
+Navagate to `main\java\com\geneticselection\mobs\ModEntities.java`, to register your custom mob:
 ```java
-public static void initialize() {
-    globalAttributes.put(EntityType.COW, new MobAttributes(0.2, 10.0));
-    
-    // Initialize attributes for NewMob
-    globalAttributes.put(EntityType.NEWMOB, new MobAttributes(0.3, 8.0)); // Example attributes
+package com.geneticselection.mobs;
+
+import com.geneticselection.GeneticSelection;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
+import net.minecraft.entity.EntityDimensions;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnGroup;
+import net.minecraft.util.Identifier;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.Registries;
+
+public class ModEntities{
+    public static final EntityType<CustomCowEntity> CUSTOM_COW = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_cow"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomCowEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
+                    .build()
+    );
+    //register new mobs here by using the above format
+}
+```
+
+### Step 4: Add a mod model layer for your custom mob
+
+Navagate to `main\java\com\geneticselection\mobs\ModModleLayers.java`, to add your custom mobs model layer:
+```java
+package com.geneticselection.mobs;
+
+import com.geneticselection.GeneticSelection;
+import net.minecraft.client.render.entity.model.EntityModelLayer;
+import net.minecraft.util.Identifier;
+
+public class ModModleLayers {
+    public static final EntityModelLayer CUSTOM_COW = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_cow"), "main");
+    //add your new mobs here by using the above format
 }
 ```
 ### Step 5: Test the Implementation
