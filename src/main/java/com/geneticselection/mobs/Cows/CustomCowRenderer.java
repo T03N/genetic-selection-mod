@@ -1,7 +1,7 @@
 package com.geneticselection.mobs.Cows;
 
 import com.geneticselection.GeneticSelection;
-import com.geneticselection.mobs.ModModleLayers;
+import com.geneticselection.mobs.ModModelLayers;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
@@ -13,7 +13,7 @@ public class CustomCowRenderer extends MobEntityRenderer<CustomCowEntity, CowEnt
     private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/minecraft-cow.png");
 
     public CustomCowRenderer(EntityRendererFactory.Context context) {
-        super(context, new CowEntityModel<>(context.getPart(ModModleLayers.CUSTOM_COW)), 0.6f);
+        super(context, new CowEntityModel<>(context.getPart(ModModelLayers.CUSTOM_COW)), 0.6f);
     }
     @Override
     public Identifier getTexture(CustomCowEntity entity) {
