@@ -1,6 +1,7 @@
 package com.geneticselection.mobs.Cows;
 
 import com.geneticselection.mobs.ModEntities;
+import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
@@ -35,7 +36,9 @@ public class CustomCowEntity extends CowEntity {
         this.MinLeather = random.nextInt(2);
         this.MaxLeather = MinLeather + random.nextInt(2);
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
+        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
     }
+
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
@@ -48,13 +51,7 @@ public class CustomCowEntity extends CowEntity {
         } else if (itemStack.isEmpty()) { // Check if the hand is empty
             // Only display the stats on the server side to avoid duplication
             if (!this.getWorld().isClient) {
-                player.sendMessage(Text.literal("Custom Cow Stats:"));
-                player.sendMessage(Text.literal("Max Health: " + MaxHp));
-                player.sendMessage(Text.literal("Min Meat: " + MinMeat));
-                player.sendMessage(Text.literal("Max Meat: " + MaxMeat));
-                player.sendMessage(Text.literal("Min Leather: " + MinLeather));
-                player.sendMessage(Text.literal("Max Leather: " + MaxLeather));
-                player.sendMessage(Text.literal("----------------------------------------------"));
+                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
