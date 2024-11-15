@@ -2,7 +2,7 @@ package com.geneticselection;
 
 import com.geneticselection.mobs.Cows.CustomCowRenderer;
 import com.geneticselection.mobs.ModEntities;
-import com.geneticselection.mobs.ModModleLayers;
+import com.geneticselection.mobs.ModModelLayers;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -13,7 +13,7 @@ public class GeneticSelectionClient implements ClientModInitializer {
         //register your cow
         EntityRendererRegistry.register(ModEntities.CUSTOM_COW, CustomCowRenderer::new);
         //register your model layer for your cow
-        EntityModelLayerRegistry.registerModelLayer(ModModleLayers.CUSTOM_COW, CowEntityModel::getTexturedModelData);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_COW, CowEntityModel::getTexturedModelData);
     }
 
     @Override
