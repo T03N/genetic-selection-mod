@@ -62,7 +62,7 @@ public class DescriptionRenderer {
 
                 // Draw entity's display name
                 Text name = entity.getDisplayName();
-                float xOffset = ((float) textRenderer.getWidth(name) / 2) + 2.0f; // Add small gap
+                float xOffset = ((float) textRenderer.getWidth(name) / 2); // Add small gap
                 float yOffset = -(entity.getHeight() / 2) * 0.025f;
 
                 // Split description into lines

@@ -36,7 +36,6 @@ public class CustomCowEntity extends CowEntity {
         this.MinLeather = random.nextInt(2);
         this.MaxLeather = MinLeather + random.nextInt(2);
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
     }
 
     @Override
@@ -50,7 +49,7 @@ public class CustomCowEntity extends CowEntity {
             return ActionResult.success(this.getWorld().isClient);
         } else if (itemStack.isEmpty()) { // Check if the hand is empty
             // Only display the stats on the server side to avoid duplication
-            if (!this.getWorld().isClient) {
+            if (this.getWorld().isClient) {
                 DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
             }
             return ActionResult.success(this.getWorld().isClient);
