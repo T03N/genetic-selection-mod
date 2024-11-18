@@ -2,6 +2,7 @@ package com.geneticselection.mobs;
 
 import com.geneticselection.GeneticSelection;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
+import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
@@ -18,5 +19,12 @@ public class ModEntities{
                     .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
                     .build()
     );
-    //register new mobs here by using the above format
+
+    public static final EntityType<CustomPigEntity> CUSTOM_PIG = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_pig"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomPigEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
+                    .build()
+    );
 }
