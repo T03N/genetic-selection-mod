@@ -25,8 +25,6 @@ public class CustomPigEntity extends PigEntity {
     private int MaxHp;
     private int MinMeat;
     private int MaxMeat;
-    private int MinLeather;
-    private int MaxLeather;
 
     public CustomPigEntity(EntityType<? extends PigEntity> entityType, World world) {
         super(entityType, world);
@@ -35,10 +33,8 @@ public class CustomPigEntity extends PigEntity {
         this.MaxHp = 5 + random.nextInt(11);
         this.MinMeat = 1+ random.nextInt(2);
         this.MaxMeat = MinMeat + random.nextInt(3);
-        this.MinLeather = random.nextInt(2);
-        this.MaxLeather = MinLeather + random.nextInt(2);
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
+        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat));
     }
 
     @Override
@@ -52,7 +48,7 @@ public class CustomPigEntity extends PigEntity {
             // Only display the stats on the server side to avoid duplication
             if (!this.getWorld().isClient) {
                 DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
-                        "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
+                        "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
@@ -70,10 +66,6 @@ public class CustomPigEntity extends PigEntity {
             // Calculate the amount of meat to drop between MinMeat and MaxMeat
             int meatAmount = MinMeat + this.getWorld().random.nextInt((MaxMeat - MinMeat) + 1);
             this.dropStack(new ItemStack(Items.PORKCHOP, meatAmount));
-
-            // Calculate the amount of leather to drop between MinLeather and MaxLeather
-            int leatherAmount = MinLeather + this.getWorld().random.nextInt((MaxLeather - MinLeather) + 1);
-            this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
         }
     }
     @Override
@@ -88,16 +80,12 @@ public class CustomPigEntity extends PigEntity {
         int childMaxHp = (parent1.MaxHp + parent2.MaxHp) / 2;
         int childMinMeat = (parent1.MinMeat + parent2.MinMeat) / 2;
         int childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
-        int childMinLeather = (parent1.MinLeather + parent2.MinLeather) / 2;
-        int childMaxLeather = (parent1.MaxLeather + parent2.MaxLeather) / 2;
 
         CustomPigEntity child = new CustomPigEntity(ModEntities.CUSTOM_PIG, serverWorld);
 
         child.MaxHp = childMaxHp;
         child.MinMeat = childMinMeat;
         child.MaxMeat = childMaxMeat;
-        child.MinLeather = childMinLeather;
-        child.MaxLeather = childMaxLeather;
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
 
         return child;

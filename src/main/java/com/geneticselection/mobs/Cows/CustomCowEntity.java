@@ -23,6 +23,8 @@ public class CustomCowEntity extends CowEntity {
     private int MaxHp;
     private int MinMeat;
     private int MaxMeat;
+    private int MinLeather;
+    private int MaxLeather;
 
     public CustomCowEntity(EntityType<? extends CowEntity> entityType, World world) {
         super(entityType, world);
@@ -31,8 +33,10 @@ public class CustomCowEntity extends CowEntity {
         this.MaxHp = 5 + random.nextInt(11);
         this.MinMeat = 1+ random.nextInt(2);
         this.MaxMeat = MinMeat + random.nextInt(3);
+        this.MinLeather = random.nextInt(2);
+        this.MaxLeather = MinLeather + random.nextInt(2);
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat));
+        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
     }
 
     @Override
@@ -47,7 +51,7 @@ public class CustomCowEntity extends CowEntity {
         } else if (itemStack.isEmpty()) { // Check if the hand is empty
             // Only display the stats on the server side to avoid duplication
             if (!this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat));
+                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
@@ -62,6 +66,10 @@ public class CustomCowEntity extends CowEntity {
             // Calculate the amount of meat to drop between MinMeat and MaxMeat
             int meatAmount = MinMeat + this.getWorld().random.nextInt((MaxMeat - MinMeat) + 1);
             this.dropStack(new ItemStack(Items.BEEF, meatAmount));
+
+            // Calculate the amount of leather to drop between MinLeather and MaxLeather
+            int leatherAmount = MinLeather + this.getWorld().random.nextInt((MaxLeather - MinLeather) + 1);
+            this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
         }
     }
     @Override
@@ -76,12 +84,16 @@ public class CustomCowEntity extends CowEntity {
         int childMaxHp = (parent1.MaxHp + parent2.MaxHp) / 2;
         int childMinMeat = (parent1.MinMeat + parent2.MinMeat) / 2;
         int childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
+        int childMinLeather = (parent1.MinLeather + parent2.MinLeather) / 2;
+        int childMaxLeather = (parent1.MaxLeather + parent2.MaxLeather) / 2;
 
         CustomCowEntity child = new CustomCowEntity(ModEntities.CUSTOM_COW, serverWorld);
 
         child.MaxHp = childMaxHp;
         child.MinMeat = childMinMeat;
         child.MaxMeat = childMaxMeat;
+        child.MinLeather = childMinLeather;
+        child.MaxLeather = childMaxLeather;
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
 
         return child;
