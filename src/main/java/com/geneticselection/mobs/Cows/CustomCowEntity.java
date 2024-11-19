@@ -25,6 +25,8 @@ public class CustomCowEntity extends CowEntity {
     private int MaxMeat;
     private int MinLeather;
     private int MaxLeather;
+    private int milkingCooldown;
+    private long lastMilkTime = 0;
 
     public CustomCowEntity(EntityType<? extends CowEntity> entityType, World world) {
         super(entityType, world);
@@ -35,6 +37,7 @@ public class CustomCowEntity extends CowEntity {
         this.MaxMeat = MinMeat + random.nextInt(3);
         this.MinLeather = random.nextInt(2);
         this.MaxLeather = MinLeather + random.nextInt(2);
+        this.milkingCooldown = 3000 + random.nextInt(2001);
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
     }
 
@@ -43,20 +46,41 @@ public class CustomCowEntity extends CowEntity {
         ItemStack itemStack = player.getStackInHand(hand);
 
         if (itemStack.isOf(Items.BUCKET) && !this.isBaby()) {
-            player.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
-            ItemStack itemStack2 = ItemUsage.exchangeStack(itemStack, player, Items.MILK_BUCKET.getDefaultStack());
-            player.setStackInHand(hand, itemStack2);
-            return ActionResult.success(this.getWorld().isClient);
-        } else if (itemStack.isEmpty()) { // Check if the hand is empty
-            // Only display the stats on the server side to avoid duplication
+            // Ensure this is only processed server-side
+            if (!this.getWorld().isClient) {
+                long currentTime = this.getWorld().getTime();
+                if (currentTime - lastMilkTime >= milkingCooldown) {
+                    player.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
+                    ItemStack itemStack2 = ItemUsage.exchangeStack(itemStack, player, Items.MILK_BUCKET.getDefaultStack());
+                    player.setStackInHand(hand, itemStack2);
+                    lastMilkTime = currentTime; // Update last milked time
+                    return ActionResult.SUCCESS;
+                } else {
+                    // Send the message only on the server to avoid duplication
+                    player.sendMessage(
+                            Text.of("This cow needs " + (milkingCooldown - (currentTime - lastMilkTime)) + " more ticks"),
+                            true
+                    );
+                    return ActionResult.FAIL;
+                }
+            }
+            return ActionResult.CONSUME; // Inform client the interaction is handled server-side
+        } else if (itemStack.isEmpty()) {
             if (this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
+                DescriptionRenderer.setDescription(this, Text.of(
+                        "Attributes\n" +
+                                "Max Hp: " + this.getHealth() + "\n" +
+                                "Meat: " + this.MinMeat + "-" + this.MaxMeat + "\n" +
+                                "Leather: " + this.MinLeather + "-" + this.MaxLeather + "\n" +
+                                "Cooldown: " + this.milkingCooldown
+                ));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
             return super.interactMob(player, hand);
         }
     }
+
     @Override
     public void onDeath(DamageSource source) {
         super.onDeath(source);
@@ -85,6 +109,7 @@ public class CustomCowEntity extends CowEntity {
         int childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
         int childMinLeather = (parent1.MinLeather + parent2.MinLeather) / 2;
         int childMaxLeather = (parent1.MaxLeather + parent2.MaxLeather) / 2;
+        int childMilkingCooldown = (parent1.milkingCooldown + parent2.milkingCooldown) / 2;
 
         CustomCowEntity child = new CustomCowEntity(ModEntities.CUSTOM_COW, serverWorld);
 
@@ -93,6 +118,7 @@ public class CustomCowEntity extends CowEntity {
         child.MaxMeat = childMaxMeat;
         child.MinLeather = childMinLeather;
         child.MaxLeather = childMaxLeather;
+        child.milkingCooldown = childMilkingCooldown;
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
 
         return child;
