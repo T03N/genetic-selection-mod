@@ -1,6 +1,7 @@
 package com.geneticselection.mobs.Sheep;
 
 import com.geneticselection.mobs.ModEntities;
+import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
@@ -37,21 +38,12 @@ public class CustomSheepEntity extends SheepEntity {
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
 
-        if (itemStack.isOf(Items.BUCKET) && !this.isBaby()) {
-            player.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
-            ItemStack itemStack2 = ItemUsage.exchangeStack(itemStack, player, Items.MILK_BUCKET.getDefaultStack());
-            player.setStackInHand(hand, itemStack2);
-            return ActionResult.success(this.getWorld().isClient);
-        } else if (itemStack.isEmpty()) { // Check if the hand is empty
+    if (itemStack.isEmpty()) { // Check if the hand is empty
             // Only display the stats on the server side to avoid duplication
-            if (!this.getWorld().isClient) {
-                player.sendMessage(Text.literal("Custom Sheep Stats:"));
-                player.sendMessage(Text.literal("Max Health: " + MaxHp));
-                player.sendMessage(Text.literal("Min Meat: " + MinMeat));
-                player.sendMessage(Text.literal("Max Meat: " + MaxMeat));
-                player.sendMessage(Text.literal("----------------------------------------------"));
-            }
-            return ActionResult.success(this.getWorld().isClient);
+        if (this.getWorld().isClient) {
+            DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat));
+        }
+        return ActionResult.success(this.getWorld().isClient);
         } else {
             return super.interactMob(player, hand);
         }
