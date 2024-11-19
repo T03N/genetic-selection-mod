@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.render.entity.model.CowEntityModel;
 import net.minecraft.client.render.entity.model.PigEntityModel;
+import net.minecraft.client.model.Dilation;
 
 public class GeneticSelectionClient implements ClientModInitializer {
     public void cowMethod(){
@@ -18,9 +19,11 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_COW, CowEntityModel::getTexturedModelData);
     }
 
-    public void pigMethod(){
+    public void pigMethod() {
+        // Register custom pig renderer
         EntityRendererRegistry.register(ModEntities.CUSTOM_PIG, CustomPigRenderer::new);
-        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_PIG, PigEntityModel::getTexturedModelData);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_PIG,
+                () -> PigEntityModel.getTexturedModelData(new Dilation(0.2F))); // Apply dilation here
     }
 
     @Override
