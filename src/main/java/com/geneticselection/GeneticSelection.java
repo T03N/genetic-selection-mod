@@ -2,6 +2,7 @@ package com.geneticselection;
 
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
+import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import net.fabricmc.api.ModInitializer;
 
@@ -80,6 +81,37 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void pigMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_PIG, CustomPigEntity.createPigAttributes());
+		//lowers the spawn rate of default vanilla pigs
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.PIG, // Remove the original pig
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		//adds custom pig to natural spawn
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_PIG, // Add custom pig
+				20, // Spawn weight (higher = more frequent)
+				5,  // Minimum group size
+				10   // Maximum group size
+		);
+		//restricts the cow spawn to grass blocks on the ground
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_PIG,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.GRASS_BLOCK)
+		);
+	}
+
 	@Override
 	public void onInitialize() {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -88,6 +120,7 @@ public class GeneticSelection implements ModInitializer {
 
 		cowMethod();
 		sheepMethod();
+		pigMethod();
 		LOGGER.info("Hello Fabric world!");
 	}
 }
