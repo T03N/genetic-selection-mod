@@ -33,51 +33,57 @@ public class CustomCowEntity extends CowEntity {
 
         Random random = new Random();
         this.MaxHp = 5 + random.nextInt(11);
-        this.MinMeat = 1+ random.nextInt(2);
-        this.MaxMeat = MinMeat + random.nextInt(3);
+        this.MinMeat = 1 + random.nextInt(2);
+        this.MaxMeat = this.MinMeat + random.nextInt(3);
         this.MinLeather = random.nextInt(2);
-        this.MaxLeather = MinLeather + random.nextInt(2);
+        this.MaxLeather = this.MinLeather + random.nextInt(2);
         this.milkingCooldown = 3000 + random.nextInt(2001);
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
+        this.setHealth(this.MaxHp);
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
+    }
+
+    private void updateDescription(CustomCowEntity ent) {
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
+                "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp + "\n" +
+                "Meat: " + ent.MinMeat + "-" + ent.MaxMeat + "\n" +
+                "Leather: " + ent.MinLeather + "-" + ent.MaxLeather + "\n" +
+                "Cooldown: " + ent.milkingCooldown));
     }
 
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
-
         if (itemStack.isOf(Items.BUCKET) && !this.isBaby()) {
-            // Ensure this is only processed server-side
             if (!this.getWorld().isClient) {
                 long currentTime = this.getWorld().getTime();
                 if (currentTime - lastMilkTime >= milkingCooldown) {
                     player.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
                     ItemStack itemStack2 = ItemUsage.exchangeStack(itemStack, player, Items.MILK_BUCKET.getDefaultStack());
                     player.setStackInHand(hand, itemStack2);
-                    lastMilkTime = currentTime; // Update last milked time
+                    lastMilkTime = currentTime;
                     return ActionResult.SUCCESS;
                 } else {
-                    // Send the message only on the server to avoid duplication
-                    player.sendMessage(
-                            Text.of("This cow needs " + (milkingCooldown - (currentTime - lastMilkTime)) + " more ticks"),
-                            true
-                    );
+                    player.sendMessage(Text.of("This cow needs " + (milkingCooldown - (currentTime - lastMilkTime)) + " more ticks"), true);
                     return ActionResult.FAIL;
                 }
             }
-            return ActionResult.CONSUME; // Inform client the interaction is handled server-side
-        } else if (itemStack.isEmpty()) {
-            if (this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of(
-                        "Attributes\n" +
-                                "Max Hp: " + this.getHealth() + "\n" +
-                                "Meat: " + this.MinMeat + "-" + this.MaxMeat + "\n" +
-                                "Leather: " + this.MinLeather + "-" + this.MaxLeather + "\n" +
-                                "Cooldown: " + this.milkingCooldown
-                ));
-            }
-            return ActionResult.success(this.getWorld().isClient);
-        } else {
+            return ActionResult.CONSUME;
+        }
+        else {
             return super.interactMob(player, hand);
+        }
+    }
+
+    @Override
+    protected void applyDamage(DamageSource source, float amount) {
+        super.applyDamage(source, amount);
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
         }
     }
 
@@ -86,15 +92,15 @@ public class CustomCowEntity extends CowEntity {
         super.onDeath(source);
 
         if (!this.getWorld().isClient) {
-            // Calculate the amount of meat to drop between MinMeat and MaxMeat
             int meatAmount = MinMeat + this.getWorld().random.nextInt((MaxMeat - MinMeat) + 1);
             this.dropStack(new ItemStack(Items.BEEF, meatAmount));
 
-            // Calculate the amount of leather to drop between MinLeather and MaxLeather
             int leatherAmount = MinLeather + this.getWorld().random.nextInt((MaxLeather - MinLeather) + 1);
             this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
         }
     }
+
+    // Custom breeding from your original code
     @Override
     public CustomCowEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
         if (!(mate instanceof CustomCowEntity)) {
@@ -121,6 +127,9 @@ public class CustomCowEntity extends CowEntity {
         child.milkingCooldown = childMilkingCooldown;
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
 
+        if (!this.getWorld().isClient) {
+            updateDescription(child);
+        }
         return child;
     }
 }
