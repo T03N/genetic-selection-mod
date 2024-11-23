@@ -1,5 +1,7 @@
 package com.geneticselection.mobs.Cows;
 
+import com.geneticselection.attributes.GlobalAttributesManager;
+import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
@@ -17,25 +19,64 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
-import java.util.Random;
+
+import java.util.Optional;
+
+import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomCowEntity extends CowEntity {
-    private int MaxHp;
-    private int MinMeat;
-    private int MaxMeat;
-    private int MinLeather;
-    private int MaxLeather;
+    private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
+    private double MaxHp;
+    private double Speed;
+    private double MinMeat;
+    private double MaxMeat;
+    private double MinLeather;
+    private double MaxLeather;
 
     public CustomCowEntity(EntityType<? extends CowEntity> entityType, World world) {
         super(entityType, world);
 
-        Random random = new Random();
-        this.MaxHp = 5 + random.nextInt(11);
-        this.MinMeat = 1+ random.nextInt(2);
-        this.MaxMeat = MinMeat + random.nextInt(3);
-        this.MinLeather = random.nextInt(2);
-        this.MaxLeather = MinLeather + random.nextInt(2);
+        // Initialize mob attributes (directly within the class)
+        if (this.mobAttributes == null) {
+            MobAttributes global = GlobalAttributesManager.getAttributes(entityType);
+            double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
+            double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
+            double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
+            double leather = global.getMaxLeather().orElse(0.0) * (0.98 + Math.random() * 0.1);
+            this.mobAttributes = new MobAttributes(speed, health, Optional.of(meat), Optional.of(leather), null);
+        }
+
+        // Apply attributes to the entity
+        this.MaxHp = this.mobAttributes.getMaxHealth();
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
+        this.Speed = this.mobAttributes.getMovementSpeed();
+        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+        this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
+            this.MaxMeat = maxMeat;
+        });
+        this.mobAttributes.getMaxLeather().ifPresent(maxLeather -> {
+            this.MaxLeather = maxLeather;
+        });
+    }
+
+    public void setMinMeat(double minMeat)
+    {
+        this.MinMeat = minMeat;
+    }
+
+    public void setMaxMeat(double maxMeat)
+    {
+        this.MaxMeat = maxMeat;
+    }
+
+    public void setMinLeather(double minLeather)
+    {
+        this.MinLeather = minLeather;
+    }
+
+    public void setMaxLeather(double maxLeather)
+    {
+        this.MaxLeather = maxLeather;
     }
 
     @Override
@@ -50,27 +91,29 @@ public class CustomCowEntity extends CowEntity {
         } else if (itemStack.isEmpty()) { // Check if the hand is empty
             // Only display the stats on the server side to avoid duplication
             if (this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
+                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nMin Leather: " + this.MinLeather));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
             return super.interactMob(player, hand);
         }
     }
+
     @Override
     public void onDeath(DamageSource source) {
         super.onDeath(source);
 
         if (!this.getWorld().isClient) {
             // Calculate the amount of meat to drop between MinMeat and MaxMeat
-            int meatAmount = MinMeat + this.getWorld().random.nextInt((MaxMeat - MinMeat) + 1);
+            int meatAmount = (int) (MinMeat + this.getWorld().random.nextInt(((int)(MaxMeat - MinMeat)) + 1));
             this.dropStack(new ItemStack(Items.BEEF, meatAmount));
 
             // Calculate the amount of leather to drop between MinLeather and MaxLeather
-            int leatherAmount = MinLeather + this.getWorld().random.nextInt((MaxLeather - MinLeather) + 1);
+            int leatherAmount = (int)(MinLeather + this.getWorld().random.nextInt((int)(MaxLeather - MinLeather) + 1));
             this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
         }
     }
+
     @Override
     public CustomCowEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
         if (!(mate instanceof CustomCowEntity)) {
@@ -80,21 +123,40 @@ public class CustomCowEntity extends CowEntity {
         CustomCowEntity parent1 = this;
         CustomCowEntity parent2 = (CustomCowEntity) mate;
 
-        int childMaxHp = (parent1.MaxHp + parent2.MaxHp) / 2;
-        int childMinMeat = (parent1.MinMeat + parent2.MinMeat) / 2;
-        int childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
-        int childMinLeather = (parent1.MinLeather + parent2.MinLeather) / 2;
-        int childMaxLeather = (parent1.MaxLeather + parent2.MaxLeather) / 2;
+        MobAttributes attr1 = parent1.mobAttributes;
+        MobAttributes attr2 = parent2.mobAttributes;
+
+        // Inherit attributes from both parents
+        MobAttributes childAttributes = inheritAttributes(attr1, attr2);
+
+        double childMinMeat = (parent1.MinMeat + parent2.MinMeat) / 2;
+        double childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
+        double childMinLeather = (parent1.MinLeather + parent2.MinLeather) / 2;
+        double childMaxLeather = (parent1.MaxLeather + parent2.MaxLeather) / 2;
 
         CustomCowEntity child = new CustomCowEntity(ModEntities.CUSTOM_COW, serverWorld);
 
-        child.MaxHp = childMaxHp;
+        // Set the inherited attributes directly
+        child.mobAttributes = childAttributes;
+        applyAttributes(child, childAttributes);
+
         child.MinMeat = childMinMeat;
         child.MaxMeat = childMaxMeat;
         child.MinLeather = childMinLeather;
         child.MaxLeather = childMaxLeather;
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
 
+        influenceGlobalAttributes(child.getType());
+
         return child;
+    }
+
+    // Getter and Setter for mobAttributes if needed
+    public MobAttributes getMobAttributes() {
+        return this.mobAttributes;
+    }
+
+    public void setMobAttributes(MobAttributes attributes) {
+        this.mobAttributes = attributes;
     }
 }
