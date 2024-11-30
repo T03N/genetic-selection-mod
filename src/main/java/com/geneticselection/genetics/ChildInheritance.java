@@ -42,9 +42,10 @@ public class ChildInheritance {
         Optional<Double> newMaxMeat = inheritOptionalAttribute(a.getMaxMeat(), b.getMaxMeat(), random);
         Optional<Double> newMaxLeather = inheritOptionalAttribute(a.getMaxLeather(), b.getMaxLeather(), random);
         Optional<Double> newMaxWool = inheritOptionalAttribute(a.getMaxWool(), b.getMaxWool(), random);
+        Optional<Double> newMaxRabbitHide = inheritOptionalAttribute(a.getMaxRabbitHide(), b.getMaxRabbitHide(), random);
 
         // Return a new MobAttributes object with the inherited values
-        return new MobAttributes(newSpeed, newHealth, newMaxMeat, newMaxLeather, newMaxWool);
+        return new MobAttributes(newSpeed, newHealth, newMaxMeat, newMaxLeather, newMaxWool, newMaxRabbitHide);
     }
 
     /**

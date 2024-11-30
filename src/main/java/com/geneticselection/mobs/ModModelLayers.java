@@ -10,5 +10,7 @@ public class ModModelLayers {
     public static final EntityModelLayer CUSTOM_SHEEP = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_sheep"), "main");
 
     public static final EntityModelLayer CUSTOM_PIG = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID, "custom_pig"), "main");
+
+    public static final EntityModelLayer CUSTOM_RABBIT = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID, "custom_rabbit"), "main");
     //add your new mobs here by using the above format
 }
