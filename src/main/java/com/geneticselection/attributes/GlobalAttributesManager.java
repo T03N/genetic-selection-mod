@@ -16,6 +16,8 @@ public class GlobalAttributesManager {
         // Initialize default attributes for cows
         globalAttributes.put(EntityType.COW, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.of(2.0), null, null));
         globalAttributes.put(EntityType.RABBIT, new MobAttributes(2.2, 3.0, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(2.0)));
+        globalAttributes.put(EntityType.PIG, new MobAttributes(0.2, 8.0, Optional.empty(), null, null, null));
+
     }
 
     public static MobAttributes getAttributes(EntityType<?> type) {
