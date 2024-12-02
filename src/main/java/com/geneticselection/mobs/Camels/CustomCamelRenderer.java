@@ -12,7 +12,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomCamelRenderer extends MobEntityRenderer<CustomCamelEntity, CamelEntityModel<CustomCamelEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/minecraft-donkey.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/minecraft-camel.png");
 
     public CustomCamelRenderer(EntityRendererFactory.Context context) {
         super(context, new CamelEntityModel<>(context.getPart(ModModelLayers.CUSTOM_CAMEL)), 0.6f);
