@@ -1,6 +1,7 @@
 package com.geneticselection;
 
 import com.geneticselection.mobs.Cows.CustomCowRenderer;
+import com.geneticselection.mobs.Donkeys.CustomDonkeyRenderer;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
 import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
@@ -9,11 +10,8 @@ import com.geneticselection.mobs.Pigs.CustomPigRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.minecraft.client.render.entity.model.CowEntityModel;
-import net.minecraft.client.render.entity.model.PigEntityModel;
+import net.minecraft.client.render.entity.model.*;
 import net.minecraft.client.model.Dilation;
-import net.minecraft.client.render.entity.model.RabbitEntityModel;
-import net.minecraft.client.render.entity.model.SheepEntityModel;
 
 public class GeneticSelectionClient implements ClientModInitializer {
     public void cowMethod(){
@@ -41,11 +39,17 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_RABBIT, RabbitEntityModel::getTexturedModelData);
     }
 
+    public void donkeyMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_DONKEY, CustomDonkeyRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_DONKEY, DonkeyEntityModel::getTexturedModelData);
+    }
+
     @Override
     public void onInitializeClient() {
         cowMethod();
         sheepMethod();
         pigMethod();
         rabbitMethod();
+        donkeyMethod();
     }
 }

@@ -1,6 +1,7 @@
 package com.geneticselection;
 
 import com.geneticselection.mobs.Cows.CustomCowEntity;
+import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
@@ -113,7 +114,7 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
-	public void rabbitMethod(){
+	public void rabbitMethod() {
 		//Register the default attibutes to your mob
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_RABBIT, CustomRabbitEntity.createRabbitAttributes());
 		//lowers the spawn rate of default vanilla pigs
@@ -144,6 +145,35 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void donkeyMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_DONKEY, CustomDonkeyEntity.createAbstractDonkeyAttributes());
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.DONKEY,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_DONKEY,
+				20, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_DONKEY,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.GRASS_BLOCK)
+		);
+	}
+
+
 	@Override
 	public void onInitialize() {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -154,6 +184,7 @@ public class GeneticSelection implements ModInitializer {
 		sheepMethod();
 		pigMethod();
 		rabbitMethod();
+		donkeyMethod();
 		LOGGER.info("Hello Fabric world!");
 	}
 }
