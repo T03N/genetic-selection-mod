@@ -1,11 +1,13 @@
 package com.geneticselection.mobs.Pigs;
 
+import com.geneticselection.attributes.GlobalAttributesManager;
+import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.passive.CowEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -19,22 +21,38 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
-import java.util.Random;
+import java.util.Optional;
+import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomPigEntity extends PigEntity {
-    private int MaxHp;
-    private int MinMeat;
-    private int MaxMeat;
+    private MobAttributes mobAttributes;
+    private double MaxHp;
+    private double Speed;
+    private double MinMeat;
+    private double MaxMeat;
 
     public CustomPigEntity(EntityType<? extends PigEntity> entityType, World world) {
         super(entityType, world);
 
-        Random random = new Random();
-        this.MaxHp = 5 + random.nextInt(11);
-        this.MinMeat = 1+ random.nextInt(2);
-        this.MaxMeat = MinMeat + random.nextInt(3);
+        if(this.mobAttributes == null){
+            MobAttributes global = GlobalAttributesManager.getAttributes(entityType);
+            double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
+            double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
+            double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
+            this.mobAttributes = new MobAttributes(speed, health, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty());
+        }
+        this.MaxHp = this.mobAttributes.getMaxHealth();
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat));
+        this.Speed = this.mobAttributes.getMovementSpeed();
+        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+        this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
+            this.MaxMeat = maxMeat;
+        });
+    }
+
+    public void setMaxMeat(double maxMeat)
+    {
+        this.MaxMeat = maxMeat;
     }
 
     @Override
@@ -64,8 +82,8 @@ public class CustomPigEntity extends PigEntity {
 
         if (!this.getWorld().isClient) {
             // Calculate the amount of meat to drop between MinMeat and MaxMeat
-            int meatAmount = MinMeat + this.getWorld().random.nextInt((MaxMeat - MinMeat) + 1);
-            this.dropStack(new ItemStack(Items.PORKCHOP, meatAmount));
+            int meatAmount = (int) (MaxMeat);
+            this.dropStack(new ItemStack(Items.BEEF, meatAmount));
         }
     }
     @Override
@@ -77,17 +95,32 @@ public class CustomPigEntity extends PigEntity {
         CustomPigEntity parent1 = this;
         CustomPigEntity parent2 = (CustomPigEntity) mate;
 
-        int childMaxHp = (parent1.MaxHp + parent2.MaxHp) / 2;
-        int childMinMeat = (parent1.MinMeat + parent2.MinMeat) / 2;
-        int childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
+        MobAttributes attr1 = parent1.mobAttributes;
+        MobAttributes attr2 = parent2.mobAttributes;
+
+        MobAttributes childAttributes = inheritAttributes(attr1, attr2);
+
+        double childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
+
 
         CustomPigEntity child = new CustomPigEntity(ModEntities.CUSTOM_PIG, serverWorld);
 
-        child.MaxHp = childMaxHp;
-        child.MinMeat = childMinMeat;
+        child.mobAttributes = childAttributes;
+        applyAttributes(child, childAttributes);
+
         child.MaxMeat = childMaxMeat;
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
 
+        influenceGlobalAttributes(child.getType());
+
         return child;
+    }
+
+    public MobAttributes getMobAttributes() {
+        return this.mobAttributes;
+    }
+
+    public void setMobAttributes(MobAttributes attributes) {
+        this.mobAttributes = attributes;
     }
 }
