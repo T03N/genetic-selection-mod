@@ -198,7 +198,7 @@ public class GeneticSelection implements ModInitializer {
 				SpawnLocationTypes.ON_GROUND,
 				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
 				(entityType, world, spawnReason, pos, random) ->
-						world.getBlockState(pos.down()).isOf(Blocks.GRASS_BLOCK)
+						world.getBlockState(pos.down()).isOf(Blocks.SAND) // Only spawn on sand blocks (sand or red sand)
 		);
 	}
 
