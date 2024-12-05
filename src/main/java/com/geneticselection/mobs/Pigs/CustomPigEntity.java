@@ -2,6 +2,7 @@ package com.geneticselection.mobs.Pigs;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
@@ -45,11 +46,22 @@ public class CustomPigEntity extends PigEntity {
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
         });
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
     public void setMaxMeat(double maxMeat)
     {
         this.MaxMeat = maxMeat;
+    }
+
+    private void updateDescription(CustomPigEntity ent) {
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
+                "Max Hp: " + ent.MaxHp +
+                "Max Speed: " + ent.Speed +
+                "\nMax Meat: " + ent.MaxMeat));
     }
 
     @Override
@@ -62,8 +74,7 @@ public class CustomPigEntity extends PigEntity {
 
             // Only display the stats on the server side to avoid duplication
             if (!this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
-                        "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat));
+                updateDescription(this);
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
@@ -110,7 +121,20 @@ public class CustomPigEntity extends PigEntity {
 
         influenceGlobalAttributes(child.getType());
 
+        if (!this.getWorld().isClient) {
+            updateDescription(child);
+        }
+
         return child;
+    }
+
+    @Override
+    protected void applyDamage(DamageSource source, float amount) {
+        super.applyDamage(source, amount);
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
 }

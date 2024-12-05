@@ -54,7 +54,9 @@ public class CustomRabbitEntity extends RabbitEntity {
             this.rabbitHide = maxRabbitHide;
         });
 
-        updateDescription(this);
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
     public void setMaxMeat(double maxMeat)
@@ -68,7 +70,11 @@ public class CustomRabbitEntity extends RabbitEntity {
     }
 
     private void updateDescription(CustomRabbitEntity ent) {
-        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + ent.getHealth() + "/"+ ent.MaxHp +"\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nRabbit Hide: " + this.rabbitHide));
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
+                "Max Hp: " + ent.getHealth() + "/"+ ent.MaxHp +
+                "\nSpeed: " + ent.Speed +
+                "\nMax Meat: " + ent.MaxMeat +
+                "\nRabbit Hide: " + ent.rabbitHide));
     }
 
     @Override
@@ -129,7 +135,9 @@ public class CustomRabbitEntity extends RabbitEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        updateDescription(child);
+        if (!this.getWorld().isClient) {
+            updateDescription(child);
+        }
 
         return child;
     }

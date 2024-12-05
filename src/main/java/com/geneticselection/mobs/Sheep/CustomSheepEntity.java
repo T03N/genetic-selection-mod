@@ -58,7 +58,10 @@ public class CustomSheepEntity extends SheepEntity {
         this.mobAttributes.getMaxWool().ifPresent(MaxWool -> {
             this.MaxWool = MaxWool;
         });
-        updateDescription(this);
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
     public void setMaxMeat(double maxMeat)
@@ -72,7 +75,11 @@ public class CustomSheepEntity extends SheepEntity {
     }
 
     private void updateDescription(CustomSheepEntity ent) {
-        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" + "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp + "\nSpeed: " + ent.Speed + "\nMax Meat: " + ent.MaxMeat + "\nWool: " + ent.MaxWool));
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
+                "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp +
+                "\nSpeed: " + ent.Speed +
+                "\nMax Meat: " + ent.MaxMeat +
+                "\nWool: " + ent.MaxWool));
     }
 
     @Override
@@ -135,7 +142,9 @@ public class CustomSheepEntity extends SheepEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        updateDescription(child);
+        if (!this.getWorld().isClient) {
+            updateDescription(child);
+        }
 
         return child;
     }

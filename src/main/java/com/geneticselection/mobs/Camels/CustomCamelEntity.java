@@ -2,6 +2,7 @@ package com.geneticselection.mobs.Camels;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
@@ -43,6 +44,16 @@ public class CustomCamelEntity extends CamelEntity {
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
+    }
+
+    private void updateDescription(CustomCamelEntity ent) {
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
+                "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp +
+                "\nSpeed: " + ent.Speed));
     }
 
     @Override
@@ -54,9 +65,7 @@ public class CustomCamelEntity extends CamelEntity {
 
             // Only display the stats on the server side to avoid duplication
             if (!this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
-                        "Max Hp: " + String.format("%.4f", this.MaxHp) + "\n" +
-                        "Speed: " + String.format("%.4f", this.Speed) + "\n"));
+                updateDescription(this);
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
@@ -95,6 +104,19 @@ public class CustomCamelEntity extends CamelEntity {
 
         influenceGlobalAttributes(child.getType());
 
+        if (!this.getWorld().isClient) {
+            updateDescription(child);
+        }
+
         return child;
+    }
+
+    @Override
+    protected void applyDamage(DamageSource source, float amount) {
+        super.applyDamage(source, amount);
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 }
