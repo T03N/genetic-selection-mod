@@ -4,7 +4,6 @@ import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
@@ -12,7 +11,6 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsage;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
@@ -47,11 +45,6 @@ public class CustomPigEntity extends PigEntity {
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
         });
-    }
-
-    public void setMaxMeat(double maxMeat)
-    {
-        this.MaxMeat = maxMeat;
     }
 
     @Override
@@ -115,11 +108,4 @@ public class CustomPigEntity extends PigEntity {
         return child;
     }
 
-    public MobAttributes getMobAttributes() {
-        return this.mobAttributes;
-    }
-
-    public void setMobAttributes(MobAttributes attributes) {
-        this.mobAttributes = attributes;
-    }
 }

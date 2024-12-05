@@ -5,14 +5,12 @@ import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.DonkeyEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsage;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
@@ -51,11 +49,6 @@ public class CustomDonkeyEntity extends DonkeyEntity {
         this.mobAttributes.getMaxLeather().ifPresent(maxLeather -> {
             this.MaxLeather = maxLeather;
         });
-    }
-
-    public void setMaxLeather(double maxLeather)
-    {
-        this.MaxLeather = maxLeather;
     }
 
     @Override
