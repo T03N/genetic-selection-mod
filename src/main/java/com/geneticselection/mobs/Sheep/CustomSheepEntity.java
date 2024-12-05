@@ -2,6 +2,7 @@ package com.geneticselection.mobs.Sheep;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
@@ -57,11 +58,16 @@ public class CustomSheepEntity extends SheepEntity {
         this.mobAttributes.getMaxWool().ifPresent(MaxWool -> {
             this.MaxWool = MaxWool;
         });
+        updateDescription(this);
     }
 
     public void setMaxMeat(double maxMeat)
     {
         this.MaxMeat = maxMeat;
+    }
+
+    private void updateDescription(CustomSheepEntity ent) {
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" + "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp + "\nSpeed: " + ent.Speed + "\nMax Meat: " + ent.MaxMeat + "\nWool: " + ent.MaxWool));
     }
 
     @Override
@@ -70,8 +76,8 @@ public class CustomSheepEntity extends SheepEntity {
 
         if (itemStack.isEmpty()) { // Check if the hand is empty
             // Only display the stats on the server side to avoid duplication
-            if (this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nWool: " + this.MaxWool));
+            if (!this.getWorld().isClient) {
+                updateDescription(this);
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
@@ -124,7 +130,18 @@ public class CustomSheepEntity extends SheepEntity {
 
         influenceGlobalAttributes(child.getType());
 
+        updateDescription(child);
+
         return child;
+    }
+
+    @Override
+    protected void applyDamage(DamageSource source, float amount) {
+        super.applyDamage(source, amount);
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
     // Getter and Setter for mobAttributes if needed
