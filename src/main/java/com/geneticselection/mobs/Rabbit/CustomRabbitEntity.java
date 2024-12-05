@@ -2,6 +2,7 @@ package com.geneticselection.mobs.Rabbit;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
@@ -56,11 +57,17 @@ public class CustomRabbitEntity extends RabbitEntity {
         this.mobAttributes.getMaxRabbitHide().ifPresent(maxRabbitHide -> {
             this.rabbitHide = maxRabbitHide;
         });
+
+        updateDescription(this);
     }
 
     public void setMaxMeat(double maxMeat)
     {
         this.MaxMeat = maxMeat;
+    }
+
+    private void updateDescription(CustomRabbitEntity ent) {
+        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Hp: " + ent.getHealth() + "\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nRabbit Hide: " + this.rabbitHide));
     }
 
     @Override
@@ -69,8 +76,8 @@ public class CustomRabbitEntity extends RabbitEntity {
 
         if (itemStack.isEmpty()) { // Check if the hand is empty
             // Only display the stats on the server side to avoid duplication
-            if (this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nRabbit Hide: " + this.rabbitHide));
+            if (!this.getWorld().isClient) {
+                updateDescription(this);
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
@@ -122,7 +129,18 @@ public class CustomRabbitEntity extends RabbitEntity {
 
         influenceGlobalAttributes(child.getType());
 
+        updateDescription(child);
+
         return child;
+    }
+
+    @Override
+    protected void applyDamage(DamageSource source, float amount) {
+        super.applyDamage(source, amount);
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
     // Getter and Setter for mobAttributes if needed
