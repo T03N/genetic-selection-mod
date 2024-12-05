@@ -47,9 +47,8 @@ public class CustomPigEntity extends PigEntity {
             this.MaxMeat = maxMeat;
         });
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
     }
 
     public void setMaxMeat(double maxMeat)
@@ -121,9 +120,8 @@ public class CustomPigEntity extends PigEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(child);
-        }
 
         return child;
     }
@@ -132,9 +130,8 @@ public class CustomPigEntity extends PigEntity {
     protected void applyDamage(DamageSource source, float amount) {
         super.applyDamage(source, amount);
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
     }
 
 }

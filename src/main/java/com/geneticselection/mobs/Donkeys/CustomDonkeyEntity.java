@@ -51,9 +51,8 @@ public class CustomDonkeyEntity extends DonkeyEntity {
             this.MaxLeather = maxLeather;
         });
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
     }
 
     public void setMaxLeather(double maxLeather)
@@ -69,9 +68,9 @@ public class CustomDonkeyEntity extends DonkeyEntity {
             player.playSound(SoundEvents.ENTITY_DONKEY_AMBIENT, 1.0F, 1.0F);
 
             // Only display the stats on the server side to avoid duplication
-            if (!this.getWorld().isClient) {
+            if (!this.getWorld().isClient)
                 updateDescription(this);
-            }
+
             return ActionResult.success(this.getWorld().isClient);
         } else {
             return super.interactMob(player, hand);
@@ -124,9 +123,8 @@ public class CustomDonkeyEntity extends DonkeyEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(child);
-        }
 
         return child;
     }
@@ -135,9 +133,8 @@ public class CustomDonkeyEntity extends DonkeyEntity {
     protected void applyDamage(DamageSource source, float amount) {
         super.applyDamage(source, amount);
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
     }
 
 }

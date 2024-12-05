@@ -59,9 +59,8 @@ public class CustomSheepEntity extends SheepEntity {
             this.MaxWool = MaxWool;
         });
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
     }
 
     public void setMaxMeat(double maxMeat)
@@ -142,9 +141,8 @@ public class CustomSheepEntity extends SheepEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(child);
-        }
 
         return child;
     }
@@ -153,17 +151,7 @@ public class CustomSheepEntity extends SheepEntity {
     protected void applyDamage(DamageSource source, float amount) {
         super.applyDamage(source, amount);
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
-    }
-
-    // Getter and Setter for mobAttributes if needed
-    public MobAttributes getMobAttributes() {
-        return this.mobAttributes;
-    }
-
-    public void setMobAttributes(MobAttributes attributes) {
-        this.mobAttributes = attributes;
     }
 }

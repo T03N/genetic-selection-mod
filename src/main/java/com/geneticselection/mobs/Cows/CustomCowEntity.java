@@ -117,9 +117,9 @@ public class CustomCowEntity extends CowEntity {
         }
         else if (itemStack.isEmpty()) { // Check if the hand is empty
             // Only display the stats on the server side to avoid duplication
-            if (!this.getWorld().isClient) {
+            if (!this.getWorld().isClient)
                 updateDescription(this);
-            }
+
             return ActionResult.success(this.getWorld().isClient);
         }
         else {
@@ -131,9 +131,9 @@ public class CustomCowEntity extends CowEntity {
     protected void applyDamage(DamageSource source, float amount) {
         super.applyDamage(source, amount);
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
+
     }
 
     @Override
@@ -153,9 +153,9 @@ public class CustomCowEntity extends CowEntity {
 
     @Override
     public CustomCowEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
-        if (!(mate instanceof CustomCowEntity)) {
+        if (!(mate instanceof CustomCowEntity))
             return (CustomCowEntity) EntityType.COW.create(serverWorld);
-        }
+
 
         CustomCowEntity parent1 = this;
         CustomCowEntity parent2 = (CustomCowEntity) mate;
@@ -177,18 +177,9 @@ public class CustomCowEntity extends CowEntity {
         child.milkingCooldown = childMilkingCooldown;
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(child);
-        }
+
         return child;
-    }
-
-    // Getter and Setter for mobAttributes if needed
-    public MobAttributes getMobAttributes() {
-        return this.mobAttributes;
-    }
-
-    public void setMobAttributes(MobAttributes attributes) {
-        this.mobAttributes = attributes;
     }
 }

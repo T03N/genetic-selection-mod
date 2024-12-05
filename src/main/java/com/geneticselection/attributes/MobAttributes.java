@@ -19,22 +19,52 @@ public class MobAttributes {
         this.maxRabbitHide = maxRabbitHide;
     }
 
-    public double getMovementSpeed() { return movementSpeed; }
-    public void setMovementSpeed(double movementSpeed) { this.movementSpeed = movementSpeed; }
+    public double getMovementSpeed() {
+        return movementSpeed;
+    }
 
-    public double getMaxHealth() { return maxHealth; }
-    public void setMaxHealth(double maxHealth) { this.maxHealth = maxHealth; }
+    public void setMovementSpeed(double movementSpeed) {
+        this.movementSpeed = movementSpeed;
+    }
+
+    public double getMaxHealth() {
+        return maxHealth;
+    }
+
+    public void setMaxHealth(double maxHealth) {
+        this.maxHealth = maxHealth;
+    }
 
     // Getter and setter for max values
-    public Optional<Double> getMaxMeat() { return maxMeat; }
-    public void setMaxMeat(double maxMeat) { this.maxMeat = Optional.of(maxMeat); }
+    public Optional<Double> getMaxMeat() {
+        return maxMeat;
+    }
 
-    public Optional<Double> getMaxLeather() { return maxLeather; }
-    public void setMaxLeather(double maxLeather) { this.maxLeather = Optional.of(maxLeather); }
+    public void setMaxMeat(double maxMeat) {
+        this.maxMeat = Optional.of(maxMeat);
+    }
 
-    public Optional<Double> getMaxWool() { return maxWool; }
-    public void setMaxWool(double maxWool) { this.maxWool = Optional.of(maxWool); }
+    public Optional<Double> getMaxLeather() {
+        return maxLeather;
+    }
 
-    public Optional<Double> getMaxRabbitHide() { return maxRabbitHide; }
-    public void setMaxRabbitHide(double maxHide) { this.maxRabbitHide = Optional.of(maxHide); }
+    public void setMaxLeather(double maxLeather) {
+        this.maxLeather = Optional.of(maxLeather);
+    }
+
+    public Optional<Double> getMaxWool() {
+        return maxWool;
+    }
+
+    public void setMaxWool(double maxWool) {
+        this.maxWool = Optional.of(maxWool);
+    }
+
+    public Optional<Double> getMaxRabbitHide() {
+        return maxRabbitHide;
+    }
+
+    public void setMaxRabbitHide(double maxHide) {
+        this.maxRabbitHide = Optional.of(maxHide);
+    }
 }

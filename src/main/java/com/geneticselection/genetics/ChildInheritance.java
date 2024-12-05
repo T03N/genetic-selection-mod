@@ -78,7 +78,9 @@ public class ChildInheritance {
                 return Optional.of(newValue);
             }
         }
-        return Optional.empty(); // If either parent doesn't have the attribute, return empty
+
+        // If either parent doesn't have the attribute, return empty
+        return Optional.empty();
     }
 
     public static void applyAttributes(Entity entity, MobAttributes attributes) {

@@ -54,9 +54,8 @@ public class CustomRabbitEntity extends RabbitEntity {
             this.rabbitHide = maxRabbitHide;
         });
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
     }
 
     public void setMaxMeat(double maxMeat)
@@ -135,9 +134,8 @@ public class CustomRabbitEntity extends RabbitEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(child);
-        }
 
         return child;
     }
@@ -146,8 +144,7 @@ public class CustomRabbitEntity extends RabbitEntity {
     protected void applyDamage(DamageSource source, float amount) {
         super.applyDamage(source, amount);
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
     }
 }

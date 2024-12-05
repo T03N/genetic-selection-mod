@@ -45,9 +45,8 @@ public class CustomCamelEntity extends CamelEntity {
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
     }
 
     private void updateDescription(CustomCamelEntity ent) {
@@ -64,9 +63,9 @@ public class CustomCamelEntity extends CamelEntity {
             player.playSound(SoundEvents.ENTITY_CAMEL_AMBIENT, 1.0F, 1.0F);
 
             // Only display the stats on the server side to avoid duplication
-            if (!this.getWorld().isClient) {
+            if (!this.getWorld().isClient)
                 updateDescription(this);
-            }
+
             return ActionResult.success(this.getWorld().isClient);
         } else {
             return super.interactMob(player, hand);
@@ -81,9 +80,8 @@ public class CustomCamelEntity extends CamelEntity {
 
     @Override
     public CustomCamelEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
-        if (!(mate instanceof CustomCamelEntity)) {
+        if (!(mate instanceof CustomCamelEntity))
             return (CustomCamelEntity) EntityType.CAMEL.create(serverWorld);
-        }
 
         CustomCamelEntity parent1 = this;
         CustomCamelEntity parent2 = (CustomCamelEntity) mate;
@@ -104,9 +102,8 @@ public class CustomCamelEntity extends CamelEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(child);
-        }
 
         return child;
     }
@@ -115,8 +112,7 @@ public class CustomCamelEntity extends CamelEntity {
     protected void applyDamage(DamageSource source, float amount) {
         super.applyDamage(source, amount);
 
-        if (!this.getWorld().isClient) {
+        if (!this.getWorld().isClient)
             updateDescription(this);
-        }
     }
 }
