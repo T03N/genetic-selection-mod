@@ -2,21 +2,17 @@ package com.geneticselection.mobs.Rabbit;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.passive.CowEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.RabbitEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsage;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -61,13 +57,8 @@ public class CustomRabbitEntity extends RabbitEntity {
         updateDescription(this);
     }
 
-    public void setMaxMeat(double maxMeat)
-    {
-        this.MaxMeat = maxMeat;
-    }
-
     private void updateDescription(CustomRabbitEntity ent) {
-        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Hp: " + ent.getHealth() + "\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nRabbit Hide: " + this.rabbitHide));
+        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + ent.getHealth() + "/"+ ent.MaxHp +"\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nRabbit Hide: " + this.rabbitHide));
     }
 
     @Override
@@ -116,7 +107,6 @@ public class CustomRabbitEntity extends RabbitEntity {
         MobAttributes childAttributes = inheritAttributes(attr1, attr2);
 
         double childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
-        double childMaxRabbitHide = (parent1.rabbitHide + parent2.rabbitHide) / 2;
 
         CustomRabbitEntity child = new CustomRabbitEntity(ModEntities.CUSTOM_RABBIT, serverWorld);
 
@@ -141,14 +131,5 @@ public class CustomRabbitEntity extends RabbitEntity {
         if (!this.getWorld().isClient) {
             updateDescription(this);
         }
-    }
-
-    // Getter and Setter for mobAttributes if needed
-    public MobAttributes getMobAttributes() {
-        return this.mobAttributes;
-    }
-
-    public void setMobAttributes(MobAttributes attributes) {
-        this.mobAttributes = attributes;
     }
 }
