@@ -2,9 +2,11 @@ package com.geneticselection.genetics;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
+import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import net.minecraft.entity.Entity;
@@ -115,8 +117,12 @@ public class ChildInheritance {
             attributes.getMaxMeat().ifPresent(pig::setMaxMeat);
         }
 
-        if (entity instanceof CustomRabbitRenderer rabbit) {
+        if (entity instanceof CustomRabbitEntity rabbit) {
             attributes.getMaxMeat().ifPresent(rabbit::setMaxMeat);
+            attributes.getMaxRabbitHide().ifPresent(rabbit::setRabbitHide);
+        }
+
+        if (entity instanceof CustomCamelEntity camel) {
         }
     }
 
