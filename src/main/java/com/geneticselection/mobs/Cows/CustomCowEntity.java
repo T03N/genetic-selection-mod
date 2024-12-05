@@ -22,8 +22,6 @@ import net.minecraft.world.World;
 
 import java.util.Optional;
 
-import static com.geneticselection.genetics.ChildInheritance.*;
-
 public class CustomCowEntity extends CowEntity {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
@@ -135,12 +133,4 @@ public class CustomCowEntity extends CowEntity {
         return child;
     }
 
-    // Getter and Setter for mobAttributes if needed
-    public MobAttributes getMobAttributes() {
-        return this.mobAttributes;
-    }
-
-    public void setMobAttributes(MobAttributes attributes) {
-        this.mobAttributes = attributes;
-    }
 }
