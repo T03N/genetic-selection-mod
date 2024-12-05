@@ -118,12 +118,4 @@ public class CustomDonkeyEntity extends DonkeyEntity {
         return child;
     }
 
-    // Getter and Setter for mobAttributes if needed
-    public MobAttributes getMobAttributes() {
-        return this.mobAttributes;
-    }
-
-    public void setMobAttributes(MobAttributes attributes) {
-        this.mobAttributes = attributes;
-    }
 }
