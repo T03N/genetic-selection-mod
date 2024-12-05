@@ -58,9 +58,9 @@ public class CustomPigEntity extends PigEntity {
 
     private void updateDescription(CustomPigEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-                "Max Hp: " + ent.MaxHp +
-                "Max Speed: " + ent.Speed +
-                "\nMax Meat: " + ent.MaxMeat));
+                "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
+                "\nSpeed: " + String.format("%.3f", ent.Speed) +
+                "\nMax Meat: " + String.format("%.3f", ent.MaxMeat)));
     }
 
     @Override

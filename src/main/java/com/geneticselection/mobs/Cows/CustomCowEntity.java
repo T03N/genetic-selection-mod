@@ -69,10 +69,11 @@ public class CustomCowEntity extends CowEntity {
 
     private void updateDescription(CustomCowEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-                "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp + "\n" +
-                "Meat: " + ent.MinMeat + "-" + ent.MaxMeat + "\n" +
-                "Leather: " + ent.MinLeather + "-" + ent.MaxLeather + "\n" +
-                "Cooldown: " + ent.milkingCooldown));
+                "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
+                "\nSpeed: " + String.format("%.3f", ent.Speed) +
+                "\nMax Meat: " + String.format("%.3f", ent.MaxMeat) +
+                "\nMax Leather: " + String.format("%.3f", ent.MaxLeather)+
+                "\nCooldown: " + ent.milkingCooldown));
     }
 
     public void setMinMeat(double minMeat)

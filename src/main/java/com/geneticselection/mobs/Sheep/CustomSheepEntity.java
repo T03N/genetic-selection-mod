@@ -74,11 +74,12 @@ public class CustomSheepEntity extends SheepEntity {
     }
 
     private void updateDescription(CustomSheepEntity ent) {
+
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-                "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp +
-                "\nSpeed: " + ent.Speed +
-                "\nMax Meat: " + ent.MaxMeat +
-                "\nWool: " + ent.MaxWool));
+                "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
+                "\nSpeed: " + String.format("%.3f", ent.Speed) +
+                "\nMax Meat: " + String.format("%.3f", ent.MaxMeat) +
+                "\nMax Wool: " + String.format("%.3f", ent.MaxWool)));
     }
 
     @Override

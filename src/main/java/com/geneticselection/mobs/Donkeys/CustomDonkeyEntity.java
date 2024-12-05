@@ -79,9 +79,9 @@ public class CustomDonkeyEntity extends DonkeyEntity {
 
     private void updateDescription(CustomDonkeyEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-                "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp + "\n" +
-                "Max Speed: " + ent.Speed +
-                "\nMax Leather: " + ent.MaxLeather));
+                "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
+                "\nSpeed: " + String.format("%.3f", ent.Speed) +
+                "\nMax Leather: " + String.format("%.3f", ent.MaxLeather)));
     }
 
 
