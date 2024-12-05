@@ -104,7 +104,7 @@ public class CustomSheepEntity extends SheepEntity {
         if (!this.getWorld().isClient) {
             // Calculate the amount of meat to drop between MinMeat and MaxMeat
             int meatAmount = (int) (MaxMeat);
-            this.dropStack(new ItemStack(Items.RABBIT, meatAmount));
+            this.dropStack(new ItemStack(Items.MUTTON, meatAmount));
 
             // Calculate the amount of leather to drop between MinLeather and MaxLeather
             int woolAmount = (int)(MaxWool);
