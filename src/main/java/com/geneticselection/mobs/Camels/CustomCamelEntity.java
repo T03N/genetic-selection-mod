@@ -11,7 +11,6 @@ import net.minecraft.entity.passive.CamelEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -96,14 +95,5 @@ public class CustomCamelEntity extends CamelEntity {
         influenceGlobalAttributes(child.getType());
 
         return child;
-    }
-
-    // Getter and Setter for mobAttributes if needed
-    public MobAttributes getMobAttributes() {
-        return this.mobAttributes;
-    }
-
-    public void setMobAttributes(MobAttributes attributes) {
-        this.mobAttributes = attributes;
     }
 }
