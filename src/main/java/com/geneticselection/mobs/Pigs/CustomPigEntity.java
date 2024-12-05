@@ -47,6 +47,11 @@ public class CustomPigEntity extends PigEntity {
         });
     }
 
+    public void setMaxMeat(double maxMeat)
+    {
+        this.MaxMeat = maxMeat;
+    }
+
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);

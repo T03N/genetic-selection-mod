@@ -3,6 +3,10 @@ package com.geneticselection.genetics;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
+import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
+import com.geneticselection.mobs.Pigs.CustomPigEntity;
+import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
+import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -98,9 +102,22 @@ public class ChildInheritance {
             attributes.getMaxLeather().ifPresent(cow::setMaxLeather);
         }
 
-/*        if (entity instanceof CustomSheepEntity sheep) {
-            attributes.getWoolDrops().ifPresent(woolDrops -> sheep.setWoolDrops(woolDrops));
-        }*/
+        if (entity instanceof CustomSheepEntity sheep) {
+            attributes.getMaxMeat().ifPresent(sheep::setMaxMeat);
+            attributes.getMaxWool().ifPresent(sheep::setMaxWool);
+        }
+
+        if (entity instanceof CustomDonkeyEntity donkey) {
+            attributes.getMaxLeather().ifPresent(donkey::setMaxLeather);
+        }
+
+        if (entity instanceof CustomPigEntity pig) {
+            attributes.getMaxMeat().ifPresent(pig::setMaxMeat);
+        }
+
+        if (entity instanceof CustomRabbitRenderer rabbit) {
+            attributes.getMaxMeat().ifPresent(rabbit::setMaxMeat);
+        }
     }
 
     public static void influenceGlobalAttributes(EntityType<?> offspring) {
