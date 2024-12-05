@@ -2,6 +2,7 @@ package com.geneticselection.mobs.Donkeys;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
@@ -49,6 +50,13 @@ public class CustomDonkeyEntity extends DonkeyEntity {
         this.mobAttributes.getMaxLeather().ifPresent(maxLeather -> {
             this.MaxLeather = maxLeather;
         });
+
+        updateDescription(this);
+    }
+
+    private void updateDescription(CustomDonkeyEntity ent) {
+        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
+                "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp + "\nMax Leather: " + this.MaxLeather));
     }
 
     @Override
@@ -60,8 +68,7 @@ public class CustomDonkeyEntity extends DonkeyEntity {
 
             // Only display the stats on the server side to avoid duplication
             if (!this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
-                        "Max Hp: " + this.MaxHp + "\nMax Leather: " + this.MaxLeather));
+                updateDescription(this);
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
@@ -108,7 +115,18 @@ public class CustomDonkeyEntity extends DonkeyEntity {
 
         influenceGlobalAttributes(child.getType());
 
+        updateDescription(child);
+
         return child;
+    }
+
+    @Override
+    protected void applyDamage(DamageSource source, float amount) {
+        super.applyDamage(source, amount);
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
 }
