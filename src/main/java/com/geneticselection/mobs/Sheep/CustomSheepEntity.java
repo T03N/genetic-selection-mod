@@ -72,7 +72,11 @@ public class CustomSheepEntity extends SheepEntity {
     }
 
     private void updateDescription(CustomSheepEntity ent) {
-        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" + "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp + "\nSpeed: " + ent.Speed + "\nMax Meat: " + ent.MaxMeat + "\nWool: " + ent.MaxWool));
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
+                "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp +
+                "\nSpeed: " + ent.Speed +
+                "\nMax Meat: " + ent.MaxMeat +
+                "\nWool: " + ent.MaxWool));
     }
 
     @Override

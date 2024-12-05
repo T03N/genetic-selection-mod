@@ -68,7 +68,11 @@ public class CustomRabbitEntity extends RabbitEntity {
     }
 
     private void updateDescription(CustomRabbitEntity ent) {
-        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + ent.getHealth() + "/"+ ent.MaxHp +"\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nRabbit Hide: " + this.rabbitHide));
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
+                "Max Hp: " + ent.getHealth() + "/"+ ent.MaxHp +
+                "\nSpeed: " + ent.Speed +
+                "\nMax Meat: " + ent.MaxMeat +
+                "\nRabbit Hide: " + ent.rabbitHide));
     }
 
     @Override
