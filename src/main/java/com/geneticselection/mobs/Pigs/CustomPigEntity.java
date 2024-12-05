@@ -28,7 +28,6 @@ public class CustomPigEntity extends PigEntity {
     private MobAttributes mobAttributes;
     private double MaxHp;
     private double Speed;
-    private double MinMeat;
     private double MaxMeat;
 
     public CustomPigEntity(EntityType<? extends PigEntity> entityType, World world) {
