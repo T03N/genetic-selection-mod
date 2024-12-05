@@ -16,6 +16,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.Registries;
 
 public class ModEntities{
+    // Register the custom cow entity
     public static final EntityType<CustomCowEntity> CUSTOM_COW = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_cow"),
@@ -23,6 +24,8 @@ public class ModEntities{
                     .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
                     .build()
     );
+
+    // Register the custom sheep entity
     public static final EntityType<CustomSheepEntity> CUSTOM_SHEEP = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_sheep"),
@@ -31,6 +34,7 @@ public class ModEntities{
                     .build()
     );
 
+    // Register the custom pig entity
     public static final EntityType<CustomPigEntity> CUSTOM_PIG = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_pig"),
@@ -38,6 +42,8 @@ public class ModEntities{
                     .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
                     .build()
     );
+
+    // Register the custom rabbit entity
     public static final EntityType<CustomRabbitEntity> CUSTOM_RABBIT = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_rabbit"),
@@ -45,6 +51,8 @@ public class ModEntities{
                     .dimensions(EntityDimensions.fixed(0.5F, 0.4F))
                     .build()
     );
+
+    // Register the custom donkey entity
     public static final EntityType<CustomDonkeyEntity> CUSTOM_DONKEY = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_donkey"),
@@ -53,6 +61,7 @@ public class ModEntities{
                     .build()
     );
 
+    // Register the custom camel entity
     public static final EntityType<CustomCamelEntity> CUSTOM_CAMEL = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_camel"),
@@ -60,5 +69,4 @@ public class ModEntities{
                     .dimensions(EntityDimensions.fixed(1.0F, 2.0F))
                     .build()
     );
-    //register new mobs here by using the above format
 }
