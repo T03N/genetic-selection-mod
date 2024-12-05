@@ -51,11 +51,6 @@ public class CustomDonkeyEntity extends DonkeyEntity {
         });
     }
 
-    public void setMaxLeather(double maxLeather)
-    {
-        this.MaxLeather = maxLeather;
-    }
-
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
@@ -66,9 +61,7 @@ public class CustomDonkeyEntity extends DonkeyEntity {
             // Only display the stats on the server side to avoid duplication
             if (!this.getWorld().isClient) {
                 DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
-                        "Max Hp: " + String.format("%.4f", this.MaxHp) + "\n" +
-                        "Speed: " + String.format("%.4f", this.Speed) + "\n" +
-                        "Max Leather: " + String.format("%.4f", this.MaxLeather)));
+                        "Max Hp: " + this.MaxHp + "\nMax Leather: " + this.MaxLeather));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {

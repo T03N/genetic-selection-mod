@@ -66,11 +66,6 @@ public class CustomSheepEntity extends SheepEntity {
         this.MaxMeat = maxMeat;
     }
 
-    public void setMaxWool(double maxWool)
-    {
-        this.MaxWool = maxWool;
-    }
-
     private void updateDescription(CustomSheepEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" + "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp + "\nSpeed: " + ent.Speed + "\nMax Meat: " + ent.MaxMeat + "\nWool: " + ent.MaxWool));
     }
