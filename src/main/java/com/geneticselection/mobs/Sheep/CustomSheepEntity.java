@@ -58,7 +58,10 @@ public class CustomSheepEntity extends SheepEntity {
         this.mobAttributes.getMaxWool().ifPresent(MaxWool -> {
             this.MaxWool = MaxWool;
         });
-        updateDescription(this);
+
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
     public void setMaxMeat(double maxMeat)
@@ -139,7 +142,9 @@ public class CustomSheepEntity extends SheepEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        updateDescription(child);
+        if (!this.getWorld().isClient) {
+            updateDescription(child);
+        }
 
         return child;
     }

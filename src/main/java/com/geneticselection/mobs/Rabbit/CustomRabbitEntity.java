@@ -54,7 +54,9 @@ public class CustomRabbitEntity extends RabbitEntity {
             this.rabbitHide = maxRabbitHide;
         });
 
-        updateDescription(this);
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
     public void setMaxMeat(double maxMeat)
@@ -133,7 +135,9 @@ public class CustomRabbitEntity extends RabbitEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        updateDescription(child);
+        if (!this.getWorld().isClient) {
+            updateDescription(child);
+        }
 
         return child;
     }

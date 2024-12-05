@@ -45,7 +45,9 @@ public class CustomCamelEntity extends CamelEntity {
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
 
-        updateDescription(this);
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
     private void updateDescription(CustomCamelEntity ent) {
@@ -102,7 +104,9 @@ public class CustomCamelEntity extends CamelEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        updateDescription(child);
+        if (!this.getWorld().isClient) {
+            updateDescription(child);
+        }
 
         return child;
     }

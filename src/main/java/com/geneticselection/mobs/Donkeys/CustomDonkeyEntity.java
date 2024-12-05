@@ -51,7 +51,9 @@ public class CustomDonkeyEntity extends DonkeyEntity {
             this.MaxLeather = maxLeather;
         });
 
-        updateDescription(this);
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
     public void setMaxLeather(double maxLeather)
@@ -122,7 +124,9 @@ public class CustomDonkeyEntity extends DonkeyEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        updateDescription(child);
+        if (!this.getWorld().isClient) {
+            updateDescription(child);
+        }
 
         return child;
     }

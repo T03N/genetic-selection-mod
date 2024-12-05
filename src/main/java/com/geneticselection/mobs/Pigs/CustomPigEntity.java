@@ -47,7 +47,9 @@ public class CustomPigEntity extends PigEntity {
             this.MaxMeat = maxMeat;
         });
 
-        updateDescription(this);
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
+        }
     }
 
     public void setMaxMeat(double maxMeat)
@@ -119,7 +121,9 @@ public class CustomPigEntity extends PigEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        updateDescription(child);
+        if (!this.getWorld().isClient) {
+            updateDescription(child);
+        }
 
         return child;
     }
