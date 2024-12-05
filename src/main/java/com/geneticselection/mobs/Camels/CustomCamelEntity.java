@@ -49,7 +49,7 @@ public class CustomCamelEntity extends CamelEntity {
     }
 
     private void updateDescription(CustomCamelEntity ent) {
-        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp +
                 "\nSpeed: " + ent.Speed));
     }
