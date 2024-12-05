@@ -57,6 +57,16 @@ public class CustomRabbitEntity extends RabbitEntity {
         updateDescription(this);
     }
 
+    public void setMaxMeat(double maxMeat)
+    {
+        this.MaxMeat = maxMeat;
+    }
+
+    public void setRabbitHide(double rabbitHide)
+    {
+        this.rabbitHide = rabbitHide;
+    }
+
     private void updateDescription(CustomRabbitEntity ent) {
         DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + ent.getHealth() + "/"+ ent.MaxHp +"\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nRabbit Hide: " + this.rabbitHide));
     }
