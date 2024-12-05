@@ -10,34 +10,33 @@ import java.util.Map;
 import java.util.Optional;
 
 public class GlobalAttributesManager {
+    // Stores all the attributes for all mobs
     private static final Map<EntityType<?>, MobAttributes> globalAttributes = new HashMap<>();
 
+    // Initialize default attributes
     public static void initialize() {
-        // Initialize default attributes for cows
         globalAttributes.put(EntityType.COW, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.of(2.0), null, null));
         globalAttributes.put(EntityType.SHEEP, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.empty(), Optional.of(2.0), Optional.empty()));
         globalAttributes.put(EntityType.RABBIT, new MobAttributes(2.2, 10.0, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(2.0)));
         globalAttributes.put(EntityType.PIG, new MobAttributes(0.2, 8.0, Optional.empty(), null, null, null));
         globalAttributes.put(EntityType.DONKEY, new MobAttributes(0.2, 15.0, null, Optional.empty(), null, null));
         globalAttributes.put(EntityType.CAMEL, new MobAttributes(0.175, 30.0, null, null, null, null));
-
-
     }
 
+    // Default values for all mobs
     public static MobAttributes getAttributes(EntityType<?> type) {
         return globalAttributes.getOrDefault(type, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.of(2.0), Optional.of(1.0), Optional.of(2.0)));
     }
 
     public static void updateGlobalAttributes(EntityType<?> type, MobAttributes newAttributes) {
         globalAttributes.put(type, newAttributes);
-        // Optionally, mark data as dirty for saving
     }
 
-    // Implement save and load methods using NBT for persistence
+    // Implement save and load methods using NBT for persistence.
+    // This is used to save and load the attributes from the world data, only keeping everything within the world and saving the data.
     public static void save(NbtCompound tag) {
         for (Map.Entry<EntityType<?>, MobAttributes> entry : globalAttributes.entrySet()) {
             NbtCompound mobTag = new NbtCompound();
-
             // Save basic attributes
             mobTag.putDouble("movementSpeed", entry.getValue().getMovementSpeed());
             mobTag.putDouble("maxHealth", entry.getValue().getMaxHealth());
@@ -50,19 +49,17 @@ public class GlobalAttributesManager {
 
             // Save entity type id
             Identifier id = Registries.ENTITY_TYPE.getId(entry.getKey());
-            if (id != null) {
+            if (id != null)
                 tag.put(id.toString(), mobTag);
-            }
         }
     }
 
     public static void load(NbtCompound tag) {
-        globalAttributes.clear(); // Clear existing data before loading
+        globalAttributes.clear();
         for (String key : tag.getKeys()) {
             Identifier id = Identifier.tryParse(key);
-            if (id == null) {
-                continue; // Skip invalid identifiers
-            }
+            if (id == null)
+                continue;
             EntityType<?> type = Registries.ENTITY_TYPE.get(id);
             if (type != null) {
                 NbtCompound mobTag = tag.getCompound(key);

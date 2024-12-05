@@ -1,5 +1,7 @@
 package com.geneticselection;
 
+import com.geneticselection.attributes.GlobalAttributesManager;
+import com.geneticselection.attributes.GlobalAttributesSavedData;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
@@ -11,9 +13,11 @@ import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.*;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.Heightmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -211,6 +215,10 @@ public class GeneticSelection implements ModInitializer {
 		rabbitMethod();
 		donkeyMethod();
 		camelMethod();
+		GlobalAttributesManager.initialize();
+		ServerWorldEvents.LOAD.register((server, world) -> {
+			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads
+		});
 		LOGGER.info("Hello Fabric world!");
 	}
 }

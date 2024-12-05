@@ -7,8 +7,7 @@ import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
 
 public class GlobalAttributesSavedData extends PersistentState {
-    private static final String KEY = "geneticselection";
-    private final MobAttributesManagerData data = new MobAttributesManagerData();
+    private static final String KEY = "genetic-selection";
 
     public GlobalAttributesSavedData() {
         super();
@@ -46,8 +45,4 @@ public class GlobalAttributesSavedData extends PersistentState {
         GlobalAttributesSavedData data = fromWorld(world);
         data.markDirty();
     }
-}
-
-class MobAttributesManagerData {
-    // Placeholder for future expansion if needed
 }
