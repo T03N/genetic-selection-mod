@@ -1,5 +1,6 @@
 package com.geneticselection;
 
+import com.geneticselection.mobs.Camels.CustomCamelRenderer;
 import com.geneticselection.mobs.Cows.CustomCowRenderer;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyRenderer;
 import com.geneticselection.mobs.ModEntities;
@@ -44,6 +45,11 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_DONKEY, DonkeyEntityModel::getTexturedModelData);
     }
 
+    public void camelMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_CAMEL, CustomCamelRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_CAMEL, CamelEntityModel::getTexturedModelData);
+    }
+
     @Override
     public void onInitializeClient() {
         cowMethod();
@@ -51,5 +57,6 @@ public class GeneticSelectionClient implements ClientModInitializer {
         pigMethod();
         rabbitMethod();
         donkeyMethod();
+        camelMethod();
     }
 }

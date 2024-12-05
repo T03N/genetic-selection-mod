@@ -1,6 +1,7 @@
 package com.geneticselection.mobs;
 
 import com.geneticselection.GeneticSelection;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
@@ -49,6 +50,14 @@ public class ModEntities{
             Identifier.of(GeneticSelection.MOD_ID, "custom_donkey"),
             FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomDonkeyEntity::new)
                     .dimensions(EntityDimensions.fixed(0.9F, 1.95F))
+                    .build()
+    );
+
+    public static final EntityType<CustomCamelEntity> CUSTOM_CAMEL = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_camel"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomCamelEntity::new)
+                    .dimensions(EntityDimensions.fixed(1.0F, 2.0F))
                     .build()
     );
     //register new mobs here by using the above format

@@ -1,5 +1,6 @@
 package com.geneticselection;
 
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
 import com.geneticselection.mobs.ModEntities;
@@ -173,6 +174,34 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void camelMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_CAMEL, CustomCamelEntity.createCamelAttributes());
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.CAMEL,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_CAMEL,
+				20, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_CAMEL,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.SAND) // Only spawn on sand blocks (sand or red sand)
+		);
+	}
+
 
 	@Override
 	public void onInitialize() {
@@ -185,6 +214,7 @@ public class GeneticSelection implements ModInitializer {
 		pigMethod();
 		rabbitMethod();
 		donkeyMethod();
+		camelMethod();
 		LOGGER.info("Hello Fabric world!");
 	}
 }

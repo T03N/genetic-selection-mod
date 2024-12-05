@@ -18,7 +18,8 @@ public class GlobalAttributesManager {
         globalAttributes.put(EntityType.SHEEP, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.empty(), Optional.of(2.0), Optional.empty()));
         globalAttributes.put(EntityType.RABBIT, new MobAttributes(2.2, 10.0, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(2.0)));
         globalAttributes.put(EntityType.PIG, new MobAttributes(0.2, 8.0, Optional.empty(), null, null, null));
-        globalAttributes.put(EntityType.DONKEY, new MobAttributes(0.175, 15.0, null, Optional.empty(), null, null));
+        globalAttributes.put(EntityType.DONKEY, new MobAttributes(0.2, 15.0, null, Optional.empty(), null, null));
+        globalAttributes.put(EntityType.CAMEL, new MobAttributes(0.175, 30.0, null, null, null, null));
 
 
     }
