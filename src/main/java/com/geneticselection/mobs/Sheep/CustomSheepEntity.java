@@ -2,17 +2,22 @@ package com.geneticselection.mobs.Sheep;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.passive.CowEntity;
 import net.minecraft.entity.passive.PassiveEntity;
+import net.minecraft.entity.passive.RabbitEntity;
 import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsage;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -54,6 +59,11 @@ public class CustomSheepEntity extends SheepEntity {
             this.MaxWool = MaxWool;
         });
         updateDescription(this);
+    }
+
+    public void setMaxMeat(double maxMeat)
+    {
+        this.MaxMeat = maxMeat;
     }
 
     private void updateDescription(CustomSheepEntity ent) {
@@ -132,5 +142,14 @@ public class CustomSheepEntity extends SheepEntity {
         if (!this.getWorld().isClient) {
             updateDescription(this);
         }
+    }
+
+    // Getter and Setter for mobAttributes if needed
+    public MobAttributes getMobAttributes() {
+        return this.mobAttributes;
+    }
+
+    public void setMobAttributes(MobAttributes attributes) {
+        this.mobAttributes = attributes;
     }
 }

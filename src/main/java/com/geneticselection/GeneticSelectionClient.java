@@ -22,9 +22,7 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_COW, CowEntityModel::getTexturedModelData);
     }
     public void sheepMethod(){
-        //register your cow
         EntityRendererRegistry.register(ModEntities.CUSTOM_SHEEP, CustomSheepRenderer::new);
-        //register your model layer for your cow
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_SHEEP, SheepEntityModel::getTexturedModelData);
     }
 

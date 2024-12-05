@@ -2,7 +2,6 @@ package com.geneticselection.mobs.Pigs;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
@@ -46,12 +45,6 @@ public class CustomPigEntity extends PigEntity {
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
         });
-        updateDescription(this);
-    }
-
-    private void updateDescription(CustomPigEntity ent) {
-        DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
-                "Max Hp: " + ent.getHealth() + "/" + ent.MaxHp + "\nMax Meat: " + this.MaxMeat));
     }
 
     @Override
@@ -64,7 +57,8 @@ public class CustomPigEntity extends PigEntity {
 
             // Only display the stats on the server side to avoid duplication
             if (!this.getWorld().isClient) {
-                updateDescription(this);
+                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
+                        "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
@@ -111,17 +105,7 @@ public class CustomPigEntity extends PigEntity {
 
         influenceGlobalAttributes(child.getType());
 
-        updateDescription(child);
-
         return child;
-    }
-
-    protected void applyDamage(DamageSource source, float amount) {
-        super.applyDamage(source, amount);
-
-        if (!this.getWorld().isClient) {
-            updateDescription(this);
-        }
     }
 
 }

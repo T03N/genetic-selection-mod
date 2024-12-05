@@ -22,18 +22,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+// Separate Mod to Render Entity Descriptions
 @Environment(EnvType.CLIENT)
+// TODO: Add support for multiple renders on different sides of the entity
 public class DescriptionRenderer {
+    // Hashmap to store entity descriptions
     private static final Map<UUID, Text> descriptions = new HashMap<>();
 
+    // Set entity description from entity class
     public static void setDescription(Entity entity, Text text) {
         descriptions.put(entity.getUuid(), text);
     }
 
+    // Get entity description from entity class
     public static Text getDescription(Entity entity) {
         return descriptions.getOrDefault(entity.getUuid(), Text.literal(""));
     }
 
+    // Main render method, based on Minecraft's EntityRenderer plus modifications to clone name tag to be description
     public static <T extends Entity> void renderDescription(
             T entity,
             MatrixStack matrices,
