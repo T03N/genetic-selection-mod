@@ -56,7 +56,8 @@ public class CustomCamelEntity extends CamelEntity {
             // Only display the stats on the server side to avoid duplication
             if (!this.getWorld().isClient) {
                 DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
-                        "Max Hp: " + this.MaxHp));
+                        "Max Hp: " + String.format("%.4f", this.MaxHp) + "\n" +
+                        "Speed: " + String.format("%.4f", this.Speed) + "\n"));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {

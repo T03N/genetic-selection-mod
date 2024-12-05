@@ -31,6 +31,7 @@ public class CustomRabbitEntity extends RabbitEntity {
     private double Speed;
     private double MaxMeat;
     private double rabbitHide;
+    private double jumpHeight;
 
     public CustomRabbitEntity(EntityType<? extends RabbitEntity> entityType, World world) {
         super(entityType, world);
@@ -58,11 +59,6 @@ public class CustomRabbitEntity extends RabbitEntity {
         });
     }
 
-    public void setMaxMeat(double maxMeat)
-    {
-        this.MaxMeat = maxMeat;
-    }
-
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
@@ -70,7 +66,11 @@ public class CustomRabbitEntity extends RabbitEntity {
         if (itemStack.isEmpty()) { // Check if the hand is empty
             // Only display the stats on the server side to avoid duplication
             if (this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nRabbit Hide: " + this.rabbitHide));
+                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
+                        "Max Hp: " + String.format("%.4f", this.MaxHp) + "\n" +
+                        "Speed: " + String.format("%.4f", this.Speed) + "\n" +
+                        "Max Meat: " + String.format("%.4f", this.MaxMeat) + "\n" +
+                        "Rabbit Hide: " + String.format("%.4f", this.rabbitHide)));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
@@ -123,14 +123,5 @@ public class CustomRabbitEntity extends RabbitEntity {
         influenceGlobalAttributes(child.getType());
 
         return child;
-    }
-
-    // Getter and Setter for mobAttributes if needed
-    public MobAttributes getMobAttributes() {
-        return this.mobAttributes;
-    }
-
-    public void setMobAttributes(MobAttributes attributes) {
-        this.mobAttributes = attributes;
     }
 }

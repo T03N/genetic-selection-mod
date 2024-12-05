@@ -66,7 +66,9 @@ public class CustomPigEntity extends PigEntity {
             // Only display the stats on the server side to avoid duplication
             if (!this.getWorld().isClient) {
                 DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
-                        "Max Hp: " + this.MaxHp + "\nMax Meat: " + this.MaxMeat));
+                        "Max Hp: " + String.format("%.4f", this.MaxHp) + "\n" +
+                        "Speed: " + String.format("%.4f", this.Speed) + "\n" +
+                        "Max Meat: " + String.format("%.4f", this.MaxMeat) + "\n"));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {

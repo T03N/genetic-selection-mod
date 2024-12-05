@@ -71,7 +71,11 @@ public class CustomSheepEntity extends SheepEntity {
         if (itemStack.isEmpty()) { // Check if the hand is empty
             // Only display the stats on the server side to avoid duplication
             if (this.getWorld().isClient) {
-                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" + "Max Hp: " + this.MaxHp + "\nSpeed: " + this.Speed + "\nMax Meat: " + this.MaxMeat + "\nWool: " + this.MaxWool));
+                DescriptionRenderer.setDescription(this, Text.of("Attributes\n" +
+                        "Max Hp: " + String.format("%.4f", this.MaxHp) + "\n" +
+                        "Speed: " + String.format("%.4f", this.Speed) + "\n" +
+                        "Max Meat: " + String.format("%.4f", this.MaxMeat) + "\n" +
+                        "Wool: " + String.format("%.4f", this.MaxWool)));
             }
             return ActionResult.success(this.getWorld().isClient);
         } else {
