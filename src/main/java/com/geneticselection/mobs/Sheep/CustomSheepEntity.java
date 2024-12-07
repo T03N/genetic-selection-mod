@@ -44,7 +44,7 @@ public class CustomSheepEntity extends SheepEntity {
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double wool = global.getMaxRabbitHide().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, Optional.of(meat), Optional.empty(), Optional.of(wool), Optional.empty());
+            this.mobAttributes = new MobAttributes(speed, health, Optional.of(meat), Optional.empty(), Optional.of(wool), Optional.empty(), Optional.empty());
         }
 
         // Apply attributes to the entity

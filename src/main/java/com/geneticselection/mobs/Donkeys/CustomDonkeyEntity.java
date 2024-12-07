@@ -39,7 +39,7 @@ public class CustomDonkeyEntity extends DonkeyEntity {
             double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
             double leather = global.getMaxLeather().orElse(0.0) * (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, Optional.empty(), Optional.of(leather), Optional.empty(), Optional.empty());
+            this.mobAttributes = new MobAttributes(speed, health, Optional.empty(), Optional.of(leather), Optional.empty(), Optional.empty(),Optional.empty());
         }
 
         // Apply attributes to the entity

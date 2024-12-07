@@ -8,15 +8,17 @@ public class MobAttributes {
     private Optional<Double> maxLeather = Optional.empty();
     private Optional<Double> maxWool = Optional.empty();
     private Optional<Double> maxRabbitHide = Optional.empty();
+    private Optional<Double> maxFeathers = Optional.empty();
 
     // Constructor with optional max values for attributes
-    public MobAttributes(double movementSpeed, double maxHealth, Optional<Double> maxMeat, Optional<Double> maxLeather, Optional<Double> maxWool, Optional<Double> maxRabbitHide) {
+    public MobAttributes(double movementSpeed, double maxHealth, Optional<Double> maxMeat, Optional<Double> maxLeather, Optional<Double> maxWool, Optional<Double> maxRabbitHide, Optional<Double> maxFeathers) {
         this.movementSpeed = movementSpeed;
         this.maxHealth = maxHealth;
         this.maxMeat = maxMeat;
         this.maxLeather = maxLeather;
         this.maxWool = maxWool;
         this.maxRabbitHide = maxRabbitHide;
+        this.maxFeathers = maxFeathers;
     }
 
     public double getMovementSpeed() {
@@ -67,4 +69,14 @@ public class MobAttributes {
     public void setMaxRabbitHide(double maxHide) {
         this.maxRabbitHide = Optional.of(maxHide);
     }
+
+    public Optional<Double> getMaxFeathers() {
+        return maxFeathers;
+    }
+
+    public void setMaxFeathers(double maxFeathers) {
+        this.maxFeathers = Optional.of(maxFeathers);
+    }
+
+
 }

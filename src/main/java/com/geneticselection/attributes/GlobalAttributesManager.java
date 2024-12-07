@@ -15,17 +15,19 @@ public class GlobalAttributesManager {
 
     // Initialize default attributes
     public static void initialize() {
-        globalAttributes.put(EntityType.COW, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.of(2.0), null, null));
-        globalAttributes.put(EntityType.SHEEP, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.empty(), Optional.of(2.0), Optional.empty()));
-        globalAttributes.put(EntityType.RABBIT, new MobAttributes(2.2, 10.0, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(2.0)));
-        globalAttributes.put(EntityType.PIG, new MobAttributes(0.2, 8.0, Optional.empty(), null, null, null));
-        globalAttributes.put(EntityType.DONKEY, new MobAttributes(0.2, 15.0, null, Optional.empty(), null, null));
-        globalAttributes.put(EntityType.CAMEL, new MobAttributes(0.175, 30.0, null, null, null, null));
+        globalAttributes.put(EntityType.COW, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.of(2.0), null, null, Optional.empty()));
+        globalAttributes.put(EntityType.SHEEP, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.empty(), Optional.of(2.0), Optional.empty(), Optional.empty()));
+        globalAttributes.put(EntityType.RABBIT, new MobAttributes(2.2, 10.0, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(2.0), Optional.empty()));
+        globalAttributes.put(EntityType.PIG, new MobAttributes(0.2, 8.0, Optional.empty(), null, null, null, Optional.empty()));
+        globalAttributes.put(EntityType.DONKEY, new MobAttributes(0.2, 15.0, null, Optional.empty(), null, null, Optional.empty()));
+        globalAttributes.put(EntityType.CAMEL, new MobAttributes(0.175, 30.0, null, null, null, null, Optional.empty()));
+        globalAttributes.put(EntityType.CHICKEN, new MobAttributes(0.175, 3, null, null, null, null, Optional.of(2.0)));
+
     }
 
     // Default values for all mobs
     public static MobAttributes getAttributes(EntityType<?> type) {
-        return globalAttributes.getOrDefault(type, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.of(2.0), Optional.of(1.0), Optional.of(2.0)));
+        return globalAttributes.getOrDefault(type, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.of(2.0), Optional.of(1.0), Optional.of(2.0), Optional.of(2.0)));
     }
 
     public static void updateGlobalAttributes(EntityType<?> type, MobAttributes newAttributes) {
@@ -46,6 +48,7 @@ public class GlobalAttributesManager {
             entry.getValue().getMaxLeather().ifPresent(maxLeather -> mobTag.putDouble("maxLeather", maxLeather));
             entry.getValue().getMaxWool().ifPresent(maxWool -> mobTag.putDouble("maxWool", maxWool));
             entry.getValue().getMaxRabbitHide().ifPresent(maxRabbitHide -> mobTag.putDouble("maxRabbitHide", maxRabbitHide));
+            entry.getValue().getMaxFeathers().ifPresent(maxFeathers -> mobTag.putDouble("maxFeathers", maxFeathers));
 
             // Save entity type id
             Identifier id = Registries.ENTITY_TYPE.getId(entry.getKey());
@@ -73,6 +76,7 @@ public class GlobalAttributesManager {
                 Optional<Double> maxLeather = mobTag.contains("maxLeather") ? Optional.of(mobTag.getDouble("maxLeather")) : Optional.empty();
                 Optional<Double> maxWool = mobTag.contains("maxWool") ? Optional.of(mobTag.getDouble("maxWool")) : Optional.empty();
                 Optional<Double> maxRabbitHide = mobTag.contains("maxRabbitHide") ? Optional.of(mobTag.getDouble("maxRabbitHide")) : Optional.empty();
+                Optional<Double> maxFeathers = mobTag.contains("maxFeathers") ? Optional.of(mobTag.getDouble("maxFeathers")) : Optional.empty();
 
                 // Create MobAttributes with loaded data
                 MobAttributes attributes = new MobAttributes(
@@ -81,7 +85,8 @@ public class GlobalAttributesManager {
                         maxMeat,
                         maxLeather,
                         maxWool,
-                        maxRabbitHide
+                        maxRabbitHide,
+                        maxFeathers
                 );
 
                 // Store loaded attributes in globalAttributes

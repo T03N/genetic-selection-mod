@@ -7,6 +7,7 @@ import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
+import com.geneticselection.mobs.Chickens.CustomChickenEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
@@ -66,6 +67,14 @@ public class ModEntities{
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_camel"),
             FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomCamelEntity::new)
+                    .dimensions(EntityDimensions.fixed(1.0F, 2.0F))
+                    .build()
+    );
+    // Register the custom camel entity
+    public static final EntityType<CustomChickenEntity> CUSTOM_CHICKEN = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_chicken"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomChickenEntity::new)
                     .dimensions(EntityDimensions.fixed(1.0F, 2.0F))
                     .build()
     );

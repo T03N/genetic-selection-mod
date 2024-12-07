@@ -39,7 +39,7 @@ public class CustomRabbitEntity extends RabbitEntity {
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double hide = global.getMaxRabbitHide().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.of(hide));
+            this.mobAttributes = new MobAttributes(speed, health, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.of(hide), Optional.empty());
         }
 
         // Apply attributes to the entity

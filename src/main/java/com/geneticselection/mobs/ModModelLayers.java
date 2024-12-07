@@ -18,4 +18,7 @@ public class ModModelLayers {
     public static final EntityModelLayer CUSTOM_DONKEY = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_donkey"), "main");
 
     public static final EntityModelLayer CUSTOM_CAMEL = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_camel"), "main");
+
+    public static final EntityModelLayer CUSTOM_CHICKEN = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_chicken"), "main");
+
 }
