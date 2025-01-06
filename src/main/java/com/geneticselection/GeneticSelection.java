@@ -18,39 +18,6 @@ public class GeneticSelection implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("Initializing Genetic Selection Mod");
 
-		// Initialize global attributes
-		GlobalAttributesManager.initialize();
-
-		// Register genetics for mobs
-		CowGeneticsInitializer.initialize();
-		// TODO: Initialize other mob genetics similarly
-
-		// Register individual attribute handlers
-		MobIndividualAttributes.register();
-
-		// Register world load and save events for PersistentState
-		ServerWorldEvents.LOAD.register(this::onWorldLoad);
-		ServerWorldEvents.UNLOAD.register(this::onWorldUnload);
-
-		LOGGER.info("Genetic Selection Mod Initialized");
-	}
-
-	private void onWorldLoad(MinecraftServer minecraftServer, ServerWorld world) {
-		if (!world.isClient()) {
-			LOGGER.info("Loading Global Attributes for world: {}", world.getRegistryKey().getValue());
-			GlobalAttributesSavedData data = GlobalAttributesSavedData.fromWorld(world);
-			if (data != null) {
-				data.markDirty(); // Ensure data is flagged for saving
-			}
-		}
-	}
-
-	private void onWorldUnload(MinecraftServer minecraftServer, ServerWorld world) {
-		if (!world.isClient()) {
-			LOGGER.info("Saving Global Attributes for world: {}", world.getRegistryKey().getValue());
-			GlobalAttributesSavedData.save(world);
-		}
 	}
 }
