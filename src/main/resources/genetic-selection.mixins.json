@@ -3,8 +3,7 @@
 	"package": "com.geneticselection.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"AnimalEntityMixin",
-		"AnimalEntityGeneticsMixin"
+		"",
 	],
 	"injectors": {
 		"defaultRequire": 1
