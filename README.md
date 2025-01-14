@@ -5,21 +5,18 @@ This Minecraft mod enhances the game by providing a more lifelike simulation of 
 This mod uses Minecraft version 1.21.1\
 If you want to contribute to the mod, use method 1.
 
-### **Method 1: Running through Intellij IDEA**
-1) Download a [JDK](https://adoptium.net/temurin/releases/?package=jdk&arch=any) of version 21-LT that matches your system.
-
-2) Use [IntelliJ IDEA](https://www.jetbrains.com/idea/), the community edition is free to use.
-
+### **Running the Project**
+1) Download the [Java JDK](https://adoptium.net/temurin/releases/?package=jdk&arch=any) of version 21-LT that matches your system.
+2) Make sure to have a java compilier. We suggest [IntelliJ IDEA](https://www.jetbrains.com/idea/), the community edition is free to use.
 3) Clone the repository
 4) Open the repository in IntelliJ
-5) Ensure the settings are correct
-6) Run through the Minecraft Client
+5) Run *Minecraft Client* through Gradle
 
 ##### *Video tutorial to run a Minecraft fabric mod in Intellij IDEA:*
 [Fabric Modding Tutorial - Minecraft 1.21: Getting Started | #1](https://youtu.be/oU8-qV-ZtUY?list=PLKGarocXCE1H_HxOYihQMq0mlpqiUJj4L)
 
-### **Method 2: Running through Fabric**
-If you already have Minecraft and/or you just want to play with this mod, you can install fabric and run mods through it.
+### **To Play the Mod**
+This mod requires Fabric Minecraft. Build the repository for a .jar file, and use it in the mods folder of your Minecraft world to playtest.
 
 ##### *Installation Guide for Windows and MacOS:*
 [Installing Fabric Mods](https://minecrafthopper.net/help/guides/installing-mods/fabric/#:~:text=Installing%20Mods,-In%20this%20tutorial&text=First%2C%20launch%20the%20Fabric%20loader,minecraft%20folder)
