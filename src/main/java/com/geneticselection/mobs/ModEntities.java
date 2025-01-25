@@ -70,7 +70,7 @@ public class ModEntities{
                     .dimensions(EntityDimensions.fixed(1.0F, 2.0F))
                     .build()
     );
-    // Register the custom camel entity
+    // Register the custom chicken entity
     public static final EntityType<CustomChickenEntity> CUSTOM_CHICKEN = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_chicken"),

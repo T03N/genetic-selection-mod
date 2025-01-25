@@ -28,10 +28,12 @@ public class ChildInheritance {
         // Calculate selection differential for speed and health
         double selectionDifferentialSpeed = (a.getMovementSpeed() - b.getMovementSpeed()) / 2;
         double selectionDifferentialHealth = (a.getMaxHealth() - b.getMaxHealth()) / 2;
+        double selectionDifferentialEnergy = (a.getEnergyLvl() - b.getEnergyLvl()) / 2;
 
         // Inherit speed and health using the breeder's equation
         double newSpeed = (a.getMovementSpeed() + b.getMovementSpeed()) / 2 + heritability * selectionDifferentialSpeed;
         double newHealth = (a.getMaxHealth() + b.getMaxHealth()) / 2 + heritability * selectionDifferentialHealth;
+        double newEnergy = (a.getEnergyLvl() + b.getEnergyLvl()) / 2 + heritability * selectionDifferentialEnergy;
 
         // Apply mutation (random genetic drift)
         double mutationFactor = 0.99;
@@ -43,6 +45,7 @@ public class ChildInheritance {
         // Ensure speed and health are within reasonable bounds
         newSpeed = Math.max(0.1, Math.min(newSpeed, 1.0));
         newHealth = Math.max(1, Math.min(newHealth, 20));
+        newEnergy = Math.max(80.0, Math.min(newEnergy, 100));
 
         // Calculate and inherit optional attributes (maxMeat, maxLeather, maxWool, etc.)
         Optional<Double> newMaxMeat = inheritOptionalAttribute(a.getMaxMeat(), b.getMaxMeat(), random);
@@ -52,7 +55,7 @@ public class ChildInheritance {
         Optional<Double> newMaxFeathers = inheritOptionalAttribute(a.getMaxFeathers(), b.getMaxFeathers(), random);
 
         // Return a new MobAttributes object with the inherited values
-        return new MobAttributes(newSpeed, newHealth, newMaxMeat, newMaxLeather, newMaxWool, newMaxRabbitHide, newMaxFeathers);
+        return new MobAttributes(newSpeed, newHealth, newEnergy, newMaxMeat, newMaxLeather, newMaxWool, newMaxRabbitHide, newMaxFeathers);
     }
 
     /**

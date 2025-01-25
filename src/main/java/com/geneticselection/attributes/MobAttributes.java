@@ -4,6 +4,7 @@ import java.util.Optional;
 public class MobAttributes {
     private double movementSpeed;
     private double maxHealth;
+    private double energyLvl;
     private Optional<Double> maxMeat = Optional.empty();
     private Optional<Double> maxLeather = Optional.empty();
     private Optional<Double> maxWool = Optional.empty();
@@ -11,9 +12,10 @@ public class MobAttributes {
     private Optional<Double> maxFeathers = Optional.empty();
 
     // Constructor with optional max values for attributes
-    public MobAttributes(double movementSpeed, double maxHealth, Optional<Double> maxMeat, Optional<Double> maxLeather, Optional<Double> maxWool, Optional<Double> maxRabbitHide, Optional<Double> maxFeathers) {
+    public MobAttributes(double movementSpeed, double maxHealth, double energyLvl, Optional<Double> maxMeat, Optional<Double> maxLeather, Optional<Double> maxWool, Optional<Double> maxRabbitHide, Optional<Double> maxFeathers) {
         this.movementSpeed = movementSpeed;
         this.maxHealth = maxHealth;
+        this.energyLvl = energyLvl;
         this.maxMeat = maxMeat;
         this.maxLeather = maxLeather;
         this.maxWool = maxWool;
@@ -35,6 +37,14 @@ public class MobAttributes {
 
     public void setMaxHealth(double maxHealth) {
         this.maxHealth = maxHealth;
+    }
+
+    public void setEnergyLvl(double energyLvl) {
+        this.energyLvl = energyLvl;
+    }
+
+    public double getEnergyLvl() {
+        return energyLvl;
     }
 
     // Getter and setter for max values

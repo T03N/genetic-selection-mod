@@ -27,6 +27,7 @@ public class CustomPigEntity extends PigEntity {
     private MobAttributes mobAttributes;
     private double MaxHp;
     private double Speed;
+    private double ELvl;
     private double MaxMeat;
 
     public CustomPigEntity(EntityType<? extends PigEntity> entityType, World world) {
@@ -36,13 +37,16 @@ public class CustomPigEntity extends PigEntity {
             MobAttributes global = GlobalAttributesManager.getAttributes(entityType);
             double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
+            double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
         }
         this.MaxHp = this.mobAttributes.getMaxHealth();
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+        this.ELvl = this.mobAttributes.getEnergyLvl();
+
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
         });
@@ -60,6 +64,7 @@ public class CustomPigEntity extends PigEntity {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.3f", ent.Speed) +
+                "\nEnergy: " + String.format("%.3f", ent.ELvl) +
                 "\nMax Meat: " + String.format("%.3f", ent.MaxMeat)));
     }
 

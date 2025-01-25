@@ -15,19 +15,19 @@ public class GlobalAttributesManager {
 
     // Initialize default attributes
     public static void initialize() {
-        globalAttributes.put(EntityType.COW, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.of(2.0), null, null, Optional.empty()));
-        globalAttributes.put(EntityType.SHEEP, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.empty(), Optional.of(2.0), Optional.empty(), Optional.empty()));
-        globalAttributes.put(EntityType.RABBIT, new MobAttributes(2.2, 10.0, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(2.0), Optional.empty()));
-        globalAttributes.put(EntityType.PIG, new MobAttributes(0.2, 8.0, Optional.empty(), null, null, null, Optional.empty()));
-        globalAttributes.put(EntityType.DONKEY, new MobAttributes(0.2, 15.0, null, Optional.empty(), null, null, Optional.empty()));
-        globalAttributes.put(EntityType.CAMEL, new MobAttributes(0.175, 30.0, null, null, null, null, Optional.empty()));
-        globalAttributes.put(EntityType.CHICKEN, new MobAttributes(0.175, 3, null, null, null, null, Optional.of(2.0)));
+        globalAttributes.put(EntityType.COW, new MobAttributes(0.2, 10.0, 100.0,  Optional.of(3.0), Optional.of(2.0), null, null, Optional.empty()));
+        globalAttributes.put(EntityType.SHEEP, new MobAttributes(0.2, 10.0, 100.0, Optional.of(3.0), Optional.empty(), Optional.of(2.0), Optional.empty(), Optional.empty()));
+        globalAttributes.put(EntityType.RABBIT, new MobAttributes(2.2, 10.0, 100.0, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(2.0), Optional.empty()));
+        globalAttributes.put(EntityType.PIG, new MobAttributes(0.2, 8.0, 100.0, Optional.empty(), null, null, null, Optional.empty()));
+        globalAttributes.put(EntityType.DONKEY, new MobAttributes(0.2, 15.0, 100.0, null, Optional.empty(), null, null, Optional.empty()));
+        globalAttributes.put(EntityType.CAMEL, new MobAttributes(0.175, 30.0, 100.0, null, null, null, null, Optional.empty()));
+        globalAttributes.put(EntityType.CHICKEN, new MobAttributes(0.175, 3, 100.0, Optional.of(3.0), null, null, null, Optional.of(2.0)));
 
     }
 
-    // Default values for all mobs
+    // Default values for all mobs (Safety load values)
     public static MobAttributes getAttributes(EntityType<?> type) {
-        return globalAttributes.getOrDefault(type, new MobAttributes(0.2, 10.0, Optional.of(3.0), Optional.of(2.0), Optional.of(1.0), Optional.of(2.0), Optional.of(2.0)));
+        return globalAttributes.getOrDefault(type, new MobAttributes(0.2, 10.0, 100.0, Optional.of(3.0), Optional.of(2.0), Optional.of(1.0), Optional.of(2.0), Optional.of(2.0)));
     }
 
     public static void updateGlobalAttributes(EntityType<?> type, MobAttributes newAttributes) {
@@ -70,6 +70,7 @@ public class GlobalAttributesManager {
                 // Load basic attributes
                 double movementSpeed = mobTag.getDouble("movementSpeed");
                 double maxHealth = mobTag.getDouble("maxHealth");
+                double energyLvl = mobTag.getDouble("energyLvl");
 
                 // Load optional attributes, or use Optional.empty() if they are not set
                 Optional<Double> maxMeat = mobTag.contains("maxMeat") ? Optional.of(mobTag.getDouble("maxMeat")) : Optional.empty();
@@ -82,6 +83,7 @@ public class GlobalAttributesManager {
                 MobAttributes attributes = new MobAttributes(
                         movementSpeed,
                         maxHealth,
+                        energyLvl,
                         maxMeat,
                         maxLeather,
                         maxWool,

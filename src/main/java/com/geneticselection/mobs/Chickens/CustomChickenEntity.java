@@ -26,6 +26,7 @@ public class CustomChickenEntity extends ChickenEntity {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
+    private double ELvl;
     private double MaxMeat;
     private double feathers;
 
@@ -37,9 +38,10 @@ public class CustomChickenEntity extends ChickenEntity {
             MobAttributes global = GlobalAttributesManager.getAttributes(entityType);
             double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
+            double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double feather = global.getMaxFeathers().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(feather));
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(feather));
         }
 
         // Apply attributes to the entity
@@ -47,6 +49,8 @@ public class CustomChickenEntity extends ChickenEntity {
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+        this.ELvl = this.mobAttributes.getEnergyLvl();
+
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
         });
@@ -62,8 +66,10 @@ public class CustomChickenEntity extends ChickenEntity {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.3f", ent.Speed) +
+                "\nEnergy: " + String.format("%.3f", ent.ELvl) +
                 "\nMax Meat: " + String.format("%.3f", ent.MaxMeat) +
                 "\nFeathers: " + String.format("%.3f", ent.feathers)));
+
     }
 
     @Override
