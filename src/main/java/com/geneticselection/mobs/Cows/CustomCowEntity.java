@@ -27,6 +27,7 @@ import static com.geneticselection.genetics.ChildInheritance.*;
 public class CustomCowEntity extends CowEntity {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
+    private double ELvl;
     private double Speed;
     private double MinMeat;
     private double MaxMeat;
@@ -43,9 +44,10 @@ public class CustomCowEntity extends CowEntity {
             MobAttributes global = GlobalAttributesManager.getAttributes(entityType);
             double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
+            double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double leather = global.getMaxLeather().orElse(0.0) * (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, Optional.of(meat), Optional.of(leather),Optional.empty(),Optional.empty(), Optional.empty());
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.of(leather),Optional.empty(),Optional.empty(), Optional.empty());
         }
 
         // Apply attributes to the entity
@@ -53,6 +55,8 @@ public class CustomCowEntity extends CowEntity {
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+        this.ELvl = this.mobAttributes.getEnergyLvl();
+
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
         });
@@ -61,7 +65,7 @@ public class CustomCowEntity extends CowEntity {
         });
         this.setMinMeat(1.0);
         this.setMinLeather(0.0);
-        this.milkingCooldown = 3000 + random.nextInt(2001);
+        this.milkingCooldown = 3000 + (int)((1 - (ELvl / 100.0)) * 2000) + random.nextInt(2001);
         if (!this.getWorld().isClient) {
             updateDescription(this);
         }
@@ -71,6 +75,7 @@ public class CustomCowEntity extends CowEntity {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.3f", ent.Speed) +
+                "\nEnergy: " + String.format("%.3f", ent.ELvl) +
                 "\nMax Meat: " + String.format("%.3f", ent.MaxMeat) +
                 "\nMax Leather: " + String.format("%.3f", ent.MaxLeather)+
                 "\nCooldown: " + ent.milkingCooldown));

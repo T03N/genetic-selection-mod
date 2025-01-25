@@ -27,6 +27,7 @@ public class CustomCamelEntity extends CamelEntity {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
+    private double Elvl;
 
     public CustomCamelEntity(EntityType<? extends CamelEntity> entityType, World world) {
         super(entityType, world);
@@ -36,7 +37,8 @@ public class CustomCamelEntity extends CamelEntity {
             MobAttributes global = GlobalAttributesManager.getAttributes(entityType);
             double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+            double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
         }
 
         // Apply attributes to the entity
@@ -44,6 +46,7 @@ public class CustomCamelEntity extends CamelEntity {
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+        this.Elvl = this.mobAttributes.getEnergyLvl();
 
         if (!this.getWorld().isClient)
             updateDescription(this);
@@ -52,7 +55,9 @@ public class CustomCamelEntity extends CamelEntity {
     private void updateDescription(CustomCamelEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
-                "\nSpeed: " + String.format("%.3f", ent.Speed)));
+                "\nSpeed: " + String.format("%.3f", ent.Speed) +
+                "\nEnergy: " + String.format("%.3f", ent.Elvl)));
+
     }
 
     @Override
