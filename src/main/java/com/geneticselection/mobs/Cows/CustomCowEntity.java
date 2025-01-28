@@ -107,69 +107,70 @@ public class CustomCowEntity extends CowEntity {
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
         ItemStack offHandStack = player.getOffHandStack();  // Get the item in the offhand
+        boolean isWheat = itemStack.isOf(Items.WHEAT) || offHandStack.isOf(Items.WHEAT); // Check both hands for wheat
 
-        // Check if the item in the main hand is wheat
-        if (itemStack.isOf(Items.WHEAT)) {
-            // Prevent breeding if the cow's energy level is below the threshold (e.g., 20)
-            if (ELvl < 20.0) {
-                player.sendMessage(Text.of("This cow cannot breed because it has low energy."), true);
-                return ActionResult.FAIL;  // Prevent interaction with wheat for breeding
+        if (isWheat) {
+            // Handle main hand or offhand wheat logic
+            Hand usedHand = itemStack.isOf(Items.WHEAT) ? hand : Hand.OFF_HAND;
+            ItemStack usedItem = itemStack.isOf(Items.WHEAT) ? itemStack : offHandStack;
+
+            if (this.isBaby()) {
+                return ActionResult.PASS; // Do nothing if the cow is a baby
             }
-            // Proceed with the usual interaction for breeding if energy is sufficient
-            return super.interactMob(player, hand);
-        }
 
-        // Check if the item in the offhand is wheat
-        else if (offHandStack.isOf(Items.WHEAT)) {
-            // Prevent breeding if the cow's energy level is below the threshold (30)
-            if (ELvl < 30.0) {
-                player.sendMessage(Text.of("This cow cannot breed because it has low energy."), true);
-                return ActionResult.FAIL;  // Prevent interaction with offhand wheat for breeding
-            }
-            // Proceed with the usual interaction for breeding if energy is sufficient
-            return super.interactMob(player, Hand.OFF_HAND);
-        }
-
-        // Handle other interactions (e.g., milking with a bucket)
-        else if (itemStack.isOf(Items.BUCKET) && !this.isBaby()) {
-            if (!this.getWorld().isClient) {
-                long currentTime = this.getWorld().getTime();
-                if (currentTime - lastMilkTime >= milkingCooldown) {
-                    player.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
-                    ItemStack itemStack2 = ItemUsage.exchangeStack(itemStack, player, Items.MILK_BUCKET.getDefaultStack());
-                    player.setStackInHand(hand, itemStack2);
-                    lastMilkTime = currentTime;
+            // If the cow is in love mode
+            if (this.isInLove()) {
+                if (ELvl < 100.0) {
+                    ELvl = Math.min(100.0, ELvl + 10.0); // Gain energy (up to max 100)
+                    player.sendMessage(Text.of("The cow has gained energy! Current energy: " + String.format("%.1f", ELvl)), true);
+                    usedItem.decrement(1); // Consume one wheat
+                    updateDescription(this); // Update description with new energy level
                     return ActionResult.SUCCESS;
                 } else {
-                    player.sendMessage(Text.of("This cow needs " + (milkingCooldown - (currentTime - lastMilkTime)) + " more ticks"), true);
-                    return ActionResult.FAIL;
+                    // Cow is in love mode and at max energy; do nothing
+                    player.sendMessage(Text.of("The cow is already at maximum energy!"), true);
+                    return ActionResult.PASS;
                 }
             }
-            return ActionResult.CONSUME;
-        }
-        else if (itemStack.isEmpty()) { // Check if the hand is empty
-            // Update description or other actions as before
-            if (!this.getWorld().isClient)
-                updateDescription(this);
 
-            return ActionResult.success(this.getWorld().isClient);
+            // If the cow is not in love mode
+            if (ELvl < 20.0) {
+                ELvl = Math.min(100.0, ELvl + 10.0); // Gain energy (up to max 100)
+                player.sendMessage(Text.of("This cow cannot breed due to low energy. Energy increased to: " + String.format("%.1f", ELvl)), true);
+                usedItem.decrement(1); // Consume one wheat
+                updateDescription(this); // Update description with new energy level
+                return ActionResult.SUCCESS;
+            } else {
+                // If energy is sufficient, trigger breeding
+                this.lovePlayer(player);
+                player.sendMessage(Text.of("The cow is now in breed mode!"), true);
+                usedItem.decrement(1); // Consume one wheat
+                updateDescription(this); // Update description
+                return ActionResult.SUCCESS;
+            }
         }
-        else {
-            return super.interactMob(player, hand);
-        }
+
+        // Handle other interactions (e.g., milking, empty hand, etc.)
+        return super.interactMob(player, hand);
     }
+
 
 
     @Override
     protected void applyDamage(DamageSource source, float amount) {
         super.applyDamage(source, amount);
 
+        // Mark the cow as recently hit
+        wasRecentlyHit = true;
+
         // Dynamically adjust movement speed based on current energy
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
                 .setBaseValue(Speed * (ELvl / 100.0));
 
-        if (!this.getWorld().isClient)
+        // Optionally update the description
+        if (!this.getWorld().isClient) {
             updateDescription(this);
+        }
     }
 
     @Override
@@ -203,15 +204,19 @@ public class CustomCowEntity extends CowEntity {
         CustomCowEntity parent1 = this;
         CustomCowEntity parent2 = (CustomCowEntity) mate;
 
-        // Inherit attributes from parents
-        double childMaxHp = (parent1.MaxHp + parent2.MaxHp) / 2;
-        double childMinMeat = (parent1.MinMeat + parent2.MinMeat) / 2;
-        double childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
-        double childMinLeather = (parent1.MinLeather + parent2.MinLeather) / 2;
-        double childMaxLeather = (parent1.MaxLeather + parent2.MaxLeather) / 2;
-        int childMilkingCooldown = (parent1.milkingCooldown + parent2.milkingCooldown) / 2;
-        double childEnergy = (parent1.ELvl + parent2.ELvl) / 2;
+        // Calculate the inheritance factor based on the lower energy level of the parents
+        double inheritanceFactor = Math.min(parent1.ELvl, parent2.ELvl) / 100.0;
 
+        // Inherit attributes from parents, scaled by the inheritance factor
+        double childMaxHp = ((parent1.MaxHp + parent2.MaxHp) / 2) * inheritanceFactor;
+        double childMinMeat = ((parent1.MinMeat + parent2.MinMeat) / 2) * inheritanceFactor;
+        double childMaxMeat = ((parent1.MaxMeat + parent2.MaxMeat) / 2) * inheritanceFactor;
+        double childMinLeather = ((parent1.MinLeather + parent2.MinLeather) / 2) * inheritanceFactor;
+        double childMaxLeather = ((parent1.MaxLeather + parent2.MaxLeather) / 2) * inheritanceFactor;
+        int childMilkingCooldown = (int) (((parent1.milkingCooldown + parent2.milkingCooldown) / 2) * (1 / inheritanceFactor));
+        double childEnergy = ((parent1.ELvl + parent2.ELvl) / 2) * inheritanceFactor;
+
+        // Create the child entity
         CustomCowEntity child = new CustomCowEntity(ModEntities.CUSTOM_COW, serverWorld);
 
         // Set inherited and calculated attributes
@@ -223,6 +228,7 @@ public class CustomCowEntity extends CowEntity {
         child.milkingCooldown = childMilkingCooldown;
         child.ELvl = childEnergy;
 
+        // Apply stats to the child entity
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
         child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
 
@@ -232,25 +238,46 @@ public class CustomCowEntity extends CowEntity {
         return child;
     }
 
+    // Add a new field to track if the cow was recently hit
+    private boolean wasRecentlyHit = false;
+
     @Override
     public void tick() {
         super.tick();
 
         // Only perform energy adjustments on the server side
         if (!this.getWorld().isClient) {
+            // Handle energy loss if the cow was recently hit
+            if (wasRecentlyHit) {
+                // Reduce energy by 20% of its current level
+                ELvl = Math.max(0.0, ELvl * 0.8);
+                wasRecentlyHit = false; // Reset the flag after applying the energy loss
+            }
+
             // Check if the cow is standing on grass
             boolean isOnGrass = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.GRASS_BLOCK);
 
-            // Adjust energy level based on whether the cow is on grass
+            // Adjust energy level randomly based on whether the cow is on grass
             if (isOnGrass) {
-                ELvl = Math.min(100.0, ELvl + 0.1); // Gain energy (up to max 100)
+                if (Math.random() < 0.2) { // 20% chance to gain energy
+                    ELvl = Math.min(100.0, ELvl + (0.01 + Math.random() * 0.19)); // Gain 0.01 to 0.2 energy
+                }
             } else {
-                ELvl = Math.max(0.0, ELvl - 0.05); // Lose energy (down to min 0)
+                if (Math.random() < 0.5) { // 50% chance to lose energy
+                    ELvl = Math.max(0.0, ELvl - (0.01 + Math.random() * 0.19)); // Lose 0.01 to 0.2 energy
+                }
             }
 
-            // If energy reaches 0, kill the cow and drop bones instead of nothing
+            // Check if energy is 100 and regenerate health if not at max
+            if (ELvl == 100.0) {
+                if (this.getHealth() < this.getMaxHealth()) {
+                    this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F)); // Regenerate 0.5 HP per second
+                }
+            }
+
+            // If energy reaches 0, kill the cow
             if (ELvl <= 0.0) {
-                this.kill();  // This makes the cow die
+                this.kill(); // This makes the cow die
             } else {
                 // Update attributes dynamically if energy is greater than 0
                 this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(Speed * (ELvl / 100.0));
@@ -260,5 +287,4 @@ public class CustomCowEntity extends CowEntity {
             }
         }
     }
-
 }
