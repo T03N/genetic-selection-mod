@@ -29,9 +29,9 @@ public class GeneticSelection implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public void cowMethod(){
-		//Register the default attibutes to your mob
+		// Register the default attibutes to your mob
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_COW, CustomCowEntity.createCowAttributes());
-		//lowers the spawn rate of default vanilla cows
+		// lowers the spawn rate of default vanilla cows
 		BiomeModifications.addSpawn(
 			BiomeSelectors.foundInOverworld(),
 			SpawnGroup.CREATURE,
@@ -40,7 +40,7 @@ public class GeneticSelection implements ModInitializer {
 			0, // No minimum group size
 			0  // No maximum group size
 		);
-		//adds custom cow to natural spawn
+		// Adds custom cow to natural spawn
 		BiomeModifications.addSpawn(
 			BiomeSelectors.foundInOverworld(),
 			SpawnGroup.CREATURE,
@@ -49,7 +49,7 @@ public class GeneticSelection implements ModInitializer {
 			2,  // Minimum group size
 			4   // Maximum group size
 		);
-		//restricts the cow spawn to grass blocks on the ground
+		// Restricts the cow spawn to grass blocks on the ground
 		SpawnRestriction.register(
 			ModEntities.CUSTOM_COW,
 			SpawnLocationTypes.ON_GROUND,
@@ -60,9 +60,9 @@ public class GeneticSelection implements ModInitializer {
 	}
 
 	public void sheepMethod(){
-		//Register the default attibutes to your mob
+		// Register the default attibutes to your mob
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_SHEEP, CustomSheepEntity.createSheepAttributes());
-		//lowers the spawn rate of default vanilla cows
+		// lowers the spawn rate of default vanilla cows
 		BiomeModifications.addSpawn(
 				BiomeSelectors.foundInOverworld(),
 				SpawnGroup.CREATURE,

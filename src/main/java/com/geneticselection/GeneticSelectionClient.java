@@ -13,6 +13,7 @@ import com.geneticselection.mobs.Wolves.CustomWolfRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.entity.model.*;
 import net.minecraft.client.model.Dilation;
 
@@ -58,7 +59,7 @@ public class GeneticSelectionClient implements ClientModInitializer {
     public void wolfMethod() {
         EntityRendererRegistry.register(ModEntities.CUSTOM_WOLF, CustomWolfRenderer::new);
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_WOLF,
-                () -> WolfEntityModel.getTexturedModelData(new Dilation(0.2F))); // Apply dilation here
+                () -> TexturedModelData.of(WolfEntityModel.getTexturedModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
     }
 
     @Override

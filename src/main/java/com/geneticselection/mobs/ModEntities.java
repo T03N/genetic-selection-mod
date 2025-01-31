@@ -17,7 +17,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.Registries;
 
-public class ModEntities{
+public class ModEntities {
     // Register the custom cow entity
     public static final EntityType<CustomCowEntity> CUSTOM_COW = Registry.register(
             Registries.ENTITY_TYPE,
