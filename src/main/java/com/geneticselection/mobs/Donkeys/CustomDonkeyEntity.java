@@ -1,5 +1,6 @@
 package com.geneticselection.mobs.Donkeys;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
@@ -23,7 +24,7 @@ import java.util.Optional;
 
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomDonkeyEntity extends DonkeyEntity {
+public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
@@ -142,4 +143,8 @@ public class CustomDonkeyEntity extends DonkeyEntity {
             updateDescription(this);
     }
 
+    @Override
+    public void applyCustomAttributes(MobAttributes attributes) {
+        attributes.getMaxLeather().ifPresent(this::setMaxLeather);
+    }
 }

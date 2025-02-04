@@ -1,9 +1,11 @@
 package com.geneticselection.mobs.Chickens;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
+import net.minecraft.entity.AnimationState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
@@ -12,23 +14,39 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.loot.LootTable;
+import net.minecraft.loot.context.LootContextParameters;
+import net.minecraft.loot.context.LootContextTypes;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.event.GameEvent;
 
 import java.util.Optional;
 
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomChickenEntity extends ChickenEntity {
+public class CustomChickenEntity extends ChickenEntity implements AttributeCarrier {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
     private double ELvl;
     private double MaxMeat;
     private double feathers;
+
+    // CHICKEN VANILLA VARS
+    public float flapProgress;
+    public float maxWingDeviation;
+    public float lastMaxWingDeviation;
+    public float lastFlapProgress;
+    public float flapSpeed = 1.0F;
+    private float field_28639 = 1.0F;
 
     public CustomChickenEntity(EntityType<? extends ChickenEntity> entityType, World world) {
         super(entityType, world);
@@ -47,7 +65,7 @@ public class CustomChickenEntity extends ChickenEntity {
         // Apply attributes to the entity
         this.MaxHp = this.mobAttributes.getMaxHealth();
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        this.setHealth((float)this.MaxHp);
+        this.setHealth(Math.round(this.MaxHp));
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
         this.ELvl = this.mobAttributes.getEnergyLvl();
@@ -104,6 +122,43 @@ public class CustomChickenEntity extends ChickenEntity {
     }
 
     @Override
+    protected boolean isFlappingWings() {
+        return this.speed > this.field_28639;
+    }
+
+    @Override
+    protected void addFlapEffects() {
+        this.field_28639 = this.speed + this.maxWingDeviation / 2.0F;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        this.lastFlapProgress = this.flapProgress;
+        this.lastMaxWingDeviation = this.maxWingDeviation;
+        this.maxWingDeviation = this.maxWingDeviation + (this.isOnGround() ? -1.0F : 4.0F) * 0.3F;
+        this.maxWingDeviation = MathHelper.clamp(this.maxWingDeviation, 0.0F, 1.0F);
+        if (!this.isOnGround() && this.flapSpeed < 1.0F) {
+            this.flapSpeed = 1.0F;
+        }
+
+        this.flapSpeed *= 0.9F;
+        Vec3d vec3d = this.getVelocity();
+        if (!this.isOnGround() && vec3d.y < 0.0) {
+            this.setVelocity(vec3d.multiply(1.0, 0.6, 1.0));
+        }
+
+        this.flapProgress = this.flapProgress + this.flapSpeed * 2.0F;
+        if (this.getWorld() instanceof ServerWorld serverWorld && this.isAlive() && !this.isBaby() && !this.hasJockey() && --this.eggLayTime <= 0) {
+            this.playSound(SoundEvents.ENTITY_CHICKEN_EGG, 1.0F, (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
+            this.emitGameEvent(GameEvent.ENTITY_PLACE);
+
+            this.eggLayTime = this.random.nextInt(6000) + 6000;
+        }
+    }
+
+    @Override
     public CustomChickenEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
         if (!(mate instanceof CustomChickenEntity)) {
             return (CustomChickenEntity) EntityType.CHICKEN.create(serverWorld);
@@ -143,5 +198,16 @@ public class CustomChickenEntity extends ChickenEntity {
 
         if (!this.getWorld().isClient)
             updateDescription(this);
+    }
+
+    @Override
+    public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
+        return false; // Chickens don't take fall damage
+    }
+
+    @Override
+    public void applyCustomAttributes(MobAttributes attributes) {
+        attributes.getMaxMeat().ifPresent(val -> this.MaxMeat = val);
+        attributes.getMaxFeathers().ifPresent(val -> this.feathers = val);
     }
 }

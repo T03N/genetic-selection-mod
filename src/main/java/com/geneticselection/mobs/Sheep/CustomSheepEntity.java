@@ -1,5 +1,6 @@
 package com.geneticselection.mobs.Sheep;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
@@ -27,7 +28,7 @@ import java.util.Optional;
 
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomSheepEntity extends SheepEntity {
+public class CustomSheepEntity extends SheepEntity implements AttributeCarrier {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
@@ -160,5 +161,11 @@ public class CustomSheepEntity extends SheepEntity {
 
         if (!this.getWorld().isClient)
             updateDescription(this);
+    }
+
+    @Override
+    public void applyCustomAttributes(MobAttributes attributes) {
+        attributes.getMaxMeat().ifPresent(this::setMaxMeat);
+        attributes.getMaxWool().ifPresent(this::setMaxWool);
     }
 }
