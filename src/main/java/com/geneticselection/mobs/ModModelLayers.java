@@ -10,6 +10,7 @@ public class ModModelLayers {
     public static final EntityModelLayer CUSTOM_COW = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_cow"), "main");
 
     public static final EntityModelLayer CUSTOM_SHEEP = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_sheep"), "main");
+    public static final EntityModelLayer CUSTOM_SHEEP_FUR = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID, "custom_sheep_fur"), "fur");
 
     public static final EntityModelLayer CUSTOM_PIG = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID, "custom_pig"), "main");
 
@@ -20,5 +21,8 @@ public class ModModelLayers {
     public static final EntityModelLayer CUSTOM_CAMEL = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_camel"), "main");
 
     public static final EntityModelLayer CUSTOM_CHICKEN = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_chicken"), "main");
+
+    public static final EntityModelLayer CUSTOM_WOLF = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_wolf"), "main");
+
 
 }

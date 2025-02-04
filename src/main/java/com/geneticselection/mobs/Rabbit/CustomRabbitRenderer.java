@@ -13,7 +13,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomRabbitRenderer extends MobEntityRenderer<CustomRabbitEntity, RabbitEntityModel<CustomRabbitEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/brown-rabbit.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/rabbit/brown-rabbit.png");
 
     public CustomRabbitRenderer(EntityRendererFactory.Context context) {
         super(context, new RabbitEntityModel<>(context.getPart(ModModelLayers.CUSTOM_RABBIT)), 0.6f);
