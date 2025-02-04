@@ -8,6 +8,7 @@ import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Chickens.CustomChickenEntity;
+import com.geneticselection.mobs.Wolves.CustomWolfEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
@@ -78,4 +79,14 @@ public class ModEntities{
                     .dimensions(EntityDimensions.fixed(1.0F, 2.0F))
                     .build()
     );
+
+    // Register the custom wolf entity
+    public static final EntityType<CustomWolfEntity> CUSTOM_WOLF = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_wolf"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomWolfEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
+                    .build()
+    );
+
 }

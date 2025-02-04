@@ -11,6 +11,8 @@ import com.geneticselection.mobs.ModModelLayers;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
+import com.geneticselection.mobs.Wolves.CustomWolfEntity;
+import com.geneticselection.mobs.Wolves.CustomWolfRenderer;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -244,6 +246,35 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void wolfMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_WOLF, CustomWolfEntity.createWolfAttributes());
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.WOLF,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_WOLF,
+				20, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_WOLF,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.GRASS_BLOCK)
+		);
+
+	}
+
 
 	@Override
 	public void onInitialize() {
@@ -254,6 +285,7 @@ public class GeneticSelection implements ModInitializer {
 		donkeyMethod();
 		camelMethod();
 		chickenMethod();
+		wolfMethod();
 		GlobalAttributesManager.initialize();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads

@@ -23,7 +23,7 @@ public class GlobalAttributesManager {
         globalAttributes.put(ModEntities.CUSTOM_DONKEY, new MobAttributes(0.2, 15.0, 100.0, null, Optional.empty(), null, null, Optional.empty()));
         globalAttributes.put(ModEntities.CUSTOM_CAMEL, new MobAttributes(0.2, 30.0, 100.0, null, null, null, null, Optional.empty()));
         globalAttributes.put(ModEntities.CUSTOM_CHICKEN, new MobAttributes(0.2, 3, 100.0, Optional.of(3.0), null, null, null, Optional.of(2.0)));
-
+        globalAttributes.put(ModEntities.CUSTOM_WOLF, new MobAttributes(0.2, 8.0, 100.0, null, null, null, Optional.empty(), Optional.empty()));
     }
 
     // Default values for all mobs (Safety load values)

@@ -9,9 +9,11 @@ import com.geneticselection.mobs.ModModelLayers;
 import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
 import com.geneticselection.mobs.Sheep.CustomSheepRenderer;
 import com.geneticselection.mobs.Pigs.CustomPigRenderer;
+import com.geneticselection.mobs.Wolves.CustomWolfRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.entity.model.*;
 import net.minecraft.client.model.Dilation;
 
@@ -54,6 +56,12 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_CHICKEN, ChickenEntityModel::getTexturedModelData);
     }
 
+    public void wolfMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_WOLF, CustomWolfRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_WOLF,
+                () -> TexturedModelData.of(WolfEntityModel.getTexturedModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
+    }
+
     @Override
     public void onInitializeClient() {
         cowMethod();
@@ -63,5 +71,6 @@ public class GeneticSelectionClient implements ClientModInitializer {
         donkeyMethod();
         camelMethod();
         chickenMethod();
+        wolfMethod();
     }
 }
