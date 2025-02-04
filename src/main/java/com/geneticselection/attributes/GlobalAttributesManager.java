@@ -21,8 +21,8 @@ public class GlobalAttributesManager {
         globalAttributes.put(ModEntities.CUSTOM_RABBIT, new MobAttributes(0.2, 10.0, 100.0, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(2.0), Optional.empty()));
         globalAttributes.put(ModEntities.CUSTOM_PIG, new MobAttributes(0.2, 8.0, 100.0, Optional.empty(), null, null, null, Optional.empty()));
         globalAttributes.put(ModEntities.CUSTOM_DONKEY, new MobAttributes(0.2, 15.0, 100.0, null, Optional.empty(), null, null, Optional.empty()));
-        globalAttributes.put(ModEntities.CUSTOM_CAMEL, new MobAttributes(0.175, 30.0, 100.0, null, null, null, null, Optional.empty()));
-        globalAttributes.put(ModEntities.CUSTOM_CHICKEN, new MobAttributes(0.175, 3, 100.0, Optional.of(3.0), null, null, null, Optional.of(2.0)));
+        globalAttributes.put(ModEntities.CUSTOM_CAMEL, new MobAttributes(0.2, 30.0, 100.0, null, null, null, null, Optional.empty()));
+        globalAttributes.put(ModEntities.CUSTOM_CHICKEN, new MobAttributes(0.2, 3, 100.0, Optional.of(3.0), null, null, null, Optional.of(2.0)));
 
     }
 
