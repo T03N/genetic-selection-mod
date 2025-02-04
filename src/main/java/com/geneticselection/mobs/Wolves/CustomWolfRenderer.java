@@ -11,7 +11,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomWolfRenderer extends MobEntityRenderer<CustomWolfEntity, WolfEntityModel<CustomWolfEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/minecraft-pig.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/wolf/wolf.png");
 
     public CustomWolfRenderer(EntityRendererFactory.Context context) {
         super(context, new WolfEntityModel<>(context.getPart(ModModelLayers.CUSTOM_WOLF)), 0.6f);
