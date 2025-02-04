@@ -1,4 +1,14 @@
 package com.geneticselection.mobs.Cows;
+import io.netty.buffer.Unpooled;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.world.GameMode;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
@@ -27,6 +37,7 @@ import java.util.Optional;
 import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomCowEntity extends CowEntity {
+    private static final TrackedData<Float> ENERGY_LEVEL = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double ELvl;
@@ -73,6 +84,33 @@ public class CustomCowEntity extends CowEntity {
         }
     }
 
+
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.ELvl = newEnergyLevel;
+
+        // If the energy level changes, notify the renderer to update.
+        if (this.getWorld().isClient) {
+            // In case this is client-side, trigger a re-render.
+            this.markForRenderUpdate();
+        }
+
+        // Sync energy level with server if needed
+        if (!this.getWorld().isClient) {
+            this.syncEnergyLevelToClient();
+        }
+    }
+
+    private void syncEnergyLevelToClient() {
+        PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
+        data.writeInt(this.getId());  // Send entity ID
+        data.writeDouble(this.ELvl);  // Send the updated energy level
+    }
+
+    public void markForRenderUpdate() {
+        // This triggers the renderer to update the texture the next time it's rendered
+        MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(this).render(this, 0, 0, new MatrixStack(), MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers(), 0);
+    }
+
     private void updateDescription(CustomCowEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
@@ -81,6 +119,11 @@ public class CustomCowEntity extends CowEntity {
                 "\nMax Meat: " + String.format("%.3f", ent.MaxMeat) +
                 "\nMax Leather: " + String.format("%.3f", ent.MaxLeather)+
                 "\nCooldown: " + ent.milkingCooldown));
+    }
+
+    // Add this getter for energy level
+    public double getEnergyLevel() {
+        return this.ELvl;
     }
 
     public void setMinMeat(double minMeat)
@@ -121,9 +164,13 @@ public class CustomCowEntity extends CowEntity {
             // If the cow is in love mode
             if (this.isInLove()) {
                 if (ELvl < 100.0) {
-                    ELvl = Math.min(100.0, ELvl + 10.0); // Gain energy (up to max 100)
+                    updateEnergyLevel(Math.min(100.0, ELvl + 10.0)); // Gain energy (up to max 100)
                     player.sendMessage(Text.of("The cow has gained energy! Current energy: " + String.format("%.1f", ELvl)), true);
-                    usedItem.decrement(1); // Consume one wheat
+
+                    if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
+                        usedItem.decrement(1);
+                    }
+
                     updateDescription(this); // Update description with new energy level
                     return ActionResult.SUCCESS;
                 } else {
@@ -133,18 +180,25 @@ public class CustomCowEntity extends CowEntity {
                 }
             }
 
-            // If the cow is not in love mode
             if (ELvl < 20.0) {
-                ELvl = Math.min(100.0, ELvl + 10.0); // Gain energy (up to max 100)
+                updateEnergyLevel(Math.min(100.0, ELvl + 10.0)); // Gain energy (up to max 100)
                 player.sendMessage(Text.of("This cow cannot breed due to low energy. Energy increased to: " + String.format("%.1f", ELvl)), true);
-                usedItem.decrement(1); // Consume one wheat
+
+                if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
+                    usedItem.decrement(1);
+                }
+
                 updateDescription(this); // Update description with new energy level
                 return ActionResult.SUCCESS;
             } else {
                 // If energy is sufficient, trigger breeding
                 this.lovePlayer(player);
                 player.sendMessage(Text.of("The cow is now in breed mode!"), true);
-                usedItem.decrement(1); // Consume one wheat
+
+                if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
+                    usedItem.decrement(1);
+                }
+
                 updateDescription(this); // Update description
                 return ActionResult.SUCCESS;
             }
@@ -250,7 +304,7 @@ public class CustomCowEntity extends CowEntity {
             // Handle energy loss if the cow was recently hit
             if (wasRecentlyHit) {
                 // Reduce energy by 20% of its current level
-                ELvl = Math.max(0.0, ELvl * 0.8);
+                updateEnergyLevel(Math.max(0.0, ELvl * 0.8));
                 wasRecentlyHit = false; // Reset the flag after applying the energy loss
             }
 
@@ -260,11 +314,11 @@ public class CustomCowEntity extends CowEntity {
             // Adjust energy level randomly based on whether the cow is on grass
             if (isOnGrass) {
                 if (Math.random() < 0.2) { // 20% chance to gain energy
-                    ELvl = Math.min(100.0, ELvl + (0.01 + Math.random() * 0.19)); // Gain 0.01 to 0.2 energy
+                    updateEnergyLevel(Math.min(100.0, ELvl + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
                 }
             } else {
                 if (Math.random() < 0.5) { // 50% chance to lose energy
-                    ELvl = Math.max(0.0, ELvl - (0.01 + Math.random() * 0.19)); // Lose 0.01 to 0.2 energy
+                    updateEnergyLevel(Math.max(0.0, ELvl - (0.01 + Math.random() * 0.19))); // Lose 0.01 to 0.2 energy
                 }
             }
 
