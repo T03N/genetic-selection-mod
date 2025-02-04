@@ -12,7 +12,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class CustomSheepRenderer extends MobEntityRenderer<CustomSheepEntity, SheepEntityModel<CustomSheepEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/minecraft-sheep.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/sheep/minecraft-sheep.png");
 
     public CustomSheepRenderer(EntityRendererFactory.Context context) {
         super(context, new SheepEntityModel<>(context.getPart(ModModelLayers.CUSTOM_SHEEP)), 0.6f);

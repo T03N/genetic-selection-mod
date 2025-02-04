@@ -11,7 +11,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomChickenRenderer extends MobEntityRenderer<CustomChickenEntity, ChickenEntityModel<CustomChickenEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/minecraft-chicken.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/chicken/minecraft-chicken.png");
 
     public CustomChickenRenderer(EntityRendererFactory.Context context) {
         super(context, new ChickenEntityModel<>(context.getPart(ModModelLayers.CUSTOM_CHICKEN)), 0.6f);
