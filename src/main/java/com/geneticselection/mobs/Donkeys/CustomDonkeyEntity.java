@@ -2,7 +2,6 @@ package com.geneticselection.mobs.Donkeys;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
