@@ -1,5 +1,6 @@
 package com.geneticselection.mobs.Rabbit;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
@@ -22,7 +23,7 @@ import java.util.Optional;
 
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomRabbitEntity extends RabbitEntity {
+public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
@@ -152,5 +153,11 @@ public class CustomRabbitEntity extends RabbitEntity {
 
         if (!this.getWorld().isClient)
             updateDescription(this);
+    }
+
+    @Override
+    public void applyCustomAttributes(MobAttributes attributes) {
+        attributes.getMaxMeat().ifPresent(this::setMaxMeat);
+        attributes.getMaxLeather().ifPresent(this::setRabbitHide);
     }
 }

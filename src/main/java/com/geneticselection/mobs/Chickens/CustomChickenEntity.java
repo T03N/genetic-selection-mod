@@ -1,5 +1,6 @@
 package com.geneticselection.mobs.Chickens;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
@@ -31,7 +32,7 @@ import java.util.Optional;
 
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomChickenEntity extends ChickenEntity {
+public class CustomChickenEntity extends ChickenEntity implements AttributeCarrier {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
@@ -202,5 +203,11 @@ public class CustomChickenEntity extends ChickenEntity {
     @Override
     public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
         return false; // Chickens don't take fall damage
+    }
+
+    @Override
+    public void applyCustomAttributes(MobAttributes attributes) {
+        attributes.getMaxMeat().ifPresent(val -> this.MaxMeat = val);
+        attributes.getMaxFeathers().ifPresent(val -> this.feathers = val);
     }
 }

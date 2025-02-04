@@ -1,5 +1,6 @@
 package com.geneticselection.mobs.Camels;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
@@ -23,7 +24,7 @@ import java.util.Optional;
 
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomCamelEntity extends CamelEntity {
+public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
@@ -120,5 +121,9 @@ public class CustomCamelEntity extends CamelEntity {
 
         if (!this.getWorld().isClient)
             updateDescription(this);
+    }
+
+    @Override
+    public void applyCustomAttributes(MobAttributes attributes) {
     }
 }

@@ -1,5 +1,6 @@
 package com.geneticselection.mobs.Pigs;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
@@ -23,7 +24,7 @@ import net.minecraft.world.World;
 import java.util.Optional;
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomPigEntity extends PigEntity {
+public class CustomPigEntity extends PigEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
     private double MaxHp;
     private double Speed;
@@ -140,4 +141,8 @@ public class CustomPigEntity extends PigEntity {
             updateDescription(this);
     }
 
+    @Override
+    public void applyCustomAttributes(MobAttributes attributes) {
+        attributes.getMaxMeat().ifPresent(this::setMaxMeat);
+    }
 }
