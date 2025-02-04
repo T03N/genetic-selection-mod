@@ -14,7 +14,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.client.model.ModelPart;
 
 public class CustomSheepWoolLayer<T extends CustomSheepEntity> extends FeatureRenderer<T, SheepEntityModel<T>> {
-    private static final Identifier WOOL_TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/sheep_wool.png");
+    private static final Identifier WOOL_TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/sheep/sheep_wool.png");
     private final SheepEntityModel<T> woolModel;
 
     public CustomSheepWoolLayer(FeatureRendererContext<T, SheepEntityModel<T>> context, ModelPart woolPart) {
