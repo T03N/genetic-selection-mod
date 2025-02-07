@@ -5,26 +5,32 @@ import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
-import net.minecraft.entity.AnimationState;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
+import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.context.LootContextParameters;
-import net.minecraft.loot.context.LootContextTypes;
-import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.registry.Registries; // For Registries.ENCHANTMENT
+import net.minecraft.enchantment.Enchantments; // For Enchantments.FIRE_ASPECT
+import net.minecraft.registry.entry.RegistryEntry; // For RegistryEntry<Enchantment>
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.registry.Registries;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 
@@ -101,9 +107,9 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 updateDescription(this);
             }
             return ActionResult.success(this.getWorld().isClient);
-        } else {
-            return super.interactMob(player, hand);
         }
+
+        return super.interactMob(player, hand);
     }
 
     @Override
@@ -111,13 +117,31 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         super.onDeath(source);
 
         if (!this.getWorld().isClient) {
-            // Calculate the amount of meat to drop between MinMeat and MaxMeat
             int meatAmount = (int) (MaxMeat);
-            this.dropStack(new ItemStack(Items.CHICKEN, meatAmount));
 
-            // Calculate the amount of leather to drop between MinLeather and MaxLeather
-            int featherAmount = (int)(feathers);
-            this.dropStack(new ItemStack(Items.FEATHER, featherAmount));
+            boolean shouldDropCooked = false;
+
+            // Check if the entity died from fire, lava, or burning
+            if (source.getName().equals("onFire") || source.getName().equals("inFire") || source.getName().equals("lava")) {
+                shouldDropCooked = true;
+            }
+
+            // Check if the attacker has Fire Aspect
+            if (source.getAttacker() instanceof LivingEntity attacker) {
+                ItemStack weapon = attacker.getMainHandStack();
+                RegistryEntry<Enchantment> fireAspectEntry = this.getWorld().getServer().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.FIRE_ASPECT).get();
+                if (EnchantmentHelper.getLevel(fireAspectEntry ,weapon) >= 1) {
+                    shouldDropCooked = true;
+                }
+            }
+
+            // Drop cooked or raw chicken based on conditions
+            if(shouldDropCooked) {
+                this.dropStack(new ItemStack(Items.COOKED_CHICKEN, meatAmount));
+            }
+            else{
+                this.dropStack(new ItemStack(Items.CHICKEN, meatAmount));
+            }
         }
     }
 
