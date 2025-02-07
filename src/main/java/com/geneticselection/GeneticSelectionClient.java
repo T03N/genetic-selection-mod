@@ -6,6 +6,7 @@ import com.geneticselection.mobs.Cows.CustomCowRenderer;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyRenderer;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
+import com.geneticselection.mobs.Ocelots.CustomOcelotRenderer;
 import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
 import com.geneticselection.mobs.Sheep.CustomSheepRenderer;
 import com.geneticselection.mobs.Pigs.CustomPigRenderer;
@@ -62,6 +63,13 @@ public class GeneticSelectionClient implements ClientModInitializer {
                 () -> TexturedModelData.of(WolfEntityModel.getTexturedModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
     }
 
+    public void ocelotMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_OCELOT, CustomOcelotRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_OCELOT,
+                () -> TexturedModelData.of(OcelotEntityModel.getModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
+    }
+
+
     @Override
     public void onInitializeClient() {
         cowMethod();
@@ -72,5 +80,6 @@ public class GeneticSelectionClient implements ClientModInitializer {
         camelMethod();
         chickenMethod();
         wolfMethod();
+        ocelotMethod();
     }
 }

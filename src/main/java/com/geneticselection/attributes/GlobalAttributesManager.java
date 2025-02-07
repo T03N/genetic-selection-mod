@@ -62,6 +62,22 @@ public class GlobalAttributesManager {
             put(AttributeKey.MAX_MEAT, 3.0);
             put(AttributeKey.MAX_FEATHERS, 2.0);
         }});
+
+        ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_WOLF, new HashMap<>() {{
+            put(AttributeKey.MOVEMENT_SPEED, 0.175);
+            put(AttributeKey.MAX_HEALTH, 3.0);
+            put(AttributeKey.ENERGY, 100.0);
+            put(AttributeKey.MAX_MEAT, 3.0);
+            put(AttributeKey.MAX_FEATHERS, 2.0);
+        }});
+
+        ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_OCELOT, new HashMap<>() {{
+            put(AttributeKey.MOVEMENT_SPEED, 0.175);
+            put(AttributeKey.MAX_HEALTH, 3.0);
+            put(AttributeKey.ENERGY, 100.0);
+            put(AttributeKey.MAX_MEAT, 3.0);
+            put(AttributeKey.MAX_FEATHERS, 2.0);
+        }});
     }
 
     public static void initialize() {
