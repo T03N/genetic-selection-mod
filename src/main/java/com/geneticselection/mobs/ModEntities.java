@@ -4,6 +4,7 @@ import com.geneticselection.GeneticSelection;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
+import com.geneticselection.mobs.Ocelots.CustomOcelotEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
@@ -85,6 +86,14 @@ public class ModEntities{
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_wolf"),
             FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomWolfEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
+                    .build()
+    );
+
+    public static final EntityType<CustomOcelotEntity> CUSTOM_OCELOT = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_ocelot"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomOcelotEntity::new)
                     .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
                     .build()
     );
