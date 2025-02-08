@@ -96,7 +96,7 @@ public class CustomPigEntity extends PigEntity implements AttributeCarrier {
         if (!this.getWorld().isClient) {
             // Calculate the amount of meat to drop between MinMeat and MaxMeat
             int meatAmount = (int) (MaxMeat);
-            this.dropStack(new ItemStack(Items.BEEF, meatAmount));
+            this.dropStack(new ItemStack(Items.PORKCHOP, meatAmount));
         }
     }
     @Override

@@ -4,6 +4,7 @@ import com.geneticselection.GeneticSelection;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
+import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.Ocelots.CustomOcelotEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
@@ -95,6 +96,14 @@ public class ModEntities{
             Identifier.of(GeneticSelection.MOD_ID, "custom_ocelot"),
             FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomOcelotEntity::new)
                     .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
+                    .build()
+    );
+
+    public static final EntityType<CustomHoglinEntity> CUSTOM_HOGLIN = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_hoglin"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomHoglinEntity::new)
+                    .dimensions(EntityDimensions.fixed(1.4F, 1.4F))
                     .build()
     );
 

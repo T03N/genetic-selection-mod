@@ -78,6 +78,12 @@ public class GlobalAttributesManager {
             put(AttributeKey.MAX_MEAT, 3.0);
             put(AttributeKey.MAX_FEATHERS, 2.0);
         }});
+
+        ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_HOGLIN, new HashMap<>() {{
+            put(AttributeKey.MOVEMENT_SPEED, 0.3);
+            put(AttributeKey.MAX_HEALTH, 40.0);
+            put(AttributeKey.ENERGY, 100.0);
+        }});
     }
 
     public static void initialize() {
