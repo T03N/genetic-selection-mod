@@ -2,10 +2,12 @@ package com.geneticselection;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.GlobalAttributesSavedData;
+import com.geneticselection.mobs.Bee.CustomBeeEntity;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Chickens.CustomChickenEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
+import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
@@ -246,6 +248,37 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void hoglinMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_HOGLIN, CustomHoglinEntity.createHoglinAttributes());
+		//lowers the spawn rate of default vanilla pigs
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInTheNether(),
+				SpawnGroup.CREATURE,
+				EntityType.HOGLIN, // Remove the original pig
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		//adds custom pig to natural spawn
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInTheNether(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_HOGLIN, // Add custom pig
+				20, // Spawn weight (higher = more frequent)
+				5,  // Minimum group size
+				10   // Maximum group size
+		);
+		//restricts the cow spawn to grass blocks on the ground
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_HOGLIN,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.CRIMSON_NYLIUM)
+		);
+	}
+
 	public void wolfMethod(){
 		//Register the default attibutes to your mob
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_WOLF, CustomWolfEntity.createWolfAttributes());
@@ -275,6 +308,35 @@ public class GeneticSelection implements ModInitializer {
 
 	}
 
+	public void beeMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_BEE, CustomBeeEntity.createBeeAttributes());
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.BEE,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_BEE,
+				200, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_BEE,
+				SpawnLocationTypes.UNRESTRICTED,
+				Heightmap.Type.MOTION_BLOCKING,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.BEE_NEST)
+		);
+
+	}
+
 
 	@Override
 	public void onInitialize() {
@@ -286,6 +348,8 @@ public class GeneticSelection implements ModInitializer {
 		camelMethod();
 		chickenMethod();
 		wolfMethod();
+		hoglinMethod();
+		beeMethod();
 		GlobalAttributesManager.initialize();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads

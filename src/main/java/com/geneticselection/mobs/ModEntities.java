@@ -1,6 +1,7 @@
 package com.geneticselection.mobs;
 
 import com.geneticselection.GeneticSelection;
+import com.geneticselection.mobs.Bee.CustomBeeEntity;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
@@ -107,4 +108,11 @@ public class ModEntities{
                     .build()
     );
 
+    public static final EntityType<CustomBeeEntity> CUSTOM_BEE = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_bee"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomBeeEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.7F, 0.6F))
+                    .build()
+    );
 }

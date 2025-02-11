@@ -1,5 +1,7 @@
 package com.geneticselection;
 
+import com.geneticselection.mobs.Bee.CustomBeeEntity;
+import com.geneticselection.mobs.Bee.CustomBeeRenderer;
 import com.geneticselection.mobs.Camels.CustomCamelRenderer;
 import com.geneticselection.mobs.Chickens.CustomChickenRenderer;
 import com.geneticselection.mobs.Cows.CustomCowRenderer;
@@ -62,6 +64,11 @@ public class GeneticSelectionClient implements ClientModInitializer {
                 () -> TexturedModelData.of(WolfEntityModel.getTexturedModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
     }
 
+    public void beeMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_BEE, CustomBeeRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_BEE, BeeEntityModel::getTexturedModelData);
+    }
+
     @Override
     public void onInitializeClient() {
         cowMethod();
@@ -72,5 +79,6 @@ public class GeneticSelectionClient implements ClientModInitializer {
         camelMethod();
         chickenMethod();
         wolfMethod();
+        beeMethod();
     }
 }
