@@ -1,11 +1,15 @@
 package com.geneticselection;
 
+import com.geneticselection.mobs.Axolotl.CustomAxolotlEntity;
+import com.geneticselection.mobs.Axolotl.CustomAxolotlRenderer;
 import com.geneticselection.mobs.Bee.CustomBeeEntity;
 import com.geneticselection.mobs.Bee.CustomBeeRenderer;
 import com.geneticselection.mobs.Camels.CustomCamelRenderer;
 import com.geneticselection.mobs.Chickens.CustomChickenRenderer;
 import com.geneticselection.mobs.Cows.CustomCowRenderer;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyRenderer;
+import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
+import com.geneticselection.mobs.Hoglins.CustomHoglinRenderer;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
 import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
@@ -64,9 +68,19 @@ public class GeneticSelectionClient implements ClientModInitializer {
                 () -> TexturedModelData.of(WolfEntityModel.getTexturedModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
     }
 
+    public void hoglinMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_HOGLIN, CustomHoglinRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_HOGLIN, HoglinEntityModel::getTexturedModelData);
+    }
+
     public void beeMethod() {
         EntityRendererRegistry.register(ModEntities.CUSTOM_BEE, CustomBeeRenderer::new);
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_BEE, BeeEntityModel::getTexturedModelData);
+    }
+
+    public void axolotlMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_AXOLOTL, CustomAxolotlRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_AXOLOTL, AxolotlEntityModel::getTexturedModelData);
     }
 
     @Override
@@ -79,6 +93,8 @@ public class GeneticSelectionClient implements ClientModInitializer {
         camelMethod();
         chickenMethod();
         wolfMethod();
+        hoglinMethod();
         beeMethod();
+        axolotlMethod();
     }
 }

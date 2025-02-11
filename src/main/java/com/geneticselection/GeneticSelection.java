@@ -2,6 +2,7 @@ package com.geneticselection;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.GlobalAttributesSavedData;
+import com.geneticselection.mobs.Axolotl.CustomAxolotlEntity;
 import com.geneticselection.mobs.Bee.CustomBeeEntity;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Chickens.CustomChickenEntity;
@@ -337,6 +338,33 @@ public class GeneticSelection implements ModInitializer {
 
 	}
 
+	public void axolotlMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_AXOLOTL, CustomAxolotlEntity.createAxolotlAttributes());
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.AXOLOTL,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_AXOLOTL,
+				200, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_AXOLOTL,
+				SpawnLocationTypes.IN_WATER,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.CLAY)
+		);
+	}
 
 	@Override
 	public void onInitialize() {
@@ -350,6 +378,7 @@ public class GeneticSelection implements ModInitializer {
 		wolfMethod();
 		hoglinMethod();
 		beeMethod();
+		axolotlMethod();
 		GlobalAttributesManager.initialize();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads

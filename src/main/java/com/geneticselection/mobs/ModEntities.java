@@ -1,6 +1,7 @@
 package com.geneticselection.mobs;
 
 import com.geneticselection.GeneticSelection;
+import com.geneticselection.mobs.Axolotl.CustomAxolotlEntity;
 import com.geneticselection.mobs.Bee.CustomBeeEntity;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
@@ -113,6 +114,14 @@ public class ModEntities{
             Identifier.of(GeneticSelection.MOD_ID, "custom_bee"),
             FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomBeeEntity::new)
                     .dimensions(EntityDimensions.fixed(0.7F, 0.6F))
+                    .build()
+    );
+
+    public static final EntityType<CustomAxolotlEntity> CUSTOM_AXOLOTL = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_axolotl"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomAxolotlEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.75F, 0.42F))
                     .build()
     );
 }
