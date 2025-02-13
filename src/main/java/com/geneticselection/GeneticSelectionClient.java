@@ -1,17 +1,25 @@
 package com.geneticselection;
 
+import com.geneticselection.mobs.Axolotl.CustomAxolotlEntity;
+import com.geneticselection.mobs.Axolotl.CustomAxolotlRenderer;
+import com.geneticselection.mobs.Bee.CustomBeeEntity;
+import com.geneticselection.mobs.Bee.CustomBeeRenderer;
 import com.geneticselection.mobs.Camels.CustomCamelRenderer;
 import com.geneticselection.mobs.Chickens.CustomChickenRenderer;
 import com.geneticselection.mobs.Cows.CustomCowRenderer;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyRenderer;
+import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
+import com.geneticselection.mobs.Hoglins.CustomHoglinRenderer;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
 import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
 import com.geneticselection.mobs.Sheep.CustomSheepRenderer;
 import com.geneticselection.mobs.Pigs.CustomPigRenderer;
+import com.geneticselection.mobs.Wolves.CustomWolfRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.entity.model.*;
 import net.minecraft.client.model.Dilation;
 
@@ -54,6 +62,27 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_CHICKEN, ChickenEntityModel::getTexturedModelData);
     }
 
+    public void wolfMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_WOLF, CustomWolfRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_WOLF,
+                () -> TexturedModelData.of(WolfEntityModel.getTexturedModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
+    }
+
+    public void hoglinMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_HOGLIN, CustomHoglinRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_HOGLIN, HoglinEntityModel::getTexturedModelData);
+    }
+
+    public void beeMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_BEE, CustomBeeRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_BEE, BeeEntityModel::getTexturedModelData);
+    }
+
+    public void axolotlMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_AXOLOTL, CustomAxolotlRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_AXOLOTL, AxolotlEntityModel::getTexturedModelData);
+    }
+
     @Override
     public void onInitializeClient() {
         cowMethod();
@@ -63,5 +92,9 @@ public class GeneticSelectionClient implements ClientModInitializer {
         donkeyMethod();
         camelMethod();
         chickenMethod();
+        wolfMethod();
+        hoglinMethod();
+        beeMethod();
+        axolotlMethod();
     }
 }

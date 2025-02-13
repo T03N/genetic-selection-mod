@@ -2,21 +2,31 @@ package com.geneticselection;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.GlobalAttributesSavedData;
+import com.geneticselection.mobs.Axolotl.CustomAxolotlEntity;
+import com.geneticselection.mobs.Bee.CustomBeeEntity;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Chickens.CustomChickenEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
+import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.ModEntities;
+import com.geneticselection.mobs.ModModelLayers;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
+import com.geneticselection.mobs.Wolves.CustomWolfEntity;
+import com.geneticselection.mobs.Wolves.CustomWolfRenderer;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.model.ModelData;
+import net.minecraft.client.model.TexturedModelData;
+import net.minecraft.client.render.entity.model.SheepEntityModel;
 import net.minecraft.entity.*;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.Heightmap;
@@ -62,6 +72,7 @@ public class GeneticSelection implements ModInitializer {
 	public void sheepMethod(){
 		//Register the default attibutes to your mob
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_SHEEP, CustomSheepEntity.createSheepAttributes());
+		EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_SHEEP_FUR, SheepEntityModel::getTexturedModelData);
 		//lowers the spawn rate of default vanilla cows
 		BiomeModifications.addSpawn(
 				BiomeSelectors.foundInOverworld(),
@@ -239,6 +250,122 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void hoglinMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_HOGLIN, CustomHoglinEntity.createHoglinAttributes());
+		//lowers the spawn rate of default vanilla pigs
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInTheNether(),
+				SpawnGroup.CREATURE,
+				EntityType.HOGLIN, // Remove the original pig
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		//adds custom pig to natural spawn
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInTheNether(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_HOGLIN, // Add custom pig
+				20, // Spawn weight (higher = more frequent)
+				5,  // Minimum group size
+				10   // Maximum group size
+		);
+		//restricts the cow spawn to grass blocks on the ground
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_HOGLIN,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.CRIMSON_NYLIUM)
+		);
+	}
+
+	public void wolfMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_WOLF, CustomWolfEntity.createWolfAttributes());
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.WOLF,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_WOLF,
+				20, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_WOLF,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.GRASS_BLOCK)
+		);
+
+	}
+
+	public void beeMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_BEE, CustomBeeEntity.createBeeAttributes());
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.BEE,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_BEE,
+				200, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_BEE,
+				SpawnLocationTypes.UNRESTRICTED,
+				Heightmap.Type.MOTION_BLOCKING,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.BEE_NEST)
+		);
+
+	}
+
+	public void axolotlMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_AXOLOTL, CustomAxolotlEntity.createAxolotlAttributes());
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.AXOLOTL,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_AXOLOTL,
+				200, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_AXOLOTL,
+				SpawnLocationTypes.IN_WATER,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.CLAY)
+		);
+	}
 
 	@Override
 	public void onInitialize() {
@@ -249,6 +376,10 @@ public class GeneticSelection implements ModInitializer {
 		donkeyMethod();
 		camelMethod();
 		chickenMethod();
+		wolfMethod();
+		hoglinMethod();
+		beeMethod();
+		axolotlMethod();
 		GlobalAttributesManager.initialize();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads

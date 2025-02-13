@@ -1,8 +1,8 @@
 package com.geneticselection.mobs.Pigs;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
@@ -23,7 +23,7 @@ import net.minecraft.world.World;
 import java.util.Optional;
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomPigEntity extends PigEntity {
+public class CustomPigEntity extends PigEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
     private double MaxHp;
     private double Speed;
@@ -43,6 +43,7 @@ public class CustomPigEntity extends PigEntity {
         }
         this.MaxHp = this.mobAttributes.getMaxHealth();
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
+        this.setHealth((float)this.MaxHp);
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
         this.ELvl = this.mobAttributes.getEnergyLvl();
@@ -95,7 +96,7 @@ public class CustomPigEntity extends PigEntity {
         if (!this.getWorld().isClient) {
             // Calculate the amount of meat to drop between MinMeat and MaxMeat
             int meatAmount = (int) (MaxMeat);
-            this.dropStack(new ItemStack(Items.BEEF, meatAmount));
+            this.dropStack(new ItemStack(Items.PORKCHOP, meatAmount));
         }
     }
     @Override
@@ -139,4 +140,8 @@ public class CustomPigEntity extends PigEntity {
             updateDescription(this);
     }
 
+    @Override
+    public void applyCustomAttributes(MobAttributes attributes) {
+        attributes.getMaxMeat().ifPresent(this::setMaxMeat);
+    }
 }

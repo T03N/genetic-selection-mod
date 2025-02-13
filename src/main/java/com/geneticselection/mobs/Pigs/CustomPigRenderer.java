@@ -13,7 +13,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomPigRenderer extends MobEntityRenderer<CustomPigEntity, PigEntityModel<CustomPigEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/minecraft-pig.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/pig/minecraft-pig.png");
 
     public CustomPigRenderer(EntityRendererFactory.Context context) {
         super(context, new PigEntityModel<>(context.getPart(ModModelLayers.CUSTOM_PIG)), 0.6f);

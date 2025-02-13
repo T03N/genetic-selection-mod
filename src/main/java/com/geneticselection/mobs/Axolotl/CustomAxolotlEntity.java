@@ -1,4 +1,4 @@
-package com.geneticselection.mobs.Rabbit;
+package com.geneticselection.mobs.Axolotl;
 
 import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
@@ -9,7 +9,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.PassiveEntity;
-import net.minecraft.entity.passive.RabbitEntity;
+import net.minecraft.entity.passive.AxolotlEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -23,15 +23,13 @@ import java.util.Optional;
 
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier {
+public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarrier {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
     private double ELvl;
-    private double MaxMeat;
-    private double rabbitHide;
 
-    public CustomRabbitEntity(EntityType<? extends RabbitEntity> entityType, World world) {
+    public CustomAxolotlEntity(EntityType<? extends AxolotlEntity> entityType, World world) {
         super(entityType, world);
 
         // Initialize mob attributes (directly within the class)
@@ -40,9 +38,7 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
             double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
             double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
-            double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            double hide = global.getMaxRabbitHide().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.of(hide), Optional.empty());
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
         }
 
         // Apply attributes to the entity
@@ -53,34 +49,15 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
         this.ELvl = this.mobAttributes.getEnergyLvl();
 
-        this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
-            this.MaxMeat = maxMeat;
-        });
-        this.mobAttributes.getMaxRabbitHide().ifPresent(maxRabbitHide -> {
-            this.rabbitHide = maxRabbitHide;
-        });
-
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
 
-    public void setMaxMeat(double maxMeat)
-    {
-        this.MaxMeat = maxMeat;
-    }
-
-    public void setRabbitHide(double rabbitHide)
-    {
-        this.rabbitHide = rabbitHide;
-    }
-
-    private void updateDescription(CustomRabbitEntity ent) {
+    private void updateDescription(CustomAxolotlEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.3f", ent.Speed) +
-                "\nEnergy: " + String.format("%.3f", ent.ELvl) +
-                "\nMax Meat: " + String.format("%.3f", ent.MaxMeat) +
-                "\nRabbit Hide: " + String.format("%.3f", ent.rabbitHide)));
+                "\nEnergy: " + String.format("%.3f", ent.ELvl)));
     }
 
     @Override
@@ -101,26 +78,16 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
     @Override
     public void onDeath(DamageSource source) {
         super.onDeath(source);
-
-        if (!this.getWorld().isClient) {
-            // Calculate the amount of meat to drop between MinMeat and MaxMeat
-            int meatAmount = (int) (MaxMeat);
-            this.dropStack(new ItemStack(Items.RABBIT, meatAmount));
-
-            // Calculate the amount of leather to drop between MinLeather and MaxLeather
-            int rabbitHideAmount = (int)(rabbitHide);
-            this.dropStack(new ItemStack(Items.RABBIT_HIDE, rabbitHideAmount));
-        }
     }
 
     @Override
-    public CustomRabbitEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
-        if (!(mate instanceof CustomRabbitEntity)) {
-            return (CustomRabbitEntity) EntityType.RABBIT.create(serverWorld);
+    public CustomAxolotlEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
+        if (!(mate instanceof CustomAxolotlEntity)) {
+            return (CustomAxolotlEntity) EntityType.AXOLOTL.create(serverWorld);
         }
 
-        CustomRabbitEntity parent1 = this;
-        CustomRabbitEntity parent2 = (CustomRabbitEntity) mate;
+        CustomAxolotlEntity parent1 = this;
+        CustomAxolotlEntity parent2 = (CustomAxolotlEntity) mate;
 
         MobAttributes attr1 = parent1.mobAttributes;
         MobAttributes attr2 = parent2.mobAttributes;
@@ -128,15 +95,12 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
         // Inherit attributes from both parents
         MobAttributes childAttributes = inheritAttributes(attr1, attr2);
 
-        double childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
-
-        CustomRabbitEntity child = new CustomRabbitEntity(ModEntities.CUSTOM_RABBIT, serverWorld);
+        CustomAxolotlEntity child = new CustomAxolotlEntity(ModEntities.CUSTOM_AXOLOTL, serverWorld);
 
         // Set the inherited attributes directly
         child.mobAttributes = childAttributes;
         applyAttributes(child, childAttributes);
 
-        child.MaxMeat = childMaxMeat;
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
 
         influenceGlobalAttributes(child.getType());
@@ -157,7 +121,5 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
 
     @Override
     public void applyCustomAttributes(MobAttributes attributes) {
-        attributes.getMaxMeat().ifPresent(this::setMaxMeat);
-        attributes.getMaxLeather().ifPresent(this::setRabbitHide);
     }
 }
