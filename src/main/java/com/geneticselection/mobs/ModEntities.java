@@ -1,13 +1,18 @@
 package com.geneticselection.mobs;
 
 import com.geneticselection.GeneticSelection;
+import com.geneticselection.mobs.Axolotl.CustomAxolotlEntity;
+import com.geneticselection.mobs.Bee.CustomBeeEntity;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
+import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
+import com.geneticselection.mobs.Ocelots.CustomOcelotEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Chickens.CustomChickenEntity;
+import com.geneticselection.mobs.Wolves.CustomWolfEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
@@ -76,6 +81,47 @@ public class ModEntities{
             Identifier.of(GeneticSelection.MOD_ID, "custom_chicken"),
             FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomChickenEntity::new)
                     .dimensions(EntityDimensions.fixed(1.0F, 2.0F))
+                    .build()
+    );
+
+    // Register the custom wolf entity
+    public static final EntityType<CustomWolfEntity> CUSTOM_WOLF = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_wolf"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomWolfEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
+                    .build()
+    );
+
+    public static final EntityType<CustomOcelotEntity> CUSTOM_OCELOT = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_ocelot"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomOcelotEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
+                    .build()
+    );
+
+    public static final EntityType<CustomHoglinEntity> CUSTOM_HOGLIN = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_hoglin"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomHoglinEntity::new)
+                    .dimensions(EntityDimensions.fixed(1.4F, 1.4F))
+                    .build()
+    );
+
+    public static final EntityType<CustomBeeEntity> CUSTOM_BEE = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_bee"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomBeeEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.7F, 0.6F))
+                    .build()
+    );
+
+    public static final EntityType<CustomAxolotlEntity> CUSTOM_AXOLOTL = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_axolotl"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomAxolotlEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.75F, 0.42F))
                     .build()
     );
 }

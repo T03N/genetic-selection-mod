@@ -1,8 +1,8 @@
 package com.geneticselection.mobs.Camels;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.entity.EntityType;
@@ -23,7 +23,7 @@ import java.util.Optional;
 
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomCamelEntity extends CamelEntity {
+public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
@@ -44,6 +44,7 @@ public class CustomCamelEntity extends CamelEntity {
         // Apply attributes to the entity
         this.MaxHp = this.mobAttributes.getMaxHealth();
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
+        this.setHealth((float)this.MaxHp);
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
         this.Elvl = this.mobAttributes.getEnergyLvl();
@@ -119,5 +120,9 @@ public class CustomCamelEntity extends CamelEntity {
 
         if (!this.getWorld().isClient)
             updateDescription(this);
+    }
+
+    @Override
+    public void applyCustomAttributes(MobAttributes attributes) {
     }
 }

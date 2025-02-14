@@ -1,34 +1,58 @@
 package com.geneticselection.mobs.Chickens;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
+import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.registry.Registries; // For Registries.ENCHANTMENT
+import net.minecraft.enchantment.Enchantments; // For Enchantments.FIRE_ASPECT
+import net.minecraft.registry.entry.RegistryEntry; // For RegistryEntry<Enchantment>
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.registry.Registries;
 import net.minecraft.world.World;
+import net.minecraft.world.event.GameEvent;
 
 import java.util.Optional;
 
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomChickenEntity extends ChickenEntity {
+public class CustomChickenEntity extends ChickenEntity implements AttributeCarrier {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double Speed;
     private double ELvl;
     private double MaxMeat;
     private double feathers;
+
+    // CHICKEN VANILLA VARS
+    public float flapProgress;
+    public float maxWingDeviation;
+    public float lastMaxWingDeviation;
+    public float lastFlapProgress;
+    public float flapSpeed = 1.0F;
+    private float field_28639 = 1.0F;
 
     public CustomChickenEntity(EntityType<? extends ChickenEntity> entityType, World world) {
         super(entityType, world);
@@ -47,6 +71,7 @@ public class CustomChickenEntity extends ChickenEntity {
         // Apply attributes to the entity
         this.MaxHp = this.mobAttributes.getMaxHealth();
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
+        this.setHealth(Math.round(this.MaxHp));
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
         this.ELvl = this.mobAttributes.getEnergyLvl();
@@ -82,9 +107,9 @@ public class CustomChickenEntity extends ChickenEntity {
                 updateDescription(this);
             }
             return ActionResult.success(this.getWorld().isClient);
-        } else {
-            return super.interactMob(player, hand);
         }
+
+        return super.interactMob(player, hand);
     }
 
     @Override
@@ -92,13 +117,68 @@ public class CustomChickenEntity extends ChickenEntity {
         super.onDeath(source);
 
         if (!this.getWorld().isClient) {
-            // Calculate the amount of meat to drop between MinMeat and MaxMeat
             int meatAmount = (int) (MaxMeat);
-            this.dropStack(new ItemStack(Items.CHICKEN, meatAmount));
 
-            // Calculate the amount of leather to drop between MinLeather and MaxLeather
-            int featherAmount = (int)(feathers);
-            this.dropStack(new ItemStack(Items.FEATHER, featherAmount));
+            boolean shouldDropCooked = false;
+
+            // Check if the entity died from fire, lava, or burning
+            if (source.getName().equals("onFire") || source.getName().equals("inFire") || source.getName().equals("lava")) {
+                shouldDropCooked = true;
+            }
+
+            // Check if the attacker has Fire Aspect
+            if (source.getAttacker() instanceof LivingEntity attacker) {
+                ItemStack weapon = attacker.getMainHandStack();
+                RegistryEntry<Enchantment> fireAspectEntry = this.getWorld().getServer().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.FIRE_ASPECT).get();
+                if (EnchantmentHelper.getLevel(fireAspectEntry ,weapon) >= 1) {
+                    shouldDropCooked = true;
+                }
+            }
+
+            // Drop cooked or raw chicken based on conditions
+            if(shouldDropCooked) {
+                this.dropStack(new ItemStack(Items.COOKED_CHICKEN, meatAmount));
+            }
+            else{
+                this.dropStack(new ItemStack(Items.CHICKEN, meatAmount));
+            }
+        }
+    }
+
+    @Override
+    protected boolean isFlappingWings() {
+        return this.speed > this.field_28639;
+    }
+
+    @Override
+    protected void addFlapEffects() {
+        this.field_28639 = this.speed + this.maxWingDeviation / 2.0F;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        this.lastFlapProgress = this.flapProgress;
+        this.lastMaxWingDeviation = this.maxWingDeviation;
+        this.maxWingDeviation = this.maxWingDeviation + (this.isOnGround() ? -1.0F : 4.0F) * 0.3F;
+        this.maxWingDeviation = MathHelper.clamp(this.maxWingDeviation, 0.0F, 1.0F);
+        if (!this.isOnGround() && this.flapSpeed < 1.0F) {
+            this.flapSpeed = 1.0F;
+        }
+
+        this.flapSpeed *= 0.9F;
+        Vec3d vec3d = this.getVelocity();
+        if (!this.isOnGround() && vec3d.y < 0.0) {
+            this.setVelocity(vec3d.multiply(1.0, 0.6, 1.0));
+        }
+
+        this.flapProgress = this.flapProgress + this.flapSpeed * 2.0F;
+        if (this.getWorld() instanceof ServerWorld serverWorld && this.isAlive() && !this.isBaby() && !this.hasJockey() && --this.eggLayTime <= 0) {
+            this.playSound(SoundEvents.ENTITY_CHICKEN_EGG, 1.0F, (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
+            this.emitGameEvent(GameEvent.ENTITY_PLACE);
+
+            this.eggLayTime = this.random.nextInt(6000) + 6000;
         }
     }
 
@@ -142,5 +222,16 @@ public class CustomChickenEntity extends ChickenEntity {
 
         if (!this.getWorld().isClient)
             updateDescription(this);
+    }
+
+    @Override
+    public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
+        return false; // Chickens don't take fall damage
+    }
+
+    @Override
+    public void applyCustomAttributes(MobAttributes attributes) {
+        attributes.getMaxMeat().ifPresent(val -> this.MaxMeat = val);
+        attributes.getMaxFeathers().ifPresent(val -> this.feathers = val);
     }
 }

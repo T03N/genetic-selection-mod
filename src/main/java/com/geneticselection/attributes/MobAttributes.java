@@ -1,92 +1,81 @@
 package com.geneticselection.attributes;
+
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class MobAttributes {
-    private double movementSpeed;
-    private double maxHealth;
-    private double energyLvl;
-    private Optional<Double> maxMeat = Optional.empty();
-    private Optional<Double> maxLeather = Optional.empty();
-    private Optional<Double> maxWool = Optional.empty();
-    private Optional<Double> maxRabbitHide = Optional.empty();
-    private Optional<Double> maxFeathers = Optional.empty();
+    private final Map<AttributeKey, Double> attributes = new EnumMap<>(AttributeKey.class);
 
-    // Constructor with optional max values for attributes
-    public MobAttributes(double movementSpeed, double maxHealth, double energyLvl, Optional<Double> maxMeat, Optional<Double> maxLeather, Optional<Double> maxWool, Optional<Double> maxRabbitHide, Optional<Double> maxFeathers) {
-        this.movementSpeed = movementSpeed;
-        this.maxHealth = maxHealth;
-        this.energyLvl = energyLvl;
-        this.maxMeat = maxMeat;
-        this.maxLeather = maxLeather;
-        this.maxWool = maxWool;
-        this.maxRabbitHide = maxRabbitHide;
-        this.maxFeathers = maxFeathers;
+    // New constructor that takes a map (used by GlobalAttributesManager)
+    public MobAttributes(Map<AttributeKey, Double> defaults) {
+        attributes.putAll(defaults);
+    }
+
+    // Backward compatibility constructor used by mob classes
+    public MobAttributes(double movementSpeed, double maxHealth, double energy, Optional<Double> maxMeat, Optional<Double> maxLeather, Optional<Double> maxWool, Optional<Double> maxRabbitHide, Optional<Double> maxFeathers) {
+        attributes.put(AttributeKey.MOVEMENT_SPEED, movementSpeed);
+        attributes.put(AttributeKey.MAX_HEALTH, maxHealth);
+        attributes.put(AttributeKey.ENERGY, energy);
+        if (maxMeat != null && maxMeat.isPresent()) {
+            attributes.put(AttributeKey.MAX_MEAT, maxMeat.get());
+        }
+        if (maxLeather != null && maxLeather.isPresent()) {
+            attributes.put(AttributeKey.MAX_LEATHER, maxLeather.get());
+        }
+        if (maxWool != null && maxWool.isPresent()) {
+            attributes.put(AttributeKey.MAX_WOOL, maxWool.get());
+        }
+        if (maxRabbitHide != null && maxRabbitHide.isPresent()) {
+            attributes.put(AttributeKey.MAX_RABBIT_HIDE, maxRabbitHide.get());
+        }
+        if (maxFeathers != null && maxFeathers.isPresent()) {
+            attributes.put(AttributeKey.MAX_FEATHERS, maxFeathers.get());
+        }
+    }
+
+    public double get(AttributeKey key) {
+        return attributes.getOrDefault(key, 0.0);
+    }
+
+    public void set(AttributeKey key, double value) {
+        attributes.put(key, value);
     }
 
     public double getMovementSpeed() {
-        return movementSpeed;
-    }
-
-    public void setMovementSpeed(double movementSpeed) {
-        this.movementSpeed = movementSpeed;
+        return get(AttributeKey.MOVEMENT_SPEED);
     }
 
     public double getMaxHealth() {
-        return maxHealth;
-    }
-
-    public void setMaxHealth(double maxHealth) {
-        this.maxHealth = maxHealth;
-    }
-
-    public void setEnergyLvl(double energyLvl) {
-        this.energyLvl = energyLvl;
+        return get(AttributeKey.MAX_HEALTH);
     }
 
     public double getEnergyLvl() {
-        return energyLvl;
+        return get(AttributeKey.ENERGY);
     }
 
-    // Getter and setter for max values
+    public Map<AttributeKey, Double> getAllAttributes() {
+        return attributes;
+    }
+
+    // Backward compatibility getters
     public Optional<Double> getMaxMeat() {
-        return maxMeat;
-    }
-
-    public void setMaxMeat(double maxMeat) {
-        this.maxMeat = Optional.of(maxMeat);
+        return Optional.ofNullable(attributes.get(AttributeKey.MAX_MEAT));
     }
 
     public Optional<Double> getMaxLeather() {
-        return maxLeather;
-    }
-
-    public void setMaxLeather(double maxLeather) {
-        this.maxLeather = Optional.of(maxLeather);
+        return Optional.ofNullable(attributes.get(AttributeKey.MAX_LEATHER));
     }
 
     public Optional<Double> getMaxWool() {
-        return maxWool;
-    }
-
-    public void setMaxWool(double maxWool) {
-        this.maxWool = Optional.of(maxWool);
+        return Optional.ofNullable(attributes.get(AttributeKey.MAX_WOOL));
     }
 
     public Optional<Double> getMaxRabbitHide() {
-        return maxRabbitHide;
-    }
-
-    public void setMaxRabbitHide(double maxHide) {
-        this.maxRabbitHide = Optional.of(maxHide);
+        return Optional.ofNullable(attributes.get(AttributeKey.MAX_RABBIT_HIDE));
     }
 
     public Optional<Double> getMaxFeathers() {
-        return maxFeathers;
+        return Optional.ofNullable(attributes.get(AttributeKey.MAX_FEATHERS));
     }
-
-    public void setMaxFeathers(double maxFeathers) {
-        this.maxFeathers = Optional.of(maxFeathers);
-    }
-
-
 }

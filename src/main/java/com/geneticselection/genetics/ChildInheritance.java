@@ -1,5 +1,6 @@
 package com.geneticselection.genetics;
 
+import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
@@ -7,7 +8,6 @@ import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
-import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -15,7 +15,6 @@ import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.AnimalEntity;
 
-import java.util.Optional;
 import java.util.Random;
 
 import static com.mojang.text2speech.Narrator.LOGGER;
@@ -25,66 +24,67 @@ public class ChildInheritance {
         double heritability = 0.5;
         Random random = new Random();
 
-        // Calculate selection differential for speed and health
-        double selectionDifferentialSpeed = (a.getMovementSpeed() - b.getMovementSpeed()) / 2;
-        double selectionDifferentialHealth = (a.getMaxHealth() - b.getMaxHealth()) / 2;
-        double selectionDifferentialEnergy = (a.getEnergyLvl() - b.getEnergyLvl()) / 2;
+        double selectionDifferentialSpeed = (a.get(AttributeKey.MOVEMENT_SPEED) - b.get(AttributeKey.MOVEMENT_SPEED)) / 2;
+        double selectionDifferentialHealth = (a.get(AttributeKey.MAX_HEALTH) - b.get(AttributeKey.MAX_HEALTH)) / 2;
+        double selectionDifferentialEnergy = (a.get(AttributeKey.ENERGY) - b.get(AttributeKey.ENERGY)) / 2;
 
-        // Inherit speed and health using the breeder's equation
-        double newSpeed = (a.getMovementSpeed() + b.getMovementSpeed()) / 2 + heritability * selectionDifferentialSpeed;
-        double newHealth = (a.getMaxHealth() + b.getMaxHealth()) / 2 + heritability * selectionDifferentialHealth;
-        double newEnergy = (a.getEnergyLvl() + b.getEnergyLvl()) / 2 + heritability * selectionDifferentialEnergy;
+        double newSpeed = (a.get(AttributeKey.MOVEMENT_SPEED) + b.get(AttributeKey.MOVEMENT_SPEED)) / 2 + heritability * selectionDifferentialSpeed;
+        double newHealth = (a.get(AttributeKey.MAX_HEALTH) + b.get(AttributeKey.MAX_HEALTH)) / 2 + heritability * selectionDifferentialHealth;
+        double newEnergy = (a.get(AttributeKey.ENERGY) + b.get(AttributeKey.ENERGY)) / 2 + heritability * selectionDifferentialEnergy;
 
-        // Apply mutation (random genetic drift)
         double mutationFactor = 0.99;
         if (random.nextDouble() < mutationFactor) {
             newSpeed += random.nextGaussian() * 0.09;
             newHealth += random.nextGaussian() * 0.9;
         }
 
-        // Ensure speed and health are within reasonable bounds
         newSpeed = Math.max(0.1, Math.min(newSpeed, 1.0));
         newHealth = Math.max(1, Math.min(newHealth, 20));
         newEnergy = Math.max(80.0, Math.min(newEnergy, 100));
 
-        // Calculate and inherit optional attributes (maxMeat, maxLeather, maxWool, etc.)
-        Optional<Double> newMaxMeat = inheritOptionalAttribute(a.getMaxMeat(), b.getMaxMeat(), random);
-        Optional<Double> newMaxLeather = inheritOptionalAttribute(a.getMaxLeather(), b.getMaxLeather(), random);
-        Optional<Double> newMaxWool = inheritOptionalAttribute(a.getMaxWool(), b.getMaxWool(), random);
-        Optional<Double> newMaxRabbitHide = inheritOptionalAttribute(a.getMaxRabbitHide(), b.getMaxRabbitHide(), random);
-        Optional<Double> newMaxFeathers = inheritOptionalAttribute(a.getMaxFeathers(), b.getMaxFeathers(), random);
+        double newMaxMeat = inheritOptional(a, b, AttributeKey.MAX_MEAT, random);
+        double newMaxLeather = inheritOptional(a, b, AttributeKey.MAX_LEATHER, random);
+        double newMaxWool = inheritOptional(a, b, AttributeKey.MAX_WOOL, random);
+        double newMaxRabbitHide = inheritOptional(a, b, AttributeKey.MAX_RABBIT_HIDE, random);
+        double newMaxFeathers = inheritOptional(a, b, AttributeKey.MAX_FEATHERS, random);
 
-        // Return a new MobAttributes object with the inherited values
-        return new MobAttributes(newSpeed, newHealth, newEnergy, newMaxMeat, newMaxLeather, newMaxWool, newMaxRabbitHide, newMaxFeathers);
+        java.util.Map<AttributeKey, Double> newAttrMap = new java.util.HashMap<>();
+        newAttrMap.put(AttributeKey.MOVEMENT_SPEED, newSpeed);
+        newAttrMap.put(AttributeKey.MAX_HEALTH, newHealth);
+        newAttrMap.put(AttributeKey.ENERGY, newEnergy);
+        if (newMaxMeat >= 0) {
+            newAttrMap.put(AttributeKey.MAX_MEAT, newMaxMeat);
+        }
+        if (newMaxLeather >= 0) {
+            newAttrMap.put(AttributeKey.MAX_LEATHER, newMaxLeather);
+        }
+        if (newMaxWool >= 0) {
+            newAttrMap.put(AttributeKey.MAX_WOOL, newMaxWool);
+        }
+        if (newMaxRabbitHide >= 0) {
+            newAttrMap.put(AttributeKey.MAX_RABBIT_HIDE, newMaxRabbitHide);
+        }
+        if (newMaxFeathers >= 0) {
+            newAttrMap.put(AttributeKey.MAX_FEATHERS, newMaxFeathers);
+        }
+        return new MobAttributes(newAttrMap);
     }
 
-    /**
-     * Helper method to handle inheritance and mutation for optional attributes.
-     */
-    private static Optional<Double> inheritOptionalAttribute(Optional<Double> a, Optional<Double> b, Random random) {
-        if (a != null && b != null) {
-            if (a.isPresent() && b.isPresent()) {
-                // Calculate selection differential
-                double selectionDifferential = Math.abs(a.get() - b.get()) / 2;
-                // Apply heritability and mutation
-                double heritability = 0.5;
-                double newValue = (a.get() + b.get()) / 2 + (int)(heritability * selectionDifferential);
-
-                // Apply mutation (random drift)
-                double mutationFactor = 0.99;
-                if (random.nextDouble() < mutationFactor) {
-                    newValue += random.nextInt(3) - 1; // Small random change (-1, 0, +1)
-                }
-
-                // Ensure the new value is within reasonable bounds (for example, 0 to 10)
-                newValue = Math.max(0, Math.min(newValue, 10));
-
-                return Optional.of(newValue);
-            }
+    private static double inheritOptional(MobAttributes a, MobAttributes b, AttributeKey key, Random random) {
+        double valA = a.get(key);
+        double valB = b.get(key);
+        if (valA == 0 && valB == 0) {
+            return -1;
         }
-
-        // If either parent doesn't have the attribute, return empty
-        return Optional.empty();
+        double selectionDifferential = Math.abs(valA - valB) / 2;
+        double heritability = 0.5;
+        double newValue = (valA + valB) / 2 + (heritability * selectionDifferential);
+        double mutationFactor = 0.99;
+        if (random.nextDouble() < mutationFactor) {
+            newValue += random.nextInt(3) - 1;
+        }
+        newValue = Math.max(0, Math.min(newValue, 10));
+        return newValue;
     }
 
     public static void applyAttributes(Entity entity, MobAttributes attributes) {
@@ -97,59 +97,48 @@ public class ChildInheritance {
         }
 
         if (speedAttribute != null) {
-            speedAttribute.setBaseValue(attributes.getMovementSpeed());
+            speedAttribute.setBaseValue(attributes.get(AttributeKey.MOVEMENT_SPEED));
         }
         if (healthAttribute != null) {
-            healthAttribute.setBaseValue(attributes.getMaxHealth());
-            ((AnimalEntity) entity).setHealth((float) attributes.getMaxHealth());
+            healthAttribute.setBaseValue(attributes.get(AttributeKey.MAX_HEALTH));
+            ((AnimalEntity) entity).setHealth((float) attributes.get(AttributeKey.MAX_HEALTH));
         }
 
-        // Handle Optional attributes for drops
         if (entity instanceof CustomCowEntity cow) {
-            attributes.getMaxMeat().ifPresent(cow::setMaxMeat);
-            attributes.getMaxLeather().ifPresent(cow::setMaxLeather);
+            if(attributes.get(AttributeKey.MAX_MEAT) > 0) cow.setMaxMeat(attributes.get(AttributeKey.MAX_MEAT));
+            if(attributes.get(AttributeKey.MAX_LEATHER) > 0) cow.setMaxLeather(attributes.get(AttributeKey.MAX_LEATHER));
         }
-
         if (entity instanceof CustomSheepEntity sheep) {
-            attributes.getMaxMeat().ifPresent(sheep::setMaxMeat);
-            attributes.getMaxWool().ifPresent(sheep::setMaxWool);
+            if(attributes.get(AttributeKey.MAX_MEAT) > 0) sheep.setMaxMeat(attributes.get(AttributeKey.MAX_MEAT));
+            if(attributes.get(AttributeKey.MAX_WOOL) > 0) sheep.setMaxWool(attributes.get(AttributeKey.MAX_WOOL));
         }
-
         if (entity instanceof CustomDonkeyEntity donkey) {
-            attributes.getMaxLeather().ifPresent(donkey::setMaxLeather);
+            if(attributes.get(AttributeKey.MAX_LEATHER) > 0) donkey.setMaxLeather(attributes.get(AttributeKey.MAX_LEATHER));
         }
-
         if (entity instanceof CustomPigEntity pig) {
-            attributes.getMaxMeat().ifPresent(pig::setMaxMeat);
+            if(attributes.get(AttributeKey.MAX_MEAT) > 0) pig.setMaxMeat(attributes.get(AttributeKey.MAX_MEAT));
         }
-
         if (entity instanceof CustomRabbitEntity rabbit) {
-            attributes.getMaxMeat().ifPresent(rabbit::setMaxMeat);
-            attributes.getMaxRabbitHide().ifPresent(rabbit::setRabbitHide);
+            if(attributes.get(AttributeKey.MAX_MEAT) > 0) rabbit.setMaxMeat(attributes.get(AttributeKey.MAX_MEAT));
+            if(attributes.get(AttributeKey.MAX_RABBIT_HIDE) > 0) rabbit.setRabbitHide(attributes.get(AttributeKey.MAX_RABBIT_HIDE));
         }
-
         if (entity instanceof CustomCamelEntity camel) {
+            // Camel-specific attributes can be applied here if needed.
         }
     }
 
     public static void influenceGlobalAttributes(EntityType<?> offspring) {
         if (offspring != null) {
             MobAttributes childAttributes = GlobalAttributesManager.getAttributes(offspring);
-
             if (childAttributes != null) {
-                MobAttributes globalAttributes = GlobalAttributesManager.getAttributes(offspring);
-
-                // Update global attributes using a moving average
+                MobAttributes globalAttr = GlobalAttributesManager.getAttributes(offspring);
                 double updateRate = 0.01;
-                double newMovementSpeed = globalAttributes.getMovementSpeed() * (1 - updateRate) + childAttributes.getMovementSpeed() * updateRate;
-                double newMaxHealth = globalAttributes.getMaxHealth() * (1 - updateRate) + childAttributes.getMaxHealth() * updateRate;
-
-                globalAttributes.setMovementSpeed(newMovementSpeed);
-                globalAttributes.setMaxHealth(newMaxHealth);
-
-                GlobalAttributesManager.updateGlobalAttributes(offspring, globalAttributes);
-                LOGGER.info("Updated global attributes: Speed={}, Health={}",
-                        globalAttributes.getMovementSpeed(), globalAttributes.getMaxHealth());
+                double newMovementSpeed = globalAttr.get(AttributeKey.MOVEMENT_SPEED) * (1 - updateRate) + childAttributes.get(AttributeKey.MOVEMENT_SPEED) * updateRate;
+                double newMaxHealth = globalAttr.get(AttributeKey.MAX_HEALTH) * (1 - updateRate) + childAttributes.get(AttributeKey.MAX_HEALTH) * updateRate;
+                globalAttr.set(AttributeKey.MOVEMENT_SPEED, newMovementSpeed);
+                globalAttr.set(AttributeKey.MAX_HEALTH, newMaxHealth);
+                GlobalAttributesManager.updateGlobalAttributes(offspring, globalAttr);
+                LOGGER.info("Updated global attributes: Speed={}, Health={}", newMovementSpeed, newMaxHealth);
             }
         }
     }

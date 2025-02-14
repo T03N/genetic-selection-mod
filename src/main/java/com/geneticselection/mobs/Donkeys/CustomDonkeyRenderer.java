@@ -12,7 +12,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomDonkeyRenderer extends MobEntityRenderer<CustomDonkeyEntity, DonkeyEntityModel<CustomDonkeyEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/minecraft-donkey.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/donkey/minecraft-donkey.png");
 
     public CustomDonkeyRenderer(EntityRendererFactory.Context context) {
         super(context, new DonkeyEntityModel<>(context.getPart(ModModelLayers.CUSTOM_DONKEY)), 0.6f);
