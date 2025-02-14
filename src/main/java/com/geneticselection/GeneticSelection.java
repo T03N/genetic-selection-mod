@@ -73,7 +73,6 @@ public class GeneticSelection implements ModInitializer {
 	public void sheepMethod(){
 		//Register the default attibutes to your mob
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_SHEEP, CustomSheepEntity.createSheepAttributes());
-		EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_SHEEP_FUR, SheepEntityModel::getTexturedModelData);
 		//lowers the spawn rate of default vanilla cows
 		BiomeModifications.addSpawn(
 				BiomeSelectors.foundInOverworld(),
