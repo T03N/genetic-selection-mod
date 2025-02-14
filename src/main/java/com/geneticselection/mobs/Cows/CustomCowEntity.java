@@ -3,7 +3,13 @@ import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.GameMode;
 import net.minecraft.entity.data.DataTracker;
@@ -229,23 +235,33 @@ public class CustomCowEntity extends CowEntity {
 
     @Override
     public void onDeath(DamageSource source) {
-        // If the cow is a baby, don't drop any items
-        if (this.isBaby()) {
-            return;
-        }
-        // If energy is zero, drop bones instead of meat or leather
-        if (ELvl <= 0.0) {
-            // Ensure bones are dropped
-            this.dropStack(new ItemStack(Items.BONE, 1)); // Drop one bone
-        } else {
-            // Normal death drops (meat and leather)
-            super.onDeath(source);
-            if (!this.getWorld().isClient) {
-                int scaledMeatAmount = (int) ((MinMeat + this.getWorld().random.nextInt((int) (MaxMeat - MinMeat) + 1)) * (ELvl / 100.0));
-                this.dropStack(new ItemStack(Items.BEEF, Math.max(0, scaledMeatAmount))); // Ensure no negative values
+        super.onDeath(source);
 
-                int scaledLeatherAmount = (int) ((MinLeather + this.getWorld().random.nextInt((int) (MaxLeather - MinLeather) + 1)) * (ELvl / 100.0));
-                this.dropStack(new ItemStack(Items.LEATHER, Math.max(0, scaledLeatherAmount)));
+        if (!this.getWorld().isClient) {
+            int meatAmount = (int) (MaxMeat);
+
+            boolean shouldDropCooked = false;
+
+            // Check if the entity died from fire, lava, or burning
+            if (source.getName().equals("onFire") || source.getName().equals("inFire") || source.getName().equals("lava")) {
+                shouldDropCooked = true;
+            }
+
+            // Check if the attacker has Fire Aspect
+            if (source.getAttacker() instanceof LivingEntity attacker) {
+                ItemStack weapon = attacker.getMainHandStack();
+                RegistryEntry<Enchantment> fireAspectEntry = this.getWorld().getServer().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.FIRE_ASPECT).get();
+                if (EnchantmentHelper.getLevel(fireAspectEntry ,weapon) >= 1) {
+                    shouldDropCooked = true;
+                }
+            }
+
+            // Drop cooked or raw chicken based on conditions
+            if(shouldDropCooked) {
+                this.dropStack(new ItemStack(Items.COOKED_BEEF, meatAmount));
+            }
+            else{
+                this.dropStack(new ItemStack(Items.BEEF, meatAmount));
             }
         }
     }
