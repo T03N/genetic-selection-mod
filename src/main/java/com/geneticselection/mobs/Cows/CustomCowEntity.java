@@ -37,6 +37,10 @@ public class CustomCowEntity extends CowEntity {
     private double MaxLeather;
     private int milkingCooldown;
     private long lastMilkTime = 0;
+    private int panicTicks = 0;
+    private static final int PANIC_DURATION = 100; // 5 seconds at 20 ticks per second
+    private static final double PANIC_SPEED_MULTIPLIER = 1.25;
+    private boolean wasRecentlyHit = false;
 
     public CustomCowEntity(EntityType<? extends CowEntity> entityType, World world) {
         super(entityType, world);
@@ -163,11 +167,13 @@ public class CustomCowEntity extends CowEntity {
         // Mark the cow as recently hit
         wasRecentlyHit = true;
 
-        // Dynamically adjust movement speed based on current energy
-        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                .setBaseValue(Speed * (ELvl / 100.0));
+        // Start panic mode
+        panicTicks = PANIC_DURATION;
 
-        // Optionally update the description
+        // Increase speed temporarily
+        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                .setBaseValue(Speed * (ELvl / 100.0) * PANIC_SPEED_MULTIPLIER);
+
         if (!this.getWorld().isClient) {
             updateDescription(this);
         }
@@ -238,15 +244,22 @@ public class CustomCowEntity extends CowEntity {
         return child;
     }
 
-    // Add a new field to track if the cow was recently hit
-    private boolean wasRecentlyHit = false;
-
     @Override
     public void tick() {
         super.tick();
 
         // Only perform energy adjustments on the server side
         if (!this.getWorld().isClient) {
+            // Handle panic state
+            if (panicTicks > 0) {
+                panicTicks--;
+                if (panicTicks == 0) {
+                    // Reset speed back to normal when panic ends
+                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                            .setBaseValue(Speed * (ELvl / 100.0));
+                }
+            }
+
             // Handle energy loss if the cow was recently hit
             if (wasRecentlyHit) {
                 // Reduce energy by 20% of its current level
@@ -280,9 +293,12 @@ public class CustomCowEntity extends CowEntity {
                 this.kill(); // This makes the cow die
             } else {
                 // Update attributes dynamically if energy is greater than 0
-                this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(Speed * (ELvl / 100.0));
+                if (panicTicks == 0) { // Only update speed if not in panic mode
+                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                            .setBaseValue(Speed * (ELvl / 100.0));
+                }
 
-                // Optionally, update the description with the new energy level
+                // Update the description with the new energy level
                 updateDescription(this);
             }
         }
