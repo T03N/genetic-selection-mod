@@ -12,6 +12,7 @@ import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinRenderer;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
+import com.geneticselection.mobs.Ocelots.CustomOcelotRenderer;
 import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
 import com.geneticselection.mobs.Sheep.CustomSheepRenderer;
 import com.geneticselection.mobs.Pigs.CustomPigRenderer;
@@ -83,6 +84,12 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_AXOLOTL, AxolotlEntityModel::getTexturedModelData);
     }
 
+    public void ocelotMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_OCELOT, CustomOcelotRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_OCELOT,
+                () -> TexturedModelData.of(OcelotEntityModel.getModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
+    }
+
     @Override
     public void onInitializeClient() {
         cowMethod();
@@ -96,5 +103,6 @@ public class GeneticSelectionClient implements ClientModInitializer {
         hoglinMethod();
         beeMethod();
         axolotlMethod();
+        ocelotMethod();
     }
 }

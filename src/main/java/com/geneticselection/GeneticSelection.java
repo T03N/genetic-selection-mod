@@ -11,6 +11,7 @@ import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
+import com.geneticselection.mobs.Ocelots.CustomOcelotEntity;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
@@ -339,7 +340,7 @@ public class GeneticSelection implements ModInitializer {
 
 	}
 
-	public void axolotlMethod(){
+	public void axolotlMethod() {
 		//Register the default attibutes to your mob
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_AXOLOTL, CustomAxolotlEntity.createAxolotlAttributes());
 		BiomeModifications.addSpawn(
@@ -367,6 +368,34 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void ocelotMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_OCELOT, CustomOcelotEntity.createOcelotAttributes());
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.OCELOT,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_OCELOT,
+				20, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_OCELOT,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.GRASS_BLOCK)
+		);
+	}
+
 	@Override
 	public void onInitialize() {
 		cowMethod();
@@ -380,6 +409,7 @@ public class GeneticSelection implements ModInitializer {
 		hoglinMethod();
 		beeMethod();
 		axolotlMethod();
+		ocelotMethod();
 		GlobalAttributesManager.initialize();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads
