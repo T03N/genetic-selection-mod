@@ -16,8 +16,6 @@ public class CustomSheepRenderer extends MobEntityRenderer<CustomSheepEntity, Sh
 
     public CustomSheepRenderer(EntityRendererFactory.Context context) {
         super(context, new SheepEntityModel<>(context.getPart(ModModelLayers.CUSTOM_SHEEP)), 0.6f);
-
-        // Use the correct model part for wool
         this.addFeature(new CustomSheepWoolLayer<>(this, context.getPart(ModModelLayers.CUSTOM_SHEEP_FUR)));
     }
 
