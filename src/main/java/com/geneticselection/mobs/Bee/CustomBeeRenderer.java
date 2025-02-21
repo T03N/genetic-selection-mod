@@ -11,7 +11,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomBeeRenderer extends MobEntityRenderer<CustomBeeEntity, BeeEntityModel<CustomBeeEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/cow/minecraft-cow.png");
+    private static final Identifier TEXTURE = Identifier.of("minecraft", "textures/entity/bee/bee.png");
 
     public CustomBeeRenderer(EntityRendererFactory.Context context) {
         super(context, new BeeEntityModel<>(context.getPart(ModModelLayers.CUSTOM_BEE)), 0.6f);

@@ -13,7 +13,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomHoglinRenderer extends MobEntityRenderer<CustomHoglinEntity, HoglinEntityModel<CustomHoglinEntity>> {
-    private static final Identifier TEXTURE = Identifier.of("minecraft", "textures/entity/hoglin/minecraft-hoglin.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/hoglin/hoglin.png");
 
     public CustomHoglinRenderer(EntityRendererFactory.Context context) {
         super(context, new HoglinEntityModel<>(context.getPart(ModModelLayers.CUSTOM_HOGLIN)), 0.6f);
