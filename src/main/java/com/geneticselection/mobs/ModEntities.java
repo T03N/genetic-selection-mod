@@ -6,6 +6,7 @@ import com.geneticselection.mobs.Bee.CustomBeeEntity;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
+import com.geneticselection.mobs.Goat.CustomGoatEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.Ocelots.CustomOcelotEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
@@ -122,6 +123,14 @@ public class ModEntities{
             Identifier.of(GeneticSelection.MOD_ID, "custom_axolotl"),
             FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomAxolotlEntity::new)
                     .dimensions(EntityDimensions.fixed(0.75F, 0.42F))
+                    .build()
+    );
+
+    public static final EntityType<CustomGoatEntity> CUSTOM_GOAT = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_goat"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomGoatEntity::new)
+                    .dimensions(EntityDimensions.fixed(1.3F, 0.9F))
                     .build()
     );
 }

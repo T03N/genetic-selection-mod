@@ -38,6 +38,7 @@ public class CustomSheepEntity extends SheepEntity implements AttributeCarrier {
 
     public CustomSheepEntity(EntityType<? extends SheepEntity> entityType, World world) {
         super(entityType, world);
+        this.setSheared(false);
 
         // Initialize mob attributes (directly within the class)
         if (this.mobAttributes == null) {

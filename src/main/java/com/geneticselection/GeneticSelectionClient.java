@@ -8,6 +8,8 @@ import com.geneticselection.mobs.Camels.CustomCamelRenderer;
 import com.geneticselection.mobs.Chickens.CustomChickenRenderer;
 import com.geneticselection.mobs.Cows.CustomCowRenderer;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyRenderer;
+import com.geneticselection.mobs.Goat.CustomGoatEntity;
+import com.geneticselection.mobs.Goat.CustomGoatRenderer;
 import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinRenderer;
 import com.geneticselection.mobs.ModEntities;
@@ -69,7 +71,7 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_WOLF,
                 () -> TexturedModelData.of(WolfEntityModel.getTexturedModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
     }
-
+ 
     public void hoglinMethod() {
         EntityRendererRegistry.register(ModEntities.CUSTOM_HOGLIN, CustomHoglinRenderer::new);
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_HOGLIN, HoglinEntityModel::getTexturedModelData);
@@ -91,6 +93,11 @@ public class GeneticSelectionClient implements ClientModInitializer {
                 () -> TexturedModelData.of(OcelotEntityModel.getModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
     }
 
+    public void goatMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_GOAT, CustomGoatRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_GOAT, GoatEntityModel::getTexturedModelData);
+    }
+
     @Override
     public void onInitializeClient() {
         cowMethod();
@@ -105,5 +112,6 @@ public class GeneticSelectionClient implements ClientModInitializer {
         beeMethod();
         axolotlMethod();
         ocelotMethod();
+        goatMethod();
     }
 }

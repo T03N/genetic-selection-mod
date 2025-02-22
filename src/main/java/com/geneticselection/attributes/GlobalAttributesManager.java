@@ -90,6 +90,18 @@ public class GlobalAttributesManager {
             put(AttributeKey.MAX_HEALTH, 10.0);
             put(AttributeKey.ENERGY, 100.0);
         }});
+
+        ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_AXOLOTL, new HashMap<>() {{
+            put(AttributeKey.MOVEMENT_SPEED, 0.3);
+            put(AttributeKey.MAX_HEALTH, 10.0);
+            put(AttributeKey.ENERGY, 100.0);
+        }});
+
+        ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_GOAT, new HashMap<>() {{
+            put(AttributeKey.MOVEMENT_SPEED, 0.2);
+            put(AttributeKey.MAX_HEALTH, 10.0);
+            put(AttributeKey.ENERGY, 100.0);
+        }});
     }
 
     public static void initialize() {

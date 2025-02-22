@@ -8,6 +8,7 @@ import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Chickens.CustomChickenEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
+import com.geneticselection.mobs.Goat.CustomGoatEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
@@ -395,6 +396,34 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void goatMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_GOAT, CustomGoatEntity.createGoatAttributes());
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.GOAT,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_GOAT,
+				20, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_GOAT,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.SNOW_BLOCK)
+		);
+	}
+
 	@Override
 	public void onInitialize() {
 		cowMethod();
@@ -409,6 +438,7 @@ public class GeneticSelection implements ModInitializer {
 		beeMethod();
 		axolotlMethod();
 		ocelotMethod();
+		goatMethod();
 		GlobalAttributesManager.initialize();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads
