@@ -8,6 +8,7 @@ import com.geneticselection.mobs.Camels.CustomCamelRenderer;
 import com.geneticselection.mobs.Chickens.CustomChickenRenderer;
 import com.geneticselection.mobs.Cows.CustomCowRenderer;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyRenderer;
+import com.geneticselection.mobs.Fox.CustomFoxRenderer;
 import com.geneticselection.mobs.Goat.CustomGoatEntity;
 import com.geneticselection.mobs.Goat.CustomGoatRenderer;
 import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
@@ -98,6 +99,11 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_GOAT, GoatEntityModel::getTexturedModelData);
     }
 
+    public void foxMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_FOX, CustomFoxRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_FOX, FoxEntityModel::getTexturedModelData);
+    }
+
     @Override
     public void onInitializeClient() {
         cowMethod();
@@ -113,5 +119,6 @@ public class GeneticSelectionClient implements ClientModInitializer {
         axolotlMethod();
         ocelotMethod();
         goatMethod();
+        foxMethod();
     }
 }
