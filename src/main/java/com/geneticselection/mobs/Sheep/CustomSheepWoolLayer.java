@@ -10,9 +10,10 @@ import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.render.entity.model.SheepEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.passive.SheepEntity;
+import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.client.model.ModelPart;
-
 public class CustomSheepWoolLayer<T extends CustomSheepEntity> extends FeatureRenderer<T, SheepEntityModel<T>> {
     private static final Identifier WOOL_TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/sheep/sheep_wool.png");
     private final SheepEntityModel<T> woolModel;
@@ -23,23 +24,35 @@ public class CustomSheepWoolLayer<T extends CustomSheepEntity> extends FeatureRe
     }
 
     @Override
-    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-        if (!entity.isSheared()) {
-            renderWool(matrices, vertexConsumers, light, entity, limbAngle, limbDistance, animationProgress, headYaw, headPitch);
+    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity,
+                       float limbAngle, float limbDistance, float tickDelta,
+                       float animationProgress, float headYaw, float headPitch) {
+        if (entity.isSheared()) {
+            return; // Don't render wool if sheep is sheared
         }
-    }
 
-    private void renderWool(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
-        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(WOOL_TEXTURE));
+        // Get the sheep color
+        DyeColor dyeColor = entity.getColor();
+        // Get the correct vertex consumer with the wool texture
+        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(
+                RenderLayer.getEntityCutoutNoCull(WOOL_TEXTURE));
 
+        // Important: Save the current state of the matrices
         matrices.push();
 
-        // Set the angles based on entity movement
-        woolModel.setAngles(entity, limbAngle, limbDistance, animationProgress, headYaw, headPitch);
+        // Copy the model state but explicitly handle child scaling
+        this.woolModel.child = entity.isBaby();
 
-        // Render the wool model
-        woolModel.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
+        // Make sure animation parameters are set correctly
+        this.woolModel.animateModel(entity, limbAngle, limbDistance, tickDelta);
+        this.woolModel.setAngles(entity, limbAngle, limbDistance, animationProgress, headYaw, headPitch);
 
+        // Render the wool with color
+        this.woolModel.render(matrices, vertexConsumer, light,
+                OverlayTexture.DEFAULT_UV
+        );
+
+        // Restore the matrices
         matrices.pop();
     }
 }
