@@ -43,7 +43,6 @@ import java.util.Optional;
 import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomCowEntity extends CowEntity {
-    private static final TrackedData<Float> ENERGY_LEVEL = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double ELvl;
