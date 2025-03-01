@@ -1,77 +1,60 @@
 package com.geneticselection.mobs.Chickens;
 
 import com.geneticselection.attributes.AttributeCarrier;
+import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.genetics.ChildInheritance;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.registry.Registries; // For Registries.ENCHANTMENT
-import net.minecraft.enchantment.Enchantments; // For Enchantments.FIRE_ASPECT
-import net.minecraft.registry.entry.RegistryEntry; // For RegistryEntry<Enchantment>
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.registry.Registries;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 
 import java.util.Optional;
-
 import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomChickenEntity extends ChickenEntity implements AttributeCarrier {
-    private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
+    private MobAttributes mobAttributes;
     private double MaxHp;
     private double Speed;
     private double ELvl;
     private double MaxMeat;
-    private double feathers;
+    private double MaxFeathers;
 
-    // CHICKEN VANILLA VARS
-    public float flapProgress;
-    public float maxWingDeviation;
-    public float lastMaxWingDeviation;
-    public float lastFlapProgress;
-    public float flapSpeed = 1.0F;
-    private float field_28639 = 1.0F;
+    private int panicTicks = 0;
+    private static final int PANIC_DURATION = 100;
+    private static final double PANIC_SPEED_MULTIPLIER = 2.0;
+    private boolean wasRecentlyHit = false;
 
     public CustomChickenEntity(EntityType<? extends ChickenEntity> entityType, World world) {
         super(entityType, world);
 
-        // Initialize mob attributes (directly within the class)
         if (this.mobAttributes == null) {
             MobAttributes global = GlobalAttributesManager.getAttributes(entityType);
             double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
             double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            double feather = global.getMaxFeathers().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(feather));
+            double feathers = global.getMaxFeathers().orElse(0.0) + (0.98 + Math.random() * 0.1);
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(feathers));
         }
 
-        // Apply attributes to the entity
         this.MaxHp = this.mobAttributes.getMaxHealth();
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        this.setHealth(Math.round(this.MaxHp));
+        this.setHealth((float)this.MaxHp);
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
         this.ELvl = this.mobAttributes.getEnergyLvl();
@@ -79,8 +62,8 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
         });
-        this.mobAttributes.getMaxFeathers().ifPresent(maxRabbitHide -> {
-            this.feathers = maxRabbitHide;
+        this.mobAttributes.getMaxFeathers().ifPresent(maxFeathers -> {
+            this.MaxFeathers = maxFeathers;
         });
 
         if (!this.getWorld().isClient)
@@ -89,24 +72,30 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
     private void updateDescription(CustomChickenEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-                "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
-                "\nSpeed: " + String.format("%.3f", ent.Speed) +
-                "\nEnergy: " + String.format("%.3f", ent.ELvl) +
-                "\nMax Meat: " + String.format("%.3f", ent.MaxMeat) +
-                "\nFeathers: " + String.format("%.3f", ent.feathers)));
-
+                "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
+                "\nSpeed: " + String.format("%.2f", ent.Speed) +
+                "\nEnergy: " + String.format("%.1f", ent.ELvl) +
+                "\nMax Meat: " + String.format("%.1f", ent.MaxMeat) +
+                "\nFeathers: " + String.format("%.1f", ent.MaxFeathers)));
     }
 
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
 
-        if (itemStack.isEmpty()) { // Check if the hand is empty
-            // Only display the stats on the server side to avoid duplication
+        if (itemStack.isOf(Items.WHEAT_SEEDS)) {
+            if (ELvl < 20.0) {
+                player.sendMessage(Text.of("This chicken cannot breed because it has low energy."), true);
+                return ActionResult.FAIL;
+            }
+            return super.interactMob(player, hand);
+        }
+
+        if (itemStack.isEmpty()) {
             if (!this.getWorld().isClient) {
                 updateDescription(this);
             }
-            return ActionResult.success(this.getWorld().isClient);
+            return ActionResult.SUCCESS;
         }
 
         return super.interactMob(player, hand);
@@ -114,71 +103,72 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
     @Override
     public void onDeath(DamageSource source) {
-        super.onDeath(source);
+        if (this.isBaby()) {
+            return;
+        }
 
-        if (!this.getWorld().isClient) {
-            int meatAmount = (int) (MaxMeat);
+        if (ELvl <= 0.0) {
+            // Drop minimal resources or nothing
+            this.dropStack(new ItemStack(Items.FEATHER, 1));
+        } else {
+            super.onDeath(source);
+            if (!this.getWorld().isClient) {
+                // Drop feathers based on energy
+                int feathersAmount = (int) ((MaxFeathers) * (ELvl / 100.0));
+                this.dropStack(new ItemStack(Items.FEATHER, feathersAmount));
 
-            boolean shouldDropCooked = false;
-
-            // Check if the entity died from fire, lava, or burning
-            if (source.getName().equals("onFire") || source.getName().equals("inFire") || source.getName().equals("lava")) {
-                shouldDropCooked = true;
-            }
-
-            // Check if the attacker has Fire Aspect
-            if (source.getAttacker() instanceof LivingEntity attacker) {
-                ItemStack weapon = attacker.getMainHandStack();
-                RegistryEntry<Enchantment> fireAspectEntry = this.getWorld().getServer().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.FIRE_ASPECT).get();
-                if (EnchantmentHelper.getLevel(fireAspectEntry ,weapon) >= 1) {
-                    shouldDropCooked = true;
-                }
-            }
-
-            // Drop cooked or raw chicken based on conditions
-            if(shouldDropCooked) {
-                this.dropStack(new ItemStack(Items.COOKED_CHICKEN, meatAmount));
-            }
-            else{
+                // Drop chicken meat based on energy
+                int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
                 this.dropStack(new ItemStack(Items.CHICKEN, meatAmount));
             }
         }
     }
 
     @Override
-    protected boolean isFlappingWings() {
-        return this.speed > this.field_28639;
-    }
-
-    @Override
-    protected void addFlapEffects() {
-        this.field_28639 = this.speed + this.maxWingDeviation / 2.0F;
-    }
-
-    @Override
     public void tick() {
         super.tick();
 
-        this.lastFlapProgress = this.flapProgress;
-        this.lastMaxWingDeviation = this.maxWingDeviation;
-        this.maxWingDeviation = this.maxWingDeviation + (this.isOnGround() ? -1.0F : 4.0F) * 0.3F;
-        this.maxWingDeviation = MathHelper.clamp(this.maxWingDeviation, 0.0F, 1.0F);
-        if (!this.isOnGround() && this.flapSpeed < 1.0F) {
-            this.flapSpeed = 1.0F;
-        }
+        if (!this.getWorld().isClient) {
+            // Handle panic
+            if (panicTicks > 0) {
+                panicTicks--;
+                if (panicTicks == 0) {
+                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                            .setBaseValue(Speed * (ELvl / 100.0));
+                }
+            }
 
-        this.flapSpeed *= 0.9F;
-        Vec3d vec3d = this.getVelocity();
-        if (!this.isOnGround() && vec3d.y < 0.0) {
-            this.setVelocity(vec3d.multiply(1.0, 0.6, 1.0));
-        }
+            // Handle energy loss from damage
+            if (wasRecentlyHit) {
+                ELvl = Math.max(0.0, ELvl * 0.8);
+                wasRecentlyHit = false;
+            }
 
-        this.flapProgress = this.flapProgress + this.flapSpeed * 2.0F;
-        if (this.getWorld() instanceof ServerWorld serverWorld && this.isAlive() && !this.isBaby() && !this.hasJockey() && --this.eggLayTime <= 0) {
-            this.playSound(SoundEvents.ENTITY_CHICKEN_EGG, 1.0F, (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
-            this.emitGameEvent(GameEvent.ENTITY_PLACE);
+            // Energy gain/loss based on environment
+            boolean isOnEnergySource = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.GRASS_BLOCK);
 
-            this.eggLayTime = this.random.nextInt(6000) + 6000;
+            if (isOnEnergySource) {
+                ELvl = Math.min(100.0, ELvl + 0.1);
+            } else {
+                ELvl = Math.max(0.0, ELvl - 0.05);
+            }
+
+            // Health regeneration at max energy
+            if (ELvl == 100.0 && this.getHealth() < this.getMaxHealth()) {
+                this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
+            }
+
+            // Kill if energy is 0
+            if (ELvl <= 0.0) {
+                this.kill();
+            } else {
+                // Update speed
+                if (panicTicks == 0) {
+                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                            .setBaseValue(Speed * (ELvl / 100.0));
+                }
+                updateDescription(this);
+            }
         }
     }
 
@@ -194,19 +184,19 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         MobAttributes attr1 = parent1.mobAttributes;
         MobAttributes attr2 = parent2.mobAttributes;
 
-        // Inherit attributes from both parents
         MobAttributes childAttributes = inheritAttributes(attr1, attr2);
-
-        double childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
 
         CustomChickenEntity child = new CustomChickenEntity(ModEntities.CUSTOM_CHICKEN, serverWorld);
 
-        // Set the inherited attributes directly
         child.mobAttributes = childAttributes;
         applyAttributes(child, childAttributes);
 
-        child.MaxMeat = childMaxMeat;
+        child.MaxHp = childAttributes.getMaxHealth();
+        child.ELvl = childAttributes.getEnergyLvl();
+        child.MaxMeat = childAttributes.get(AttributeKey.MAX_MEAT);
+        child.MaxFeathers = childAttributes.get(AttributeKey.MAX_FEATHERS);
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
+        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
 
         influenceGlobalAttributes(child.getType());
 
@@ -219,19 +209,17 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     @Override
     protected void applyDamage(DamageSource source, float amount) {
         super.applyDamage(source, amount);
-
+        wasRecentlyHit = true;
+        panicTicks = PANIC_DURATION;
+        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                .setBaseValue(Speed * (ELvl / 100.0) * PANIC_SPEED_MULTIPLIER);
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
 
     @Override
-    public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
-        return false; // Chickens don't take fall damage
-    }
-
-    @Override
     public void applyCustomAttributes(MobAttributes attributes) {
         attributes.getMaxMeat().ifPresent(val -> this.MaxMeat = val);
-        attributes.getMaxFeathers().ifPresent(val -> this.feathers = val);
+        attributes.getMaxFeathers().ifPresent(val -> this.MaxFeathers = val);
     }
 }

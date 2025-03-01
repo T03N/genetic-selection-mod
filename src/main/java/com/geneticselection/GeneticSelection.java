@@ -40,7 +40,6 @@ public class GeneticSelection implements ModInitializer {
 	public static final String MOD_ID = "genetic-selection";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-
 	public void cowMethod(){
 		//Register the default attibutes to your mob
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_COW, CustomCowEntity.createCowAttributes());

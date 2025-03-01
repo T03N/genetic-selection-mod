@@ -217,8 +217,6 @@ public class CustomCowEntity extends CowEntity {
         return super.interactMob(player, hand);
     }
 
-
-
     @Override
     protected void applyDamage(DamageSource source, float amount) {
         super.applyDamage(source, amount);
