@@ -72,6 +72,10 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
                 "\nMax Leather: " + String.format("%.1f", ent.MaxLeather)));
     }
 
+    public void setMaxLeather(double maxLeather) {
+        this.MaxLeather = maxLeather;
+    }
+
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
