@@ -108,6 +108,14 @@ public class GlobalAttributesManager {
             put(AttributeKey.MAX_HEALTH, 10.0);
             put(AttributeKey.ENERGY, 100.0);
         }});
+
+        ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_MOOSHROOM, new HashMap<>() {{
+            put(AttributeKey.MOVEMENT_SPEED, 0.2);
+            put(AttributeKey.MAX_HEALTH, 10.0);
+            put(AttributeKey.ENERGY, 100.0);
+            put(AttributeKey.MAX_MEAT, 3.0);
+            put(AttributeKey.MAX_LEATHER, 2.0);
+        }});
     }
 
     public static void initialize() {

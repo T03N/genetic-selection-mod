@@ -15,6 +15,7 @@ import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinRenderer;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
+import com.geneticselection.mobs.Mooshroom.CustomMooshroomRenderer;
 import com.geneticselection.mobs.Ocelots.CustomOcelotRenderer;
 import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
 import com.geneticselection.mobs.Sheep.CustomSheepRenderer;
@@ -26,6 +27,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.entity.model.*;
 import net.minecraft.client.model.Dilation;
+import net.minecraft.entity.passive.MooshroomEntity;
 
 public class GeneticSelectionClient implements ClientModInitializer {
     public void cowMethod(){
@@ -43,10 +45,9 @@ public class GeneticSelectionClient implements ClientModInitializer {
                 SheepEntityModel::getTexturedModelData
         );
 
-
         EntityModelLayerRegistry.registerModelLayer(
                 ModModelLayers.CUSTOM_SHEEP_FUR,
-                SheepEntityModel::getTexturedModelData
+                SheepWoolEntityModel::getTexturedModelData
         );
     }
 
@@ -114,6 +115,13 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_FOX, FoxEntityModel::getTexturedModelData);
     }
 
+    public void mooshroomMethod() {
+        //register your cow
+        EntityRendererRegistry.register(ModEntities.CUSTOM_MOOSHROOM, CustomMooshroomRenderer::new);
+        //register your model layer for your cow
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_MOOSHROOM, CowEntityModel::getTexturedModelData);
+    }
+
     @Override
     public void onInitializeClient() {
         cowMethod();
@@ -130,5 +138,6 @@ public class GeneticSelectionClient implements ClientModInitializer {
         ocelotMethod();
         goatMethod();
         foxMethod();
+        mooshroomMethod();
     }
 }

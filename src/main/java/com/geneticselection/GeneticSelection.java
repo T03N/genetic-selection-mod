@@ -13,6 +13,7 @@ import com.geneticselection.mobs.Goat.CustomGoatEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
+import com.geneticselection.mobs.Mooshroom.CustomMooshroomEntity;
 import com.geneticselection.mobs.Ocelots.CustomOcelotEntity;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
@@ -452,6 +453,37 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void mooshroomMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_MOOSHROOM, CustomMooshroomEntity.createCowAttributes());
+		//lowers the spawn rate of default vanilla cows
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				EntityType.MOOSHROOM, // Remove the original cow
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		//adds custom cow to natural spawn
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_MOOSHROOM, // Add custom cow
+				20, // Spawn weight (higher = more frequent)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+		//restricts the cow spawn to grass blocks on the ground
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_MOOSHROOM,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.MYCELIUM)
+		);
+	}
+
 	@Override
 	public void onInitialize() {
 		cowMethod();
@@ -468,6 +500,7 @@ public class GeneticSelection implements ModInitializer {
 		ocelotMethod();
 		goatMethod();
 		foxMethod();
+		mooshroomMethod();
 		GlobalAttributesManager.initialize();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads
