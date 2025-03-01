@@ -175,7 +175,7 @@ public class CustomMooshroomEntity extends MooshroomEntity {
             if (this.isInLove()) {
                 if (ELvl < 100.0) {
                     updateEnergyLevel(Math.min(100.0, ELvl + 10.0)); // Gain energy (up to max 100)
-                    player.sendMessage(Text.of("The cow has gained energy! Current energy: " + String.format("%.1f", ELvl)), true);
+                    player.sendMessage(Text.of("The mooshroom has gained energy! Current energy: " + String.format("%.1f", ELvl)), true);
 
                     if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
                         usedItem.decrement(1);
@@ -185,14 +185,14 @@ public class CustomMooshroomEntity extends MooshroomEntity {
                     return ActionResult.SUCCESS;
                 } else {
                     // Cow is in love mode and at max energy; do nothing
-                    player.sendMessage(Text.of("The cow is already at maximum energy!"), true);
+                    player.sendMessage(Text.of("The mooshroom is already at maximum energy!"), true);
                     return ActionResult.PASS;
                 }
             }
 
             if (ELvl < 20.0) {
                 updateEnergyLevel(Math.min(100.0, ELvl + 10.0)); // Gain energy (up to max 100)
-                player.sendMessage(Text.of("This cow cannot breed due to low energy. Energy increased to: " + String.format("%.1f", ELvl)), true);
+                player.sendMessage(Text.of("This mooshroom cannot breed due to low energy. Energy increased to: " + String.format("%.1f", ELvl)), true);
 
                 if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
                     usedItem.decrement(1);
@@ -203,7 +203,7 @@ public class CustomMooshroomEntity extends MooshroomEntity {
             } else {
                 // If energy is sufficient, trigger breeding
                 this.lovePlayer(player);
-                player.sendMessage(Text.of("The cow is now in breed mode!"), true);
+                player.sendMessage(Text.of("The mooshroom is now in breed mode!"), true);
 
                 if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
                     usedItem.decrement(1);
@@ -273,7 +273,7 @@ public class CustomMooshroomEntity extends MooshroomEntity {
     @Override
     public CustomMooshroomEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
         if (!(mate instanceof CustomMooshroomEntity))
-            return (CustomMooshroomEntity) EntityType.COW.create(serverWorld);
+            return (CustomMooshroomEntity) EntityType.MOOSHROOM.create(serverWorld);
 
         CustomMooshroomEntity parent1 = this;
         CustomMooshroomEntity parent2 = (CustomMooshroomEntity) mate;

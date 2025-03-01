@@ -24,6 +24,8 @@ import com.geneticselection.mobs.Wolves.CustomWolfRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.block.MushroomBlock;
+import net.minecraft.block.MushroomPlantBlock;
 import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.entity.model.*;
 import net.minecraft.client.model.Dilation;
@@ -116,9 +118,7 @@ public class GeneticSelectionClient implements ClientModInitializer {
     }
 
     public void mooshroomMethod() {
-        //register your cow
         EntityRendererRegistry.register(ModEntities.CUSTOM_MOOSHROOM, CustomMooshroomRenderer::new);
-        //register your model layer for your cow
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_MOOSHROOM, CowEntityModel::getTexturedModelData);
     }
 

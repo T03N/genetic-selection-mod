@@ -34,4 +34,6 @@ public class ModModelLayers {
     public static final EntityModelLayer CUSTOM_GOAT = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_goat"), "main");
     public static final EntityModelLayer CUSTOM_FOX = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_fox"), "main");
     public static final EntityModelLayer CUSTOM_MOOSHROOM = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_mooshroom"), "main");
+    public static final EntityModelLayer CUSTOM_MOOSHROOM_MUSHROOM = new EntityModelLayer(
+            Identifier.of(GeneticSelection.MOD_ID, "custom_mushroom"), "mooshroom_mushroom");
 }
