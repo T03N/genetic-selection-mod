@@ -1,7 +1,6 @@
 package com.geneticselection.mobs.Camels;
 
 import com.geneticselection.GeneticSelection;
-import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.ModModelLayers;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;

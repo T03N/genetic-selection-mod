@@ -2,7 +2,6 @@ package com.geneticselection.mobs.Axolotl;
 
 import com.geneticselection.GeneticSelection;
 import com.geneticselection.mobs.ModModelLayers;
-import com.geneticselection.mobs.Axolotl.CustomAxolotlEntity;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
