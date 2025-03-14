@@ -6,6 +6,7 @@ import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
+import com.geneticselection.utils.EatGrassGoal;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -40,6 +41,8 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     public CustomChickenEntity(EntityType<? extends ChickenEntity> entityType, World world) {
         super(entityType, world);
 
+        this.goalSelector.add(5, new EatGrassGoal(this));
+
         if (this.mobAttributes == null) {
             MobAttributes global = GlobalAttributesManager.getAttributes(entityType);
             double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
@@ -64,6 +67,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             this.MaxFeathers = maxFeathers;
         });
 
+
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
@@ -75,6 +79,14 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 "\nEnergy: " + String.format("%.1f", ent.ELvl) +
                 "\nMax Meat: " + String.format("%.1f", ent.MaxMeat) +
                 "\nFeathers: " + String.format("%.1f", ent.MaxFeathers)));
+    }
+
+    public double getEnergyLevel(){
+        return this.ELvl;
+    }
+
+    public void increaseEnergy(double x){
+        this.ELvl += x;
     }
 
     @Override
@@ -148,7 +160,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             if (isOnEnergySource) {
                 ELvl = Math.min(100.0, ELvl + 0.1);
             } else {
-                ELvl = Math.max(0.0, ELvl - 0.05);
+                ELvl = Math.max(0.0, ELvl - 0.1);
             }
 
             // Health regeneration at max energy

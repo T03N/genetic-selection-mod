@@ -50,7 +50,7 @@ public class GlobalAttributesManager {
         }});
 
         ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_CAMEL, new HashMap<>() {{
-            put(AttributeKey.MOVEMENT_SPEED, 0.175);
+            put(AttributeKey.MOVEMENT_SPEED, 0.125);
             put(AttributeKey.MAX_HEALTH, 30.0);
             put(AttributeKey.ENERGY, 100.0);
         }});
