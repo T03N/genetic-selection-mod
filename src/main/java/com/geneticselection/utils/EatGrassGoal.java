@@ -41,29 +41,59 @@ public class EatGrassGoal extends Goal {
                     targetGrassPos.getX() + 0.5,
                     targetGrassPos.getY() + 0.5,
                     targetGrassPos.getZ() + 0.5,
-                    1.2
+                    3
             );
         }
     }
 
     @Override
     public boolean shouldContinue() {
-        return targetGrassPos != null &&
-                chicken.squaredDistanceTo(targetGrassPos.getX() + 0.5, targetGrassPos.getY() + 0.5, targetGrassPos.getZ() + 0.5) > 1.0;
+        if (targetGrassPos == null) return false;
+
+        // Check if the chicken is on the grass block
+        BlockPos chickenBlockPos = chicken.getBlockPos();
+        if (chickenBlockPos.equals(targetGrassPos)) {
+            System.out.println("[DEBUG] Standing on grass. Eating...");
+            return false;
+        }
+
+        return true;
     }
 
     private BlockPos findNearestGrass() {
         BlockPos chickenPos = chicken.getBlockPos();
         int searchRadius = 10;
+        BlockPos closestGrass = null;
+        double closestDistance = Double.MAX_VALUE;
 
-        for (int x = -searchRadius; x <= searchRadius; x++) {
-            for (int z = -searchRadius; z <= searchRadius; z++) {
-                BlockPos checkPos = chickenPos.add(x, -1, z);
-                if (chicken.getWorld().getBlockState(checkPos).isOf(Blocks.GRASS_BLOCK)) {
-                    return checkPos;
+        System.out.println("[DEBUG] Searching for nearest grass...");
+
+        for (int y = 2; y >= -10; y--) {
+            for (int x = -searchRadius; x <= searchRadius; x++) {
+                for (int z = -searchRadius; z <= searchRadius; z++) {
+                    BlockPos checkPos = chickenPos.add(x, y, z);
+
+                    if (chicken.getWorld().getBlockState(checkPos).isOf(Blocks.GRASS_BLOCK)) {
+
+                        double distance = chickenPos.getSquaredDistance(checkPos);
+
+                        if (distance < closestDistance) {
+                            closestGrass = checkPos;
+                            closestDistance = distance;
+                        }
+                    }
                 }
             }
         }
-        return null; // No grass found
+
+        if (closestGrass != null) {
+            System.out.println("[DEBUG] Found grass at: " + closestGrass);
+        } else {
+            System.out.println("[DEBUG] No grass found within search radius.");
+        }
+
+        return closestGrass;
     }
+
+
 }
