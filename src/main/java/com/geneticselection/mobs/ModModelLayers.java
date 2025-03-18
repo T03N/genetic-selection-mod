@@ -27,6 +27,7 @@ public class ModModelLayers {
 
     public static final EntityModelLayer CUSTOM_WOLF = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_wolf"), "main");
     public static final EntityModelLayer CUSTOM_HOGLIN = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_hoglin"), "main");
+    public static final EntityModelLayer CUSTOM_ZOGLIN = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_zoglin"), "main");
 
     public static final EntityModelLayer CUSTOM_OCELOT = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_ocelot"), "main");
     public static final EntityModelLayer CUSTOM_BEE = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID,"custom_bee"), "main");
