@@ -13,7 +13,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomZoglinRenderer extends MobEntityRenderer<CustomZoglinEntity, HoglinEntityModel<CustomZoglinEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/cow/minecraft-cow.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/zoglin/zoglin.png");
 
     public CustomZoglinRenderer(EntityRendererFactory.Context context) {
         super(context, new HoglinEntityModel<>(context.getPart(ModModelLayers.CUSTOM_ZOGLIN)), 0.6f);

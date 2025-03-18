@@ -6,6 +6,7 @@ import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.genetics.ChildInheritance;
 import com.geneticselection.mobs.ModEntities;
+import com.geneticselection.mobs.Zoglins.CustomZoglinEntity;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
@@ -127,48 +128,28 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
     public void tick() {
         super.tick();
 
-        if (!this.getWorld().isClient) {
-            // Handle panic
-            if (panicTicks > 0) {
-                panicTicks--;
-                if (panicTicks == 0) {
-                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
-                }
-            }
-
-            // Handle energy loss from damage
-            if (wasRecentlyHit) {
-                ELvl = Math.max(0.0, ELvl * 0.8);
-                wasRecentlyHit = false;
-            }
-
-            // Energy gain/loss based on environment
-            boolean isOnEnergySource = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.CRIMSON_NYLIUM);
-
-            if (isOnEnergySource) {
-                ELvl = Math.min(100.0, ELvl + 0.1);
+        if (!this.getWorld().isClient && this.getWorld().getDimension().bedWorks()) {
+            // If not in the Nether, start countdown
+            if (transformationTimer > 0) {
+                transformationTimer--;
             } else {
-                ELvl = Math.max(0.0, ELvl - 0.05);
-            }
-
-            // Health regeneration at max energy
-            if (ELvl == 100.0 && this.getHealth() < this.getMaxHealth()) {
-                this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
-            }
-
-            // Kill if energy is 0
-            if (ELvl <= 0.0) {
-                this.kill();
-            } else {
-                // Update speed
-                if (panicTicks == 0) {
-                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
-                }
-                updateDescription(this);
+                transformIntoZoglin();
             }
         }
+    }
+
+    @Override
+    public boolean canConvert() {
+        return false; // Prevents vanilla transformation into a Zoglin
+    }
+
+    private void transformIntoZoglin() {
+        CustomZoglinEntity zoglin = new CustomZoglinEntity(ModEntities.CUSTOM_ZOGLIN, this.getWorld());
+        zoglin.copyPositionAndRotation(this);
+        zoglin.setHealth(this.getHealth());
+
+        this.getWorld().spawnEntity(zoglin);
+        this.discard();
     }
 
     @Override
