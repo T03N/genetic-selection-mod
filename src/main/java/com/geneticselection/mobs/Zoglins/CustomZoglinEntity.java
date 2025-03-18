@@ -117,7 +117,7 @@ public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier
                 this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
 
                 int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
-                this.dropStack(new ItemStack(Items.PORKCHOP, meatAmount));
+                this.dropStack(new ItemStack(Items.ROTTEN_FLESH, meatAmount));
             }
         }
     }
