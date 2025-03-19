@@ -23,6 +23,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
+import java.util.Objects;
 import java.util.Optional;
 import static com.geneticselection.genetics.ChildInheritance.*;
 
@@ -145,9 +146,20 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
 
     private void transformIntoZoglin() {
         CustomZoglinEntity zoglin = new CustomZoglinEntity(ModEntities.CUSTOM_ZOGLIN, this.getWorld());
-        zoglin.copyPositionAndRotation(this);
-        zoglin.setHealth(this.getHealth());
 
+        // Copy position and rotation
+        zoglin.copyPositionAndRotation(this);
+
+        // Transfer attributes
+        zoglin.setHealth(this.getHealth());
+        Objects.requireNonNull(zoglin.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH));
+        Objects.requireNonNull(zoglin.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED));
+
+        if(this.isBaby()){
+            zoglin.setBaby(true);
+        }
+
+        // Spawn the new zoglin and remove the hoglin
         this.getWorld().spawnEntity(zoglin);
         this.discard();
     }

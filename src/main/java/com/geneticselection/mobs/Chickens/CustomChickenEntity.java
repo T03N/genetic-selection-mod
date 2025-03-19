@@ -9,6 +9,7 @@ import com.geneticselection.utils.DescriptionRenderer;
 import com.geneticselection.utils.EatGrassGoal;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.ChickenEntity;
@@ -16,6 +17,7 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
@@ -40,8 +42,6 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
     public CustomChickenEntity(EntityType<? extends ChickenEntity> entityType, World world) {
         super(entityType, world);
-
-        this.goalSelector.add(5, new EatGrassGoal(this));
 
         if (this.mobAttributes == null) {
             MobAttributes global = GlobalAttributesManager.getAttributes(entityType);
@@ -70,6 +70,21 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
         if (!this.getWorld().isClient)
             updateDescription(this);
+    }
+
+    @Override
+    protected void initGoals() {
+        this.goalSelector.add(0, new SwimGoal(this));
+        this.goalSelector.add(1, new EscapeDangerGoal(this, 1.4));
+        this.goalSelector.add(2, new EatGrassGoal(this));
+        this.goalSelector.add(3, new AnimalMateGoal(this, 1.0));
+        this.goalSelector.add(4, new TemptGoal(this, 1.0, (stack) -> {
+            return stack.isIn(ItemTags.CHICKEN_FOOD);
+        }, false));
+        this.goalSelector.add(5, new FollowParentGoal(this, 1.1));
+        this.goalSelector.add(6, new WanderAroundFarGoal(this, 1.0));
+        this.goalSelector.add(7, new LookAtEntityGoal(this, PlayerEntity.class, 6.0F));
+        this.goalSelector.add(8, new LookAroundGoal(this));
     }
 
     private void updateDescription(CustomChickenEntity ent) {
@@ -158,7 +173,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             boolean isOnEnergySource = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.GRASS_BLOCK);
 
             if (isOnEnergySource) {
-                ELvl = Math.min(100.0, ELvl + 0.1);
+                ELvl = Math.min(100.0, ELvl + 0.3);
             } else {
                 ELvl = Math.max(0.0, ELvl - 0.1);
             }
