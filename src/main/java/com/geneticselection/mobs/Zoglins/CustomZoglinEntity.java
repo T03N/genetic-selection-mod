@@ -1,29 +1,26 @@
 package com.geneticselection.mobs.Zoglins;
 
 import com.geneticselection.attributes.AttributeCarrier;
-import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.brain.MemoryModuleType;
+import net.minecraft.entity.ai.brain.task.LookTargetUtil;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.HoglinEntity;
 import net.minecraft.entity.mob.ZoglinEntity;
-import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
 import java.util.Optional;
-import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
@@ -122,6 +119,11 @@ public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier
         }
     }
 
+    public void setAttackTarget(LivingEntity entity) {
+        this.brain.forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
+        this.brain.remember(MemoryModuleType.ATTACK_TARGET, entity, 0L);
+    }
+
     @Override
     public void tick() {
         super.tick();
@@ -179,6 +181,23 @@ public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier
                 .setBaseValue(Speed * (ELvl / 100.0) * PANIC_SPEED_MULTIPLIER);
         if (!this.getWorld().isClient)
             updateDescription(this);
+    }
+
+    @Override
+    public boolean damage(DamageSource source, float amount) {
+        boolean bl = super.damage(source, amount);
+        if (this.getWorld().isClient) {
+            return false;
+        } else if (bl && source.getAttacker() instanceof LivingEntity) {
+            LivingEntity livingEntity = (LivingEntity)source.getAttacker();
+            if (this.canTarget(livingEntity) && !LookTargetUtil.isNewTargetTooFar(this, livingEntity, 4.0)) {
+                this.setAttackTarget(livingEntity);
+            }
+
+            return bl;
+        } else {
+            return bl;
+        }
     }
 
     @Override
