@@ -13,6 +13,8 @@ import com.geneticselection.mobs.Goat.CustomGoatEntity;
 import com.geneticselection.mobs.Goat.CustomGoatRenderer;
 import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinRenderer;
+import com.geneticselection.mobs.Zoglins.CustomZoglinEntity;
+import com.geneticselection.mobs.Zoglins.CustomZoglinRenderer;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
 import com.geneticselection.mobs.Mooshroom.CustomMooshroomRenderer;
@@ -91,6 +93,11 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_HOGLIN, HoglinEntityModel::getTexturedModelData);
     }
 
+    public void zoglinMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_ZOGLIN, CustomZoglinRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_ZOGLIN, HoglinEntityModel::getTexturedModelData);
+    }
+
     public void beeMethod() {
         EntityRendererRegistry.register(ModEntities.CUSTOM_BEE, CustomBeeRenderer::new);
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_BEE, BeeEntityModel::getTexturedModelData);
@@ -133,6 +140,7 @@ public class GeneticSelectionClient implements ClientModInitializer {
         chickenMethod();
         wolfMethod();
         hoglinMethod();
+        zoglinMethod();
         beeMethod();
         axolotlMethod();
         ocelotMethod();

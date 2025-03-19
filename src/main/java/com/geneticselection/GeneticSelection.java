@@ -283,6 +283,37 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void zoglinMethod(){
+		//Register the default attibutes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_ZOGLIN, CustomHoglinEntity.createHoglinAttributes());
+		//lowers the spawn rate of default vanilla pigs
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInTheNether(),
+				SpawnGroup.CREATURE,
+				EntityType.ZOGLIN, // Remove the original pig
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+		//adds custom pig to natural spawn
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInTheNether(),
+				SpawnGroup.CREATURE,
+				ModEntities.CUSTOM_ZOGLIN, // Add custom pig
+				20, // Spawn weight (higher = more frequent)
+				5,  // Minimum group size
+				10   // Maximum group size
+		);
+		//restricts the cow spawn to grass blocks on the ground
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_ZOGLIN,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, spawnReason, pos, random) ->
+						world.getBlockState(pos.down()).isOf(Blocks.CRIMSON_NYLIUM)
+		);
+	}
+
 	public void wolfMethod(){
 		//Register the default attibutes to your mob
 		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_WOLF, CustomWolfEntity.createWolfAttributes());
@@ -495,6 +526,7 @@ public class GeneticSelection implements ModInitializer {
 		chickenMethod();
 		wolfMethod();
 		hoglinMethod();
+		zoglinMethod();
 		beeMethod();
 		axolotlMethod();
 		ocelotMethod();

@@ -1,4 +1,5 @@
 package com.geneticselection.mobs.Mooshroom;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.MinecraftClient;
@@ -158,9 +159,30 @@ public class CustomMooshroomEntity extends MooshroomEntity {
 
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
-        ItemStack itemStack = player.getStackInHand(hand);
-        ItemStack offHandStack = player.getOffHandStack();  // Get the item in the offhand
-        boolean isWheat = itemStack.isOf(Items.WHEAT) || offHandStack.isOf(Items.WHEAT); // Check both hands for wheat
+    ItemStack itemStack = player.getStackInHand(hand);
+    if (itemStack.isOf(Items.SHEARS)) {
+        if (!this.getWorld().isClient) {
+            // Create a new CustomCowEntity and transfer relevant attributes
+            CustomCowEntity newCow = new CustomCowEntity(ModEntities.CUSTOM_COW, this.getWorld());
+            newCow.copyPositionAndRotation(this);
+            newCow.setHealth(this.getHealth());
+            newCow.updateEnergyLevel(this.getEnergyLevel());
+            newCow.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
+            newCow.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+
+            // Spawn the new cow
+            this.getWorld().spawnEntity(newCow);
+
+            // Drop mushrooms
+            this.dropStack(new ItemStack(this.getVariant() == MooshroomEntity.Type.BROWN ? Items.BROWN_MUSHROOM : Items.RED_MUSHROOM, 5));
+
+            // Remove the original Mooshroom
+            this.discard();
+        }
+        return ActionResult.SUCCESS;
+    }
+    ItemStack offHandStack = player.getOffHandStack();  // Get the item in the offhand
+    boolean isWheat = itemStack.isOf(Items.WHEAT) || offHandStack.isOf(Items.WHEAT); // Check both hands for wheat
 
         if (isWheat) {
             // Handle main hand or offhand wheat logic

@@ -1,18 +1,17 @@
-package com.geneticselection.mobs.Hoglins;
+package com.geneticselection.mobs.Zoglins;
 
 import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.genetics.ChildInheritance;
 import com.geneticselection.mobs.ModEntities;
-import com.geneticselection.mobs.Zoglins.CustomZoglinEntity;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HoglinEntity;
+import net.minecraft.entity.mob.ZoglinEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
@@ -23,25 +22,23 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
-import java.util.Objects;
 import java.util.Optional;
 import static com.geneticselection.genetics.ChildInheritance.*;
 
-public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier {
+public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
     private double MaxHp;
     private double Speed;
     private double ELvl;
     private double MaxMeat;
     private double MaxLeather;
-    private int transformationTimer = 300; // 15 seconds at 20 ticks per second
 
     private int panicTicks = 0;
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 2.0;
     private boolean wasRecentlyHit = false;
 
-    public CustomHoglinEntity(EntityType<? extends HoglinEntity> entityType, World world) {
+    public CustomZoglinEntity(EntityType<? extends ZoglinEntity> entityType, World world) {
         super(entityType, world);
 
         if (this.mobAttributes == null) {
@@ -72,7 +69,7 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
             updateDescription(this);
     }
 
-    private void updateDescription(CustomHoglinEntity ent) {
+    private void updateDescription(CustomZoglinEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.2f", ent.Speed) +
@@ -120,7 +117,7 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
                 this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
 
                 int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
-                this.dropStack(new ItemStack(Items.PORKCHOP, meatAmount));
+                this.dropStack(new ItemStack(Items.ROTTEN_FLESH, meatAmount));
             }
         }
     }
@@ -129,73 +126,48 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
     public void tick() {
         super.tick();
 
-        if (!this.getWorld().isClient && this.getWorld().getDimension().bedWorks()) {
-            // If not in the Nether, start countdown
-            if (transformationTimer > 0) {
-                transformationTimer--;
+        if (!this.getWorld().isClient) {
+            // Handle panic
+            if (panicTicks > 0) {
+                panicTicks--;
+                if (panicTicks == 0) {
+                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                            .setBaseValue(Speed * (ELvl / 100.0));
+                }
+            }
+
+            // Handle energy loss from damage
+            if (wasRecentlyHit) {
+                ELvl = Math.max(0.0, ELvl * 0.8);
+                wasRecentlyHit = false;
+            }
+
+            // Energy gain/loss based on environment
+            boolean isOnEnergySource = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.CRIMSON_NYLIUM);
+
+            if (isOnEnergySource) {
+                ELvl = Math.min(100.0, ELvl + 0.1);
             } else {
-                transformIntoZoglin();
+                ELvl = Math.max(0.0, ELvl - 0.05);
+            }
+
+            // Health regeneration at max energy
+            if (ELvl == 100.0 && this.getHealth() < this.getMaxHealth()) {
+                this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
+            }
+
+            // Kill if energy is 0
+            if (ELvl <= 0.0) {
+                this.kill();
+            } else {
+                // Update speed
+                if (panicTicks == 0) {
+                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                            .setBaseValue(Speed * (ELvl / 100.0));
+                }
+                updateDescription(this);
             }
         }
-    }
-
-    @Override
-    public boolean canConvert() {
-        return false; // Prevents vanilla transformation into a Zoglin
-    }
-
-    private void transformIntoZoglin() {
-        CustomZoglinEntity zoglin = new CustomZoglinEntity(ModEntities.CUSTOM_ZOGLIN, this.getWorld());
-
-        // Copy position and rotation
-        zoglin.copyPositionAndRotation(this);
-
-        // Transfer attributes
-        zoglin.setHealth(this.getHealth());
-        Objects.requireNonNull(zoglin.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH));
-        Objects.requireNonNull(zoglin.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED));
-
-        if(this.isBaby()){
-            zoglin.setBaby(true);
-        }
-
-        // Spawn the new zoglin and remove the hoglin
-        this.getWorld().spawnEntity(zoglin);
-        this.discard();
-    }
-
-    @Override
-    public CustomHoglinEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
-        if (!(mate instanceof CustomHoglinEntity)) {
-            return (CustomHoglinEntity) EntityType.HOGLIN.create(serverWorld);
-        }
-
-        CustomHoglinEntity parent1 = this;
-        CustomHoglinEntity parent2 = (CustomHoglinEntity) mate;
-
-        MobAttributes attr1 = parent1.mobAttributes;
-        MobAttributes attr2 = parent2.mobAttributes;
-
-        MobAttributes childAttributes = inheritAttributes(attr1, attr2);
-
-        CustomHoglinEntity child = new CustomHoglinEntity(ModEntities.CUSTOM_HOGLIN, serverWorld);
-
-        child.mobAttributes = childAttributes;
-        applyAttributes(child, childAttributes);
-
-        child.MaxHp = childAttributes.getMaxHealth();
-        child.ELvl = childAttributes.getEnergyLvl();
-        child.MaxMeat = childAttributes.get(AttributeKey.MAX_MEAT);
-        child.MaxLeather = childAttributes.get(AttributeKey.MAX_LEATHER);
-        child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
-        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
-
-        influenceGlobalAttributes(child.getType());
-
-        if (!this.getWorld().isClient)
-            updateDescription(child);
-
-        return child;
     }
 
     @Override
