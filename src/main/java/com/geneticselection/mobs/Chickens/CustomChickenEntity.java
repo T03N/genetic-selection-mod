@@ -117,10 +117,6 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         return this.ELvl;
     }
 
-    public void increaseEnergy(double x){
-        this.ELvl += x;
-    }
-
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);

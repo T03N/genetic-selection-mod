@@ -4,12 +4,11 @@ import com.geneticselection.mobs.Chickens.CustomChickenEntity;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.util.math.Vec3d;
 import java.util.EnumSet;
 
 public class EatGrassGoal extends Goal {
     private final CustomChickenEntity chicken;
-    private int eatTimer;
     private BlockPos targetGrassPos;
 
     public EatGrassGoal(CustomChickenEntity chicken) {
@@ -19,41 +18,28 @@ public class EatGrassGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        // Only eat when energy is low (adjust condition to check for low energy)
-        if (chicken.getEnergyLevel() >= 60.0) {
-            return false; // Chicken won't eat if its energy is above the threshold
+        if (chicken.getEnergyLevel() >= 40) {
+            return false;
         }
 
-        // Only search for a new target if no valid target exists yet
         if (targetGrassPos == null) {
             targetGrassPos = findNearestGrass();
         }
 
-        // Return true if a valid target has been found
         return targetGrassPos != null;
     }
 
     @Override
     public void start() {
         if (targetGrassPos != null) {
-            System.out.println("Moving to: " + targetGrassPos);
-            chicken.getNavigation().startMovingTo(
-                    targetGrassPos.getX() + 0.5,
-                    targetGrassPos.getY() + 0.5,
-                    targetGrassPos.getZ() + 0.5,
-                    3
-            );
+            moveToTarget(targetGrassPos);
         }
     }
 
     @Override
     public boolean shouldContinue() {
-        if (targetGrassPos == null) return false;
 
-        // Check if the chicken is on the grass block
-        BlockPos chickenBlockPos = chicken.getBlockPos();
-        if (chickenBlockPos.equals(targetGrassPos)) {
-            System.out.println("[DEBUG] Standing on grass. Eating...");
+        if (chicken.getEnergyLevel()>=99) {
             return false;
         }
 
@@ -62,38 +48,39 @@ public class EatGrassGoal extends Goal {
 
     private BlockPos findNearestGrass() {
         BlockPos chickenPos = chicken.getBlockPos();
-        int searchRadius = 10;
+        int searchRadius = 50;
         BlockPos closestGrass = null;
         double closestDistance = Double.MAX_VALUE;
 
-        System.out.println("[DEBUG] Searching for nearest grass...");
 
-        for (int y = 2; y >= -10; y--) {
+        for (int y = 2; y >= -2; y--) {  // Only checking reasonable height differences
             for (int x = -searchRadius; x <= searchRadius; x++) {
                 for (int z = -searchRadius; z <= searchRadius; z++) {
                     BlockPos checkPos = chickenPos.add(x, y, z);
 
-                    if (chicken.getWorld().getBlockState(checkPos).isOf(Blocks.GRASS_BLOCK)) {
-
-                        double distance = chickenPos.getSquaredDistance(checkPos);
-
-                        if (distance < closestDistance) {
-                            closestGrass = checkPos;
-                            closestDistance = distance;
-                        }
+                    if (chicken.getWorld().getBlockState(checkPos).isOf(Blocks.TALL_GRASS) || chicken.getWorld().getBlockState(checkPos).isOf(Blocks.SHORT_GRASS)) {
+                        return checkPos;
                     }
                 }
             }
         }
 
-        if (closestGrass != null) {
-            System.out.println("[DEBUG] Found grass at: " + closestGrass);
-        } else {
-            System.out.println("[DEBUG] No grass found within search radius.");
-        }
-
         return closestGrass;
     }
 
+    private void moveToTarget(BlockPos targetPos) {
+        // Calculate the center of the target block
+        Vec3d moveTarget = new Vec3d(
+                targetPos.getX() + 0.5,
+                targetPos.getY(),
+                targetPos.getZ() + 0.5
+        );
 
+        Vec3d chickenPos = chicken.getPos();
+        Vec3d direction = moveTarget.subtract(chickenPos).normalize();
+
+        Vec3d overshootTarget = moveTarget.add(direction.multiply(1.5));
+
+        chicken.getNavigation().startMovingTo(overshootTarget.x, overshootTarget.y, overshootTarget.z, 2);
+    }
 }
