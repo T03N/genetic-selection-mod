@@ -39,7 +39,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
     private int panicTicks = 0;
     private static final int PANIC_DURATION = 100;
-    private static final double PANIC_SPEED_MULTIPLIER = 2.0;
+    private static final double PANIC_SPEED_MULTIPLIER = 1.5;
     private boolean wasRecentlyHit = false;
 
     public CustomChickenEntity(EntityType<? extends ChickenEntity> entityType, World world) {
@@ -163,6 +163,11 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     }
 
     @Override
+    public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
+        return true;
+    }
+
+    @Override
     public void tick() {
         super.tick();
 
@@ -183,12 +188,12 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             }
 
             // Energy gain/loss based on environment
-            boolean isOnEnergySource = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.GRASS_BLOCK);
+            boolean isOnEnergySource = this.getWorld().getBlockState(this.getBlockPos()).isOf(Blocks.SHORT_GRASS) || this.getWorld().getBlockState(this.getBlockPos()).isOf(Blocks.TALL_GRASS);
 
             if (isOnEnergySource) {
                 ELvl = Math.min(100.0, ELvl + 0.3);
             } else {
-                ELvl = Math.max(0.0, ELvl - 0.1);
+                ELvl = Math.max(0.0, ELvl - 0.025);
             }
 
             // Health regeneration at max energy
