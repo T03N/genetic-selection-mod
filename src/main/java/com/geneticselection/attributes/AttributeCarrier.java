@@ -1,5 +1,7 @@
 package com.geneticselection.attributes;
 
+import net.minecraft.entity.LivingEntity;
+
 public interface AttributeCarrier {
     /**
      * Apply all custom (non-basic) attributes stored in the given MobAttributes.

@@ -5,6 +5,7 @@ import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
+import io.netty.buffer.Unpooled;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
@@ -13,6 +14,7 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
@@ -54,6 +56,21 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
 
         if (!this.getWorld().isClient)
             updateDescription(this);
+    }
+
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.ELvl = newEnergyLevel;
+
+        // Sync energy level with server if needed
+        if (!this.getWorld().isClient) {
+            this.syncEnergyLevelToClient();
+        }
+    }
+
+    private void syncEnergyLevelToClient() {
+        PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
+        data.writeInt(this.getId());  // Send entity ID
+        data.writeDouble(this.ELvl);  // Send the updated energy level
     }
 
     private void updateDescription(CustomAxolotlEntity ent) {

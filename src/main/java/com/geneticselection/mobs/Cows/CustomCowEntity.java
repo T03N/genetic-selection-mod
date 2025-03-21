@@ -84,7 +84,6 @@ public class CustomCowEntity extends CowEntity {
         }
     }
 
-
     public void updateEnergyLevel(double newEnergyLevel) {
         this.ELvl = newEnergyLevel;
 

@@ -7,6 +7,7 @@ import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import com.geneticselection.utils.EatGrassGoal;
+import io.netty.buffer.Unpooled;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.*;
@@ -17,6 +18,7 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -70,6 +72,21 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
         if (!this.getWorld().isClient)
             updateDescription(this);
+    }
+
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.ELvl = newEnergyLevel;
+
+        // Sync energy level with server if needed
+        if (!this.getWorld().isClient) {
+            this.syncEnergyLevelToClient();
+        }
+    }
+
+    private void syncEnergyLevelToClient() {
+        PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
+        data.writeInt(this.getId());  // Send entity ID
+        data.writeDouble(this.ELvl);  // Send the updated energy level
     }
 
     @Override
