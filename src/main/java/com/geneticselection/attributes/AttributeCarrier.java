@@ -9,4 +9,6 @@ public interface AttributeCarrier {
      * to its internal drop values.
      */
     void applyCustomAttributes(MobAttributes attributes);
+
+    double getEnergyLevel();
 }

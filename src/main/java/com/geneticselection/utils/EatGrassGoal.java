@@ -1,8 +1,10 @@
 package com.geneticselection.utils;
 
+import com.geneticselection.attributes.AttributeCarrier;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import java.util.EnumSet;
@@ -18,7 +20,9 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
 
     @Override
     public boolean canStart() {
-        if (getEnergyLevel(animal) >= 40) {
+        double energy = getEnergyLevel(animal);
+
+        if (energy >= 75) {
             return false;
         }
 
@@ -26,7 +30,8 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
             targetGrassPos = findNearestGrass();
         }
 
-        return targetGrassPos != null;
+        boolean canStart = targetGrassPos != null;
+        return canStart;
     }
 
     @Override
@@ -38,28 +43,35 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
 
     @Override
     public boolean shouldContinue() {
-        return getEnergyLevel(animal) < 99;
+        boolean shouldContinue = getEnergyLevel(animal) < 99;
+        return shouldContinue;
     }
 
     private BlockPos findNearestGrass() {
         BlockPos animalPos = animal.getBlockPos();
         int searchRadius = 50;
-        BlockPos closestGrass = null;
-        double closestDistance = Double.MAX_VALUE;
 
-        for (int y = 2; y >= -2; y--) {
-            for (int x = -searchRadius; x <= searchRadius; x++) {
-                for (int z = -searchRadius; z <= searchRadius; z++) {
-                    BlockPos checkPos = animalPos.add(x, y, z);
+        sendDebugMessage("🔎 Searching for grass in a spiral...");
 
-                    if (animal.getWorld().getBlockState(checkPos).isOf(Blocks.TALL_GRASS) ||
-                            animal.getWorld().getBlockState(checkPos).isOf(Blocks.SHORT_GRASS)) {
-                        return checkPos;
+        for (int r = 0; r <= searchRadius; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.abs(dx) < r && Math.abs(dz) < r) continue;
+
+                    for (int dy = 2; dy >= -2; dy--) {
+                        BlockPos checkPos = animalPos.add(dx, dy, dz);
+
+                        if (animal.getWorld().getBlockState(checkPos).isOf(Blocks.GRASS_BLOCK)) {
+                            sendDebugMessage("🌿 Found grass at: " + checkPos);
+                            return checkPos;
+                        }
                     }
                 }
             }
         }
-        return closestGrass;
+
+        sendDebugMessage("⚠ No grass found.");
+        return null;
     }
 
     private void moveToTarget(BlockPos targetPos) {
@@ -72,13 +84,28 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
         Vec3d animalPos = animal.getPos();
         Vec3d direction = moveTarget.subtract(animalPos).normalize();
 
-        Vec3d overshootTarget = moveTarget.add(direction.multiply(1.5));
+        Vec3d overshootTarget = moveTarget.add(direction.multiply(1));
 
         animal.getNavigation().startMovingTo(overshootTarget.x, overshootTarget.y, overshootTarget.z, 1.5);
+
+        if (animal.getNavigation().isIdle()) {
+            sendDebugMessage("⚠ Navigation is idle! Pathfinding might have failed.");
+        }
     }
 
-    private int getEnergyLevel(T entity) {
+    private double getEnergyLevel(T entity) {
+        if (entity instanceof AttributeCarrier) {
+            return ((AttributeCarrier) entity).getEnergyLevel();
+        }
+        return 0;
+    }
 
-        return 0; // Default return (modify this to integrate your energy system)
+    private void sendDebugMessage(String message) {
+        // Send message to the nearest player
+        if (animal.getWorld().isClient()) return; // Prevent client-side execution
+
+        animal.getWorld().getPlayers().stream()
+                .filter(player -> player.squaredDistanceTo(animal) < 100) // Only nearby players
+                .forEach(player -> player.sendMessage(Text.of("[" + animal.getName().getString() + "] " + message), false));
     }
 }

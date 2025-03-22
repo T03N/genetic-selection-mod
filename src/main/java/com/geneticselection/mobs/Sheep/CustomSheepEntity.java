@@ -97,6 +97,10 @@ public class CustomSheepEntity extends SheepEntity implements AttributeCarrier {
         data.writeDouble(this.ELvl);  // Send the updated energy level
     }
 
+    public double getEnergyLevel(){
+        return this.ELvl;
+    }
+
     private void updateDescription(CustomSheepEntity ent) {
 
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
