@@ -40,6 +40,7 @@ import net.minecraft.world.World;
 import net.minecraft.block.Blocks;
 
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.geneticselection.genetics.ChildInheritance.*;
@@ -328,6 +329,10 @@ public class CustomMooshroomEntity extends MooshroomEntity {
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
         child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
 
+        parent1.ELvl -= parent1.ELvl * 0.4F;
+        parent2.ELvl -= parent2.ELvl * 0.4F;
+        this.resetLoveTicks();
+
         if (!this.getWorld().isClient)
             updateDescription(child);
 
@@ -375,6 +380,42 @@ public class CustomMooshroomEntity extends MooshroomEntity {
             if (ELvl == 100.0) {
                 if (this.getHealth() < this.getMaxHealth()) {
                     this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F)); // Regenerate 0.5 HP per second
+                }
+            }
+
+            if (ELvl >= 90.0) {
+                double searchRadius = 32.0;
+
+                List<CustomMooshroomEntity> mateCandidates = this.getWorld().getEntitiesByClass(
+                    CustomMooshroomEntity.class,
+                    this.getBoundingBox().expand(searchRadius),
+                    candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
+                );
+
+                // Find the nearest candidate
+                CustomMooshroomEntity nearestMate = null;
+                double minDistanceSquared = Double.MAX_VALUE;
+                for (CustomMooshroomEntity candidate : mateCandidates) {
+                    double distSq = this.squaredDistanceTo(candidate);
+                    if (distSq < minDistanceSquared) {
+                        minDistanceSquared = distSq;
+                        nearestMate = candidate;
+                    }
+                }
+
+                // If we found a mate candidate, move towards it
+                if (nearestMate != null) {
+                    // Start moving towards the nearest cow; adjust speed as needed
+                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / 100.0));
+
+                    // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
+                    if (minDistanceSquared < 4.0) {
+                        // Only start breeding if both cows are not already in love
+                        if (!this.isInLove() && !nearestMate.isInLove()) {
+                            this.setLoveTicks(100);
+                            nearestMate.setLoveTicks(100);
+                        }
+                    }
                 }
             }
 
