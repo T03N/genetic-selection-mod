@@ -68,6 +68,9 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
             this.syncEnergyLevelToClient();
         }
     }
+    public double getEnergyLevel(){
+        return this.ELvl;
+    }
 
     private void syncEnergyLevelToClient() {
         PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());

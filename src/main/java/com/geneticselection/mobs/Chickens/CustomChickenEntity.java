@@ -188,12 +188,13 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             }
 
             // Energy gain/loss based on environment
-            boolean isOnEnergySource = this.getWorld().getBlockState(this.getBlockPos()).isOf(Blocks.SHORT_GRASS) || this.getWorld().getBlockState(this.getBlockPos()).isOf(Blocks.TALL_GRASS);
+            boolean isOnEnergySource = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.GRASS_BLOCK);
 
             if (isOnEnergySource) {
                 ELvl = Math.min(100.0, ELvl + 0.3);
             } else {
-                ELvl = Math.max(0.0, ELvl - 0.025);
+                //ELvl = Math.max(0.0, ELvl - 0.025);
+                ELvl = Math.max(0.0, ELvl - 0.15);
             }
 
             // Health regeneration at max energy
