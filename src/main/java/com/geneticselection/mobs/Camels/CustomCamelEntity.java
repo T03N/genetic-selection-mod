@@ -85,13 +85,58 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
+        ItemStack offHandStack = player.getOffHandStack();
+        boolean isHayBlock = itemStack.isOf(Items.HAY_BLOCK) || offHandStack.isOf(Items.HAY_BLOCK);
 
-        if (itemStack.isOf(Items.HAY_BLOCK)) {
-            if (ELvl < 20.0) {
-                player.sendMessage(Text.of("This camel cannot breed because it has low energy."), true);
-                return ActionResult.FAIL;
+        if (isHayBlock) {
+            // determine which hand is being used
+            Hand usedHand = itemStack.isOf(Items.HAY_BLOCK) ? hand : Hand.OFF_HAND;
+            ItemStack usedItem = itemStack.isOf(Items.HAY_BLOCK) ? itemStack : offHandStack;
+
+            if (this.isBaby()) {
+                return ActionResult.PASS; // do nothing if the camel is a baby
             }
-            return super.interactMob(player, hand);
+
+            // if the camel is in love mode
+            if (this.isInLove()) {
+                if (ELvl < 100.0) {
+                    updateEnergyLevel(Math.min(100.0, ELvl + 10.0));
+                    player.sendMessage(Text.of("The camel has gained energy! Current energy: " + String.format("%.1f", ELvl)), true);
+
+                    if (!player.isCreative()) {
+                        usedItem.decrement(1);
+                    }
+
+                    updateDescription(this);
+                    return ActionResult.SUCCESS;
+                } else {
+                    // Camel is in love mode and at max energy; do nothing
+                    player.sendMessage(Text.of("The camel is already at maximum energy!"), true);
+                    return ActionResult.PASS;
+                }
+            }
+
+            if (ELvl < 20.0) {
+                updateEnergyLevel(Math.min(100.0, ELvl + 10.0));
+                player.sendMessage(Text.of("This camel cannot breed due to low energy. Energy increased to: " + String.format("%.1f", ELvl)), true);
+
+                if (!player.isCreative()) {
+                    usedItem.decrement(1);
+                }
+
+                updateDescription(this);
+                return ActionResult.SUCCESS;
+            } else {
+                this.lovePlayer(player);
+                player.sendMessage(Text.of("The camel is now in breed mode!"), true);
+
+                if (!player.isCreative()) {
+                    usedItem.decrement(1);
+                }
+
+                updateDescription(this);
+                return ActionResult.SUCCESS;
+            }
         }
 
         if (itemStack.isEmpty()) {
