@@ -8,6 +8,7 @@ import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -22,6 +23,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.List;
@@ -95,6 +97,16 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         ItemStack offHandStack = player.getOffHandStack();
         boolean isHayBlock = itemStack.isOf(Items.HAY_BLOCK) || offHandStack.isOf(Items.HAY_BLOCK);
 
+        // if camel is standing on sand, it gains energy
+        BlockPos posBelow = this.getBlockPos().down();
+        BlockState blockBelow = this.getWorld().getBlockState(posBelow);
+        boolean isOnSand = blockBelow.isOf(Blocks.SAND) || blockBelow.isOf(Blocks.RED_SAND);
+
+        if (isOnSand && ELvl < 100.0) {
+            updateEnergyLevel(Math.min(100.0, ELvl + 2.0)); // Small energy boost
+            updateDescription(this);
+        }
+
         if (isHayBlock) {
             // determine which hand is being used
             Hand usedHand = itemStack.isOf(Items.HAY_BLOCK) ? hand : Hand.OFF_HAND;
@@ -108,8 +120,6 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
             if (this.isInLove()) {
                 if (ELvl < 100.0) {
                     updateEnergyLevel(Math.min(100.0, ELvl + 10.0));
-                    player.sendMessage(Text.of("The camel has gained energy! Current energy: " + String.format("%.1f", ELvl)), true);
-
                     if (!player.isCreative()) {
                         usedItem.decrement(1);
                     }
