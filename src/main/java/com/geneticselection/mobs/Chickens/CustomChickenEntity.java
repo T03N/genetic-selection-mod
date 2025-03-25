@@ -35,6 +35,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     private MobAttributes mobAttributes;
     private double MaxHp;
     private double Speed;
+    private double MaxEnergy = 100.0F;
     private double ELvl;
     private double MaxMeat;
     private double MaxFeathers;
@@ -142,6 +143,30 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     }
 
     @Override
+    public void growUp(int age, boolean overGrow) {
+        int i = this.getBreedingAge();
+        int j = i;
+        i += age * 20;
+        if (i > 0) {
+            i = 0;
+        }
+
+        int k = i - j;
+        this.setBreedingAge(i);
+        if (overGrow) {
+            this.forcedAge += k;
+            if (this.happyTicksRemaining == 0) {
+                this.happyTicksRemaining = 40;
+                this.MaxEnergy = 100.0F;
+            }
+        }
+
+        if (this.getBreedingAge() == 0) {
+            this.setBreedingAge(this.forcedAge);
+        }
+    }
+
+    @Override
     public void onDeath(DamageSource source) {
         if (this.isBaby()) {
             return;
@@ -193,10 +218,13 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             boolean isOnEnergySource = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.GRASS_BLOCK);
 
             if (isOnEnergySource) {
-                ELvl = Math.min(100.0, ELvl + 0.3);
+                if (Math.random() < 0.2) { // 20% chance to gain energy
+                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
+                }
             } else {
-                //ELvl = Math.max(0.0, ELvl - 0.025);
-                ELvl = Math.max(0.0, ELvl - 0.15);
+                if (Math.random() < 0.5) { // 50% chance to lose energy
+                    updateEnergyLevel(Math.max(0.0, ELvl - (0.01 + Math.random() * 0.19))); // Lose 0.01 to 0.2 energy
+                }
             }
 
             // Health regeneration at max energy

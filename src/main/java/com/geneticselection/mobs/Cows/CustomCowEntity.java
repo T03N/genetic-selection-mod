@@ -322,9 +322,8 @@ public class CustomCowEntity extends CowEntity {
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
         child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / MaxEnergy));
 
-        parent1.ELvl -= parent1.ELvl * 0.2F;
-        parent2.ELvl -= parent2.ELvl * 0.2F;
-
+        parent1.ELvl -= parent1.ELvl * 0.4F;
+        parent2.ELvl -= parent2.ELvl * 0.4F;
         this.resetLoveTicks();
 
         if (!this.getWorld().isClient)
