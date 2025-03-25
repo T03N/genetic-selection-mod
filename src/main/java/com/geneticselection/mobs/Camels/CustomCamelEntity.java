@@ -3,6 +3,8 @@ package com.geneticselection.mobs.Camels;
 import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Axolotl.CustomAxolotlEntity;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
@@ -22,6 +24,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
+import java.util.List;
 import java.util.Optional;
 import static com.geneticselection.genetics.ChildInheritance.*;
 
@@ -67,6 +70,10 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         if (!this.getWorld().isClient) {
             this.syncEnergyLevelToClient();
         }
+    }
+
+    public double getEnergyLevel(){
+        return this.ELvl;
     }
 
     private void syncEnergyLevelToClient() {
@@ -199,6 +206,42 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
                 this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
             }
 
+            if (ELvl >= 90.0) {
+                double searchRadius = 32.0;
+
+                List<CustomCamelEntity> mateCandidates = this.getWorld().getEntitiesByClass(
+                    CustomCamelEntity.class,
+                    this.getBoundingBox().expand(searchRadius),
+                    candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
+                );
+
+                // Find the nearest candidate
+                CustomCamelEntity nearestMate = null;
+                double minDistanceSquared = Double.MAX_VALUE;
+                for (CustomCamelEntity candidate : mateCandidates) {
+                    double distSq = this.squaredDistanceTo(candidate);
+                    if (distSq < minDistanceSquared) {
+                        minDistanceSquared = distSq;
+                        nearestMate = candidate;
+                    }
+                }
+
+                // If we found a mate candidate, move towards it
+                if (nearestMate != null) {
+                    // Start moving towards the nearest cow; adjust speed as needed
+                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / 100.0));
+
+                    // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
+                    if (minDistanceSquared < 4.0) {
+                        // Only start breeding if both cows are not already in love
+                        if (!this.isInLove() && !nearestMate.isInLove()) {
+                            this.setLoveTicks(100);
+                            nearestMate.setLoveTicks(100);
+                        }
+                    }
+                }
+            }
+
             // Kill if energy is 0
             if (ELvl <= 0.0) {
                 this.kill();
@@ -236,6 +279,10 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         child.ELvl = childAttributes.getEnergyLvl();
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
         child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
+
+        parent1.ELvl -= parent1.ELvl * 0.4F;
+        parent2.ELvl -= parent2.ELvl * 0.4F;
+        this.resetLoveTicks();
 
         influenceGlobalAttributes(child.getType());
 

@@ -74,6 +74,10 @@ public class CustomWolfEntity extends WolfEntity {
                 "\nEnergy: " + String.format("%.3f", ent.ELvl)));
     }
 
+    public double getEnergyLevel() {
+        return this.ELvl;
+    }
+
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
@@ -94,12 +98,21 @@ public class CustomWolfEntity extends WolfEntity {
     }
 
     @Override
+    protected void updateAttributesForTamed() {
+        if (this.isTamed()) {
+            this.setHealth((float) this.MaxHp + 40.0F);
+        } else {
+            this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue((float) this.MaxHp);
+        }
+    }
+
+    @Override
     public void onDeath(DamageSource source) {
         super.onDeath(source);
     }
 
     @Override
-    public com.geneticselection.mobs.Wolves.CustomWolfEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
+    public CustomWolfEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
         if (!(mate instanceof com.geneticselection.mobs.Wolves.CustomWolfEntity)) {
             return (com.geneticselection.mobs.Wolves.CustomWolfEntity) EntityType.WOLF.create(serverWorld);
         }

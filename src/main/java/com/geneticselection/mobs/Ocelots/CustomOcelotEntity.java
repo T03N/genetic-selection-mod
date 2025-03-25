@@ -74,6 +74,10 @@ public class CustomOcelotEntity extends OcelotEntity {
                 "\nEnergy: " + String.format("%.3f", ent.ELvl)));
     }
 
+    public double getEnergyLevel() {
+        return this.ELvl;
+    }
+
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
@@ -99,7 +103,7 @@ public class CustomOcelotEntity extends OcelotEntity {
     }
 
     @Override
-    public com.geneticselection.mobs.Ocelots.CustomOcelotEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
+    public CustomOcelotEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
         if (!(mate instanceof com.geneticselection.mobs.Ocelots.CustomOcelotEntity)) {
             return (com.geneticselection.mobs.Ocelots.CustomOcelotEntity) EntityType.OCELOT.create(serverWorld);
         }
