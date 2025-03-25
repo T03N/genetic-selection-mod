@@ -4,7 +4,6 @@ import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.mobs.Axolotl.CustomAxolotlEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import com.geneticselection.utils.EatGrassGoal;

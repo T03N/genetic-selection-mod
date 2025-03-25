@@ -3,7 +3,6 @@ package com.geneticselection.mobs.Zoglins;
 import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
 import net.minecraft.block.Blocks;
@@ -23,7 +22,6 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
-import java.util.List;
 import java.util.Optional;
 
 public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier {

@@ -22,15 +22,16 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
     public boolean canStart() {
         double energy = getEnergyLevel(animal);
 
-        if (energy >= 75) {
-            return false;
-        }
-
         if (targetGrassPos == null) {
-            targetGrassPos = findNearestGrass();
+            targetGrassPos = findNearestGrass(); // Always attempt to find grass
         }
 
-        boolean canStart = targetGrassPos != null;
+        boolean canStart = (energy < 75) && (targetGrassPos != null);
+
+        if (!canStart) {
+            sendDebugMessage("❌ Cannot start eating. Energy: " + energy + ", Grass found: " + (targetGrassPos != null));
+        }
+
         return canStart;
     }
 
@@ -43,7 +44,10 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
 
     @Override
     public boolean shouldContinue() {
-        boolean shouldContinue = getEnergyLevel(animal) < 99;
+        boolean shouldContinue = getEnergyLevel(animal) < 90;
+        if(!shouldContinue) {
+            sendDebugMessage("Finsihed eating");
+        }
         return shouldContinue;
     }
 
@@ -76,9 +80,9 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
 
     private void moveToTarget(BlockPos targetPos) {
         Vec3d moveTarget = new Vec3d(
-                targetPos.getX() + 0.5,
+                targetPos.getX(),
                 targetPos.getY(),
-                targetPos.getZ() + 0.5
+                targetPos.getZ()
         );
 
         Vec3d animalPos = animal.getPos();
@@ -86,7 +90,7 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
 
         Vec3d overshootTarget = moveTarget.add(direction.multiply(1));
 
-        animal.getNavigation().startMovingTo(overshootTarget.x, overshootTarget.y, overshootTarget.z, 1.5);
+        animal.getNavigation().startMovingTo(overshootTarget.x, overshootTarget.y, overshootTarget.z, 2);
 
         if (animal.getNavigation().isIdle()) {
             sendDebugMessage("⚠ Navigation is idle! Pathfinding might have failed.");
