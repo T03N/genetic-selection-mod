@@ -87,10 +87,6 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
                 "\nEnergy: " + String.format("%.1f", ent.ELvl)));
     }
 
-    public double getEnergyLevel() {
-        return this.ELvl;
-    }
-
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);

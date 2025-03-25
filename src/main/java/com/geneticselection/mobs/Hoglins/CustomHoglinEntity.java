@@ -104,10 +104,6 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
                 "\nMax Leather: " + String.format("%.1f", ent.MaxLeather)));
     }
 
-    public double getEnergyLevel() {
-        return this.ELvl;
-    }
-
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);

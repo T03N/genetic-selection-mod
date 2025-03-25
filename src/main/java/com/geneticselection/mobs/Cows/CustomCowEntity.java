@@ -39,6 +39,7 @@ public class CustomCowEntity extends CowEntity {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double ELvl;
+    private double MaxEnergy = 100.0F;
     private double Speed;
     private double MinMeat;
     private double MaxMeat;
@@ -164,8 +165,8 @@ public class CustomCowEntity extends CowEntity {
 
             // If the cow is in love mode
             if (this.isInLove()) {
-                if (ELvl < 100.0) {
-                    updateEnergyLevel(Math.min(100.0, ELvl + 10.0)); // Gain energy (up to max 100)
+                if (ELvl < MaxEnergy) {
+                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + 10.0)); // Gain energy (up to max 100)
                     player.sendMessage(Text.of("The cow has gained energy! Current energy: " + String.format("%.1f", ELvl)), true);
 
                     if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
@@ -182,7 +183,7 @@ public class CustomCowEntity extends CowEntity {
             }
 
             if (ELvl < 20.0) {
-                updateEnergyLevel(Math.min(100.0, ELvl + 10.0)); // Gain energy (up to max 100)
+                updateEnergyLevel(Math.min(MaxEnergy, ELvl + 10.0)); // Gain energy (up to max 100)
                 player.sendMessage(Text.of("This cow cannot breed due to low energy. Energy increased to: " + String.format("%.1f", ELvl)), true);
 
                 if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
@@ -221,10 +222,34 @@ public class CustomCowEntity extends CowEntity {
 
         // Increase speed temporarily
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                .setBaseValue(Speed * (ELvl / 100.0) * PANIC_SPEED_MULTIPLIER);
+                .setBaseValue(Speed * (ELvl / MaxEnergy) * PANIC_SPEED_MULTIPLIER);
 
         if (!this.getWorld().isClient) {
             updateDescription(this);
+        }
+    }
+
+    @Override
+    public void growUp(int age, boolean overGrow) {
+        int i = this.getBreedingAge();
+        int j = i;
+        i += age * 20;
+        if (i > 0) {
+            i = 0;
+        }
+
+        int k = i - j;
+        this.setBreedingAge(i);
+        if (overGrow) {
+            this.forcedAge += k;
+            if (this.happyTicksRemaining == 0) {
+                this.happyTicksRemaining = 40;
+                this.MaxEnergy = 100.0F;
+            }
+        }
+
+        if (this.getBreedingAge() == 0) {
+            this.setBreedingAge(this.forcedAge);
         }
     }
 
@@ -270,7 +295,7 @@ public class CustomCowEntity extends CowEntity {
         CustomCowEntity parent2 = (CustomCowEntity) mate;
 
         // Calculate the inheritance factor based on the lower energy level of the parents
-        double inheritanceFactor = Math.min(parent1.ELvl, parent2.ELvl) / 100.0;
+        double inheritanceFactor = Math.min(parent1.ELvl, parent2.ELvl) / MaxEnergy;
 
         // Inherit attributes from parents, scaled by the inheritance factor
         double childMaxHp = ((parent1.MaxHp + parent2.MaxHp) / 2) * inheritanceFactor;
@@ -295,10 +320,11 @@ public class CustomCowEntity extends CowEntity {
 
         // Apply stats to the child entity
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
-        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
+        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / MaxEnergy));
 
-        parent1.ELvl -= parent1.ELvl * 0.4F;
-        parent2.ELvl -= parent2.ELvl * 0.4F;
+        parent1.ELvl -= parent1.ELvl * 0.2F;
+        parent2.ELvl -= parent2.ELvl * 0.2F;
+
         this.resetLoveTicks();
 
         if (!this.getWorld().isClient)
@@ -313,13 +339,19 @@ public class CustomCowEntity extends CowEntity {
 
         // Only perform energy adjustments on the server side
         if (!this.getWorld().isClient) {
+            if (MaxEnergy > 0.0) {
+                double t = MaxEnergy / 100.0; // Normalized progress (1 -> 0)
+                MaxEnergy -= (100.0 / 10000.0) * t * t; // Quadratic decay (ease-in)
+                if (MaxEnergy < 0.0) MaxEnergy = 0.0; // Ensure it never goes negative
+            }
+
             // Handle panic state
             if (panicTicks > 0) {
                 panicTicks--;
                 if (panicTicks == 0) {
                     // Reset speed back to normal when panic ends
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
+                            .setBaseValue(Speed * (ELvl / MaxEnergy));
                 }
             }
 
@@ -336,7 +368,7 @@ public class CustomCowEntity extends CowEntity {
             // Adjust energy level randomly based on whether the cow is on grass
             if (isOnGrass) {
                 if (Math.random() < 0.2) { // 20% chance to gain energy
-                    updateEnergyLevel(Math.min(100.0, ELvl + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
+                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
                 }
             } else {
                 if (Math.random() < 0.5) { // 50% chance to lose energy
@@ -345,7 +377,7 @@ public class CustomCowEntity extends CowEntity {
             }
 
             // Check if energy is 100 and regenerate health if not at max
-            if (ELvl == 100.0) {
+            if (ELvl == MaxEnergy) {
                 if (this.getHealth() < this.getMaxHealth()) {
                     this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F)); // Regenerate 0.5 HP per second
                 }
@@ -374,7 +406,7 @@ public class CustomCowEntity extends CowEntity {
                 // If we found a mate candidate, move towards it
                 if (nearestMate != null) {
                     // Start moving towards the nearest cow; adjust speed as needed
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / 100.0));
+                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
 
                     // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
                     if (minDistanceSquared < 4.0) {
@@ -394,7 +426,7 @@ public class CustomCowEntity extends CowEntity {
                 // Update attributes dynamically if energy is greater than 0
                 if (panicTicks == 0) { // Only update speed if not in panic mode
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
+                            .setBaseValue(Speed * (ELvl / MaxEnergy));
                 }
 
                 // Update the description with the new energy level

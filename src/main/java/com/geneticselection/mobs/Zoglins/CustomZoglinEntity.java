@@ -79,10 +79,6 @@ public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier
         }
     }
 
-    public double getEnergyLevel(){
-        return this.ELvl;
-    }
-
     private void syncEnergyLevelToClient() {
         PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
         data.writeInt(this.getId());  // Send entity ID

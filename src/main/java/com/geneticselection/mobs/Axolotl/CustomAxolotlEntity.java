@@ -60,10 +60,6 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
             updateDescription(this);
     }
 
-    public double getEnergyLevel(){
-        return this.ELvl;
-    }
-
     public void updateEnergyLevel(double newEnergyLevel) {
         this.ELvl = newEnergyLevel;
 

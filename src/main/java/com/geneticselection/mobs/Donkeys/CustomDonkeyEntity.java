@@ -99,10 +99,6 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
         this.MaxLeather = maxLeather;
     }
 
-    public double getEnergyLevel() {
-        return this.ELvl;
-    }
-
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
