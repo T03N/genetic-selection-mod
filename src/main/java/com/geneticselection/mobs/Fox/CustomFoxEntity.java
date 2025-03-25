@@ -9,7 +9,10 @@ import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.EntityStatuses;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.FoxEntity;
@@ -19,6 +22,7 @@ import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -38,6 +42,8 @@ public class CustomFoxEntity extends FoxEntity implements AttributeCarrier {
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 2.0;
     private boolean wasRecentlyHit = false;
+
+    private int breedingTicks = 0;
 
     public CustomFoxEntity(EntityType<? extends FoxEntity> entityType, World world) {
         super(entityType, world);
@@ -131,7 +137,7 @@ public class CustomFoxEntity extends FoxEntity implements AttributeCarrier {
     @Override
     public void tick() {
         super.tick();
-
+        breedingTicks++;
         if (!this.getWorld().isClient) {
             // Handle panic
             if (panicTicks > 0) {
@@ -186,6 +192,43 @@ public class CustomFoxEntity extends FoxEntity implements AttributeCarrier {
                 if (nearestMate != null) {
                     // Start moving towards the nearest cow; adjust speed as needed
                     this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / 100.0));
+
+                    // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
+                    if (minDistanceSquared < 4.0) {
+                        // Only start breeding if both cows are not already in love
+                        if (!this.isInLove() && !nearestMate.isInLove()) {
+                            this.setLoveTicks(100);
+                            nearestMate.setLoveTicks(100);
+                        }
+                    }
+                }
+            }
+
+            if (ELvl >= 90.0 && breedingTicks > 1000) {
+                breedingTicks = 0;
+                double searchRadius = 32.0;
+
+                List<CustomFoxEntity> mateCandidates = this.getWorld().getEntitiesByClass(
+                        CustomFoxEntity.class,
+                        this.getBoundingBox().expand(searchRadius),
+                        candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
+                );
+
+                // Find the nearest candidate
+                CustomFoxEntity nearestMate = null;
+                double minDistanceSquared = Double.MAX_VALUE;
+                for (CustomFoxEntity candidate : mateCandidates) {
+                    double distSq = this.squaredDistanceTo(candidate);
+                    if (distSq < minDistanceSquared) {
+                        minDistanceSquared = distSq;
+                        nearestMate = candidate;
+                    }
+                }
+
+                // If we found a mate candidate, move towards it
+                if (nearestMate != null) {
+                    // Start moving towards the nearest cow; adjust speed as needed
+                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / 100));
 
                     // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
                     if (minDistanceSquared < 4.0) {
