@@ -45,11 +45,13 @@ public class CustomCowEntity extends CowEntity {
     private double MinLeather;
     private double MaxLeather;
     private int milkingCooldown;
+    private int breedingCooldown;
     private long lastMilkTime = 0;
     private int panicTicks = 0;
     private static final int PANIC_DURATION = 100; // 5 seconds at 20 ticks per second
     private static final double PANIC_SPEED_MULTIPLIER = 1.25;
     private boolean wasRecentlyHit = false;
+    private float lifeSpan = 0.0F;
 
     public CustomCowEntity(EntityType<? extends CowEntity> entityType, World world) {
         super(entityType, world);
@@ -81,6 +83,7 @@ public class CustomCowEntity extends CowEntity {
         this.setMinMeat(1.0);
         this.setMinLeather(0.0);
         this.milkingCooldown = 3000 + (int)((1 - (ELvl / 100.0)) * 2000) + random.nextInt(2001);
+        this.breedingCooldown = 3000 + (int)((1 - (ELvl / 100.0)) * 2000) + random.nextInt(2001);
         if (!this.getWorld().isClient) {
             updateDescription(this);
         }
@@ -244,6 +247,7 @@ public class CustomCowEntity extends CowEntity {
             if (this.happyTicksRemaining == 0) {
                 this.happyTicksRemaining = 40;
                 this.MaxEnergy = 100.0F;
+                this.ELvl = 100.0F;
             }
         }
 
@@ -303,6 +307,7 @@ public class CustomCowEntity extends CowEntity {
         double childMinLeather = ((parent1.MinLeather + parent2.MinLeather) / 2) * inheritanceFactor;
         double childMaxLeather = ((parent1.MaxLeather + parent2.MaxLeather) / 2) * inheritanceFactor;
         int childMilkingCooldown = (int) (((parent1.milkingCooldown + parent2.milkingCooldown) / 2) * (1 / inheritanceFactor));
+        int childBreedingCooldown = (int) (((parent1.breedingCooldown + parent2.breedingCooldown) / 2) * (1 / inheritanceFactor));
         double childEnergy = ((parent1.ELvl + parent2.ELvl) / 2) * inheritanceFactor;
 
         // Create the child entity
@@ -315,6 +320,7 @@ public class CustomCowEntity extends CowEntity {
         child.MinLeather = childMinLeather;
         child.MaxLeather = childMaxLeather;
         child.milkingCooldown = childMilkingCooldown;
+        child.breedingCooldown = childBreedingCooldown;
         child.ELvl = childEnergy;
 
         // Apply stats to the child entity
@@ -338,9 +344,13 @@ public class CustomCowEntity extends CowEntity {
         // Only perform energy adjustments on the server side
         if (!this.getWorld().isClient) {
             if (MaxEnergy > 0.0) {
-                double t = MaxEnergy / 100.0; // Normalized progress (1 -> 0)
-                MaxEnergy -= (100.0 / 10000.0) * t * t; // Quadratic decay (ease-in)
-                if (MaxEnergy < 0.0) MaxEnergy = 0.0; // Ensure it never goes negative
+                MaxEnergy -= lifeSpan;
+            }
+            lifeSpan += 0.0006F;
+
+            // Clamp the current energy level to the maximum cap
+            if (ELvl > MaxEnergy) {
+                updateEnergyLevel(MaxEnergy);
             }
 
             // Handle panic state
@@ -365,13 +375,13 @@ public class CustomCowEntity extends CowEntity {
 
             // Adjust energy level randomly based on whether the cow is on grass
             if (isOnGrass) {
-                if (Math.random() < 0.2) { // 20% chance to gain energy
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
+                if (Math.random() < 0.3) { // 30% chance to gain energy
+                    updateEnergyLevel(Math.min(100.0, ELvl + (0.1 + Math.random() * 0.75))); // Gain 0.1 to 0.75 energy
                 }
-            } else {
-                if (Math.random() < 0.5) { // 50% chance to lose energy
-                    updateEnergyLevel(Math.max(0.0, ELvl - (0.01 + Math.random() * 0.19))); // Lose 0.01 to 0.2 energy
-                }
+            }
+
+            if (Math.random() < 0.5) { // 50% chance to lose energy
+                updateEnergyLevel(Math.max(0.0, ELvl - (0.05 + Math.random() * 0.3))); // Lose 0.05 to 0.3 energy
             }
 
             // Check if energy is 100 and regenerate health if not at max
