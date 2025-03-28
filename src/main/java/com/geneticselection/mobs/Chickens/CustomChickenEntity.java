@@ -9,7 +9,11 @@ import com.geneticselection.utils.DescriptionRenderer;
 import com.geneticselection.utils.EatGrassGoal;
 import io.netty.buffer.Unpooled;
 import net.minecraft.block.Blocks;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
@@ -19,6 +23,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -36,6 +42,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     private double Speed;
     private double MaxEnergy = 100.0F;
     private double ELvl;
+    private double LifeSpan=0;
     private double MaxMeat;
     private double MaxFeathers;
 
@@ -171,19 +178,57 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             return;
         }
 
-        if (ELvl <= 0.0) {
-            // Drop minimal resources or nothing
-            this.dropStack(new ItemStack(Items.FEATHER, 1));
-        } else {
-            super.onDeath(source);
-            if (!this.getWorld().isClient) {
-                // Drop feathers based on energy
-                int feathersAmount = (int) ((MaxFeathers) * (ELvl / 100.0));
-                this.dropStack(new ItemStack(Items.FEATHER, feathersAmount));
+        if (!this.getWorld().isClient) {
+            boolean shouldDropCooked = false;
 
-                // Drop chicken meat based on energy
-                int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
-                this.dropStack(new ItemStack(Items.CHICKEN, meatAmount));
+            // Check if the entity died from fire, lava, or burning
+            if (source.getName().equals("onFire") || source.getName().equals("inFire") || source.getName().equals("lava")) {
+                shouldDropCooked = true;
+            }
+
+            // Check if the attacker has Fire Aspect
+            if (source.getAttacker() instanceof LivingEntity attacker) {
+                ItemStack weapon = attacker.getMainHandStack();
+                RegistryEntry<Enchantment> fireAspectEntry = this.getWorld().getServer().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.FIRE_ASPECT).get();
+                if (EnchantmentHelper.getLevel(fireAspectEntry ,weapon) >= 1) {
+                    shouldDropCooked = true;
+                }
+            }
+
+            // Drop cooked or raw chicken based on conditions
+            if(shouldDropCooked) {
+                if (ELvl <= 0.0) {
+                    // Drop minimal resources or nothing
+                    this.dropStack(new ItemStack(Items.FEATHER, 1));
+                } else {
+                    super.onDeath(source);
+                    if (!this.getWorld().isClient) {
+                        // Drop feathers based on energy
+                        int feathersAmount = (int) ((MaxFeathers) * (ELvl / 100.0));
+                        this.dropStack(new ItemStack(Items.FEATHER, feathersAmount));
+
+                        // Drop chicken meat based on energy
+                        int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
+                        this.dropStack(new ItemStack(Items.COOKED_CHICKEN, meatAmount));
+                    }
+                }
+            }
+            else{
+                if (ELvl <= 0.0) {
+                    // Drop minimal resources or nothing
+                    this.dropStack(new ItemStack(Items.FEATHER, 1));
+                } else {
+                    super.onDeath(source);
+                    if (!this.getWorld().isClient) {
+                        // Drop feathers based on energy
+                        int feathersAmount = (int) ((MaxFeathers) * (ELvl / 100.0));
+                        this.dropStack(new ItemStack(Items.FEATHER, feathersAmount));
+
+                        // Drop chicken meat based on energy
+                        int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
+                        this.dropStack(new ItemStack(Items.CHICKEN, meatAmount));
+                    }
+                }
             }
         }
     }
@@ -218,7 +263,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
             if (isOnEnergySource) {
                 if (Math.random() < 0.2) { // 20% chance to gain energy
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
+                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.01 + Math.random() * 0.19) - LifeSpan)); // Gain 0.01 to 0.2 energy
                 }
             } else {
                 if (Math.random() < 0.5) { // 50% chance to lose energy
@@ -279,6 +324,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 updateDescription(this);
             }
         }
+        LifeSpan += 0.0001;
     }
 
     @Override
