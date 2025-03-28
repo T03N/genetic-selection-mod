@@ -331,6 +331,11 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     }
 
     @Override
+    public boolean isCharging() {
+        return false;
+    }
+
+    @Override
     public void applyCustomAttributes(MobAttributes attributes) {
         attributes.getMaxMeat().ifPresent(val -> this.MaxMeat = val);
         attributes.getMaxFeathers().ifPresent(val -> this.MaxFeathers = val);

@@ -298,6 +298,11 @@ public class CustomFoxEntity extends FoxEntity implements AttributeCarrier {
     }
 
     @Override
+    public boolean isCharging() {
+        return false;
+    }
+
+    @Override
     public void applyCustomAttributes(MobAttributes attributes) {
     }
 }

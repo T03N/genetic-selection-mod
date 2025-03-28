@@ -312,6 +312,11 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     }
 
     @Override
+    public boolean isCharging() {
+        return false;
+    }
+
+    @Override
     public void applyCustomAttributes(MobAttributes attributes) {
     }
 }

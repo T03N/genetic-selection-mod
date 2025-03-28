@@ -222,6 +222,11 @@ public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier
     }
 
     @Override
+    public boolean isCharging() {
+        return false;
+    }
+
+    @Override
     public void applyCustomAttributes(MobAttributes attributes) {
         attributes.getMaxMeat().ifPresent(maxMeat -> this.MaxMeat = maxMeat);
         attributes.getMaxLeather().ifPresent(maxLeather -> this.MaxLeather = maxLeather);

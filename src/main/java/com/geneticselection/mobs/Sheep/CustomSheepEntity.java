@@ -339,6 +339,11 @@ public class CustomSheepEntity extends SheepEntity implements AttributeCarrier {
     }
 
     @Override
+    public boolean isCharging() {
+        return false;
+    }
+
+    @Override
     public void applyCustomAttributes(MobAttributes attributes) {
         attributes.getMaxMeat().ifPresent(this::setMaxMeat);
         attributes.getMaxWool().ifPresent(this::setMaxWool);

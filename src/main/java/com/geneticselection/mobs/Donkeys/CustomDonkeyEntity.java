@@ -271,6 +271,11 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
     }
 
     @Override
+    public boolean isCharging() {
+        return false;
+    }
+
+    @Override
     public void applyCustomAttributes(MobAttributes attributes) {
         attributes.getMaxLeather().ifPresent(leather -> MaxLeather = leather);
     }

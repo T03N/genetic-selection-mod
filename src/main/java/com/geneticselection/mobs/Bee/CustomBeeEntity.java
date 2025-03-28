@@ -258,6 +258,11 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
     }
 
     @Override
+    public boolean isCharging() {
+        return false;
+    }
+
+    @Override
     public void applyCustomAttributes(MobAttributes attributes) {
     }
 }

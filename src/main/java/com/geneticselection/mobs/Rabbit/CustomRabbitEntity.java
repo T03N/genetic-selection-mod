@@ -177,6 +177,11 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
     }
 
     @Override
+    public boolean isCharging() {
+        return false;
+    }
+
+    @Override
     public void applyCustomAttributes(MobAttributes attributes) {
         attributes.getMaxMeat().ifPresent(this::setMaxMeat);
         attributes.getMaxLeather().ifPresent(this::setRabbitHide);

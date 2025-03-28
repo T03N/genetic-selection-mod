@@ -255,6 +255,11 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
     }
 
     @Override
+    public boolean isCharging() {
+        return false;
+    }
+
+    @Override
     public void applyCustomAttributes(MobAttributes attributes) {
     }
 }
