@@ -26,11 +26,7 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
             targetGrassPos = findNearestGrass(); // Always attempt to find grass
         }
 
-        boolean canStart = (energy < 75) && (targetGrassPos != null);
-
-        if (!canStart) {
-            sendDebugMessage("❌ Cannot start eating. Energy: " + energy + ", Grass found: " + (targetGrassPos != null));
-        }
+        boolean canStart = (energy < 50) && (targetGrassPos != null);
 
         return canStart;
     }
@@ -44,18 +40,21 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
 
     @Override
     public boolean shouldContinue() {
-        boolean shouldContinue = getEnergyLevel(animal) < 90;
-        if(!shouldContinue) {
-            sendDebugMessage("Finsihed eating");
+        boolean hasEnergyNeed = getEnergyLevel(animal) < 90;
+
+        boolean isNavigating = !animal.getNavigation().isIdle();
+
+        if (!isNavigating) {
+            targetGrassPos = null;
+            return false;
         }
-        return shouldContinue;
+
+        return hasEnergyNeed;
     }
 
     private BlockPos findNearestGrass() {
         BlockPos animalPos = animal.getBlockPos();
         int searchRadius = 50;
-
-        sendDebugMessage("🔎 Searching for grass in a spiral...");
 
         for (int r = 0; r <= searchRadius; r++) {
             for (int dx = -r; dx <= r; dx++) {
@@ -66,7 +65,6 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
                         BlockPos checkPos = animalPos.add(dx, dy, dz);
 
                         if (animal.getWorld().getBlockState(checkPos).isOf(Blocks.GRASS_BLOCK)) {
-                            sendDebugMessage("🌿 Found grass at: " + checkPos);
                             return checkPos;
                         }
                     }
@@ -74,15 +72,14 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
             }
         }
 
-        sendDebugMessage("⚠ No grass found.");
         return null;
     }
 
     private void moveToTarget(BlockPos targetPos) {
         Vec3d moveTarget = new Vec3d(
-                targetPos.getX(),
+                targetPos.getX() + 0.5,
                 targetPos.getY(),
-                targetPos.getZ()
+                targetPos.getZ() + 0.5
         );
 
         Vec3d animalPos = animal.getPos();
@@ -91,10 +88,6 @@ public class EatGrassGoal<T extends AnimalEntity> extends Goal {
         Vec3d overshootTarget = moveTarget.add(direction.multiply(1));
 
         animal.getNavigation().startMovingTo(overshootTarget.x, overshootTarget.y, overshootTarget.z, 2);
-
-        if (animal.getNavigation().isIdle()) {
-            sendDebugMessage("⚠ Navigation is idle! Pathfinding might have failed.");
-        }
     }
 
     private double getEnergyLevel(T entity) {
