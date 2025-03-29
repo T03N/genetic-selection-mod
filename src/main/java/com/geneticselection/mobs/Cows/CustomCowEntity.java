@@ -38,7 +38,7 @@ public class CustomCowEntity extends CowEntity {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double ELvl;
-    private double MaxEnergy = 100.0F;
+    private double MaxEnergy;
     private double Speed;
     private double MinMeat;
     private double MaxMeat;
@@ -65,6 +65,7 @@ public class CustomCowEntity extends CowEntity {
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double leather = global.getMaxLeather().orElse(0.0) * (0.98 + Math.random() * 0.1);
             this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.of(leather),Optional.empty(),Optional.empty(), Optional.empty());
+            this.lifeSpan = 10000;
         }
 
         // Apply attributes to the entity
@@ -343,10 +344,16 @@ public class CustomCowEntity extends CowEntity {
 
         // Only perform energy adjustments on the server side
         if (!this.getWorld().isClient) {
-            if (MaxEnergy > 0.0) {
-                MaxEnergy -= lifeSpan;
+
+            // Max energy is determined by age
+            if(lifeSpan <= 4404){
+                MaxEnergy = 10 * Math.log(5 * lifeSpan + 5);
+            } else if (lifeSpan > 4404 && lifeSpan < 30000) {
+                MaxEnergy = 100;
+            } else {
+                MaxEnergy = -(lifeSpan - 30000) / 16 + 100;
             }
-            lifeSpan += 0.0006F;
+            lifeSpan++;
 
             // Clamp the current energy level to the maximum cap
             if (ELvl > MaxEnergy) {
