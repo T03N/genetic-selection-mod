@@ -32,8 +32,6 @@ import net.minecraft.block.Blocks;
 import java.util.List;
 import java.util.Optional;
 
-import static com.geneticselection.genetics.ChildInheritance.*;
-
 public class CustomCowEntity extends CowEntity {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
@@ -51,7 +49,9 @@ public class CustomCowEntity extends CowEntity {
     private static final int PANIC_DURATION = 100; // 5 seconds at 20 ticks per second
     private static final double PANIC_SPEED_MULTIPLIER = 1.25;
     private boolean wasRecentlyHit = false;
-    private float lifeSpan = 0.0F;
+    private int tickAge = 0;
+    private int ticksSinceLastBreeding = 0;
+
 
     public CustomCowEntity(EntityType<? extends CowEntity> entityType, World world) {
         super(entityType, world);
@@ -65,7 +65,7 @@ public class CustomCowEntity extends CowEntity {
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double leather = global.getMaxLeather().orElse(0.0) * (0.98 + Math.random() * 0.1);
             this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.of(leather),Optional.empty(),Optional.empty(), Optional.empty());
-            this.lifeSpan = 10000;
+            this.tickAge = 0;
         }
 
         // Apply attributes to the entity
@@ -123,7 +123,10 @@ public class CustomCowEntity extends CowEntity {
                 "\nEnergy: " + String.format("%.3f", ent.ELvl) +
                 "\nMax Meat: " + String.format("%.3f", ent.MaxMeat) +
                 "\nMax Leather: " + String.format("%.3f", ent.MaxLeather)+
-                "\nCooldown: " + ent.milkingCooldown));
+                "\nCooldown: " + ent.milkingCooldown+
+                        "\nBreeding Cooldown: " + ent.breedingCooldown+
+                        "\nAge: " + ent.tickAge)
+                );
     }
 
     // Add this getter for energy level
@@ -234,17 +237,20 @@ public class CustomCowEntity extends CowEntity {
 
     @Override
     public void growUp(int age, boolean overGrow) {
-        int i = this.getBreedingAge();
-        int j = i;
-        i += age * 20;
-        if (i > 0) {
-            i = 0;
+        int currentAge = this.getBreedingAge();
+        int newAge = currentAge + age; // Increment age by provided value
+
+        // Ensure cow reaches adulthood when age hits 0 (negative age counting)
+        if (newAge > 0) {
+            newAge = 0; // Reaches adulthood at age 0 (negative -> 0 for babies)
         }
 
-        int k = i - j;
-        this.setBreedingAge(i);
+        int delta = newAge - currentAge;
+        this.setBreedingAge(newAge);
+
+        // Apply forcedAge for overgrowth if necessary
         if (overGrow) {
-            this.forcedAge += k;
+            this.forcedAge += delta;
             if (this.happyTicksRemaining == 0) {
                 this.happyTicksRemaining = 40;
                 this.MaxEnergy = 100.0F;
@@ -252,7 +258,8 @@ public class CustomCowEntity extends CowEntity {
             }
         }
 
-        if (this.getBreedingAge() == 0) {
+        // Prevent resetting forcedAge unless we are an adult
+        if (this.getBreedingAge() == 0 && this.forcedAge > 0) {
             this.setBreedingAge(this.forcedAge);
         }
     }
@@ -346,14 +353,18 @@ public class CustomCowEntity extends CowEntity {
         if (!this.getWorld().isClient) {
 
             // Max energy is determined by age
-            if(lifeSpan <= 4404){
-                MaxEnergy = 10 * Math.log(5 * lifeSpan + 5);
-            } else if (lifeSpan > 4404 && lifeSpan < 30000) {
+            if(tickAge <= 4404){
+                MaxEnergy = 10 * Math.log(5 * tickAge + 5);
+            } else if (tickAge > 4404 && tickAge < 60000) {
                 MaxEnergy = 100;
             } else {
-                MaxEnergy = -(lifeSpan - 30000) / 16 + 100;
+                MaxEnergy = -(tickAge - 50000) / 16.0 + 100;
             }
-            lifeSpan++;
+            tickAge++;
+
+            if (tickAge >= 4404 && this.isBaby()) {
+                growUp(220, true);
+            }
 
             // Clamp the current energy level to the maximum cap
             if (ELvl > MaxEnergy) {
@@ -398,7 +409,7 @@ public class CustomCowEntity extends CowEntity {
                 }
             }
 
-            if (ELvl >= 90.0) {
+            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown) {
                 double searchRadius = 32.0;
 
                 List<CustomCowEntity> mateCandidates = this.getWorld().getEntitiesByClass(
@@ -427,12 +438,14 @@ public class CustomCowEntity extends CowEntity {
                     if (minDistanceSquared < 4.0) {
                         // Only start breeding if both cows are not already in love
                         if (!this.isInLove() && !nearestMate.isInLove()) {
-                            this.setLoveTicks(100);
-                            nearestMate.setLoveTicks(100);
+                            this.setLoveTicks(500);
+                            nearestMate.setLoveTicks(500);
+                            ticksSinceLastBreeding = 0;
                         }
                     }
                 }
             }
+            ticksSinceLastBreeding++;
 
             // If energy reaches 0, kill the cow
             if (ELvl <= 0.0) {
