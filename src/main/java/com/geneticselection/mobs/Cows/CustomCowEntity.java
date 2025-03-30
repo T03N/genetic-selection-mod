@@ -355,10 +355,10 @@ public class CustomCowEntity extends CowEntity {
             // Max energy is determined by age
             if(tickAge <= 4404){
                 MaxEnergy = 10 * Math.log(5 * tickAge + 5);
-            } else if (tickAge > 4404 && tickAge < 60000) {
+            } else if (tickAge > 4404 && tickAge < 35000) {
                 MaxEnergy = 100;
             } else {
-                MaxEnergy = -(tickAge - 50000) / 16.0 + 100;
+                MaxEnergy = -(tickAge - 35000) / 16.0 + 100;
             }
             tickAge++;
 
