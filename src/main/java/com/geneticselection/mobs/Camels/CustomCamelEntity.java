@@ -95,15 +95,6 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         ItemStack offHandStack = player.getOffHandStack();
         boolean isHayBlock = itemStack.isOf(Items.HAY_BLOCK) || offHandStack.isOf(Items.HAY_BLOCK);
 
-        // if camel is standing on sand, it gains energy
-        BlockPos posBelow = this.getBlockPos().down();
-        BlockState blockBelow = this.getWorld().getBlockState(posBelow);
-        boolean isOnSand = blockBelow.isOf(Blocks.SAND) || blockBelow.isOf(Blocks.RED_SAND);
-
-        if (isOnSand && ELvl < 100.0) {
-            updateEnergyLevel(Math.min(100.0, ELvl + 2.0)); // Small energy boost
-            updateDescription(this);
-        }
 
         if (isHayBlock) {
             // determine which hand is being used
