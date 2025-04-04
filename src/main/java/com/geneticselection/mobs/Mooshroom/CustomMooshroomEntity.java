@@ -37,17 +37,23 @@ public class CustomMooshroomEntity extends MooshroomEntity {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
     private double MaxHp;
     private double ELvl;
+    private double MaxEnergy;
     private double Speed;
     private double MinMeat;
     private double MaxMeat;
     private double MinLeather;
     private double MaxLeather;
     private int milkingCooldown;
+    private int breedingCooldown;
     private long lastMilkTime = 0;
+
     private int panicTicks = 0;
+    private static int LIFESPAN = 35000;
     private static final int PANIC_DURATION = 100; // 5 seconds at 20 ticks per second
     private static final double PANIC_SPEED_MULTIPLIER = 1.25;
     private boolean wasRecentlyHit = false;
+    private int tickAge = 0;
+    private int ticksSinceLastBreeding = 0;
 
     public CustomMooshroomEntity(EntityType<? extends MooshroomEntity> entityType, World world) {
         super(entityType, world);
@@ -328,18 +334,67 @@ public class CustomMooshroomEntity extends MooshroomEntity {
     }
 
     @Override
+    public void growUp(int age, boolean overGrow) {
+        int currentAge = this.getBreedingAge();
+        int newAge = currentAge + age; // Increment age by provided value
+
+        // Ensure cow reaches adulthood when age hits 0 (negative age counting)
+        if (newAge > 0) {
+            newAge = 0; // Reaches adulthood at age 0 (negative -> 0 for babies)
+        }
+
+        int delta = newAge - currentAge;
+        this.setBreedingAge(newAge);
+
+        // Apply forcedAge for overgrowth if necessary
+        if (overGrow) {
+            this.forcedAge += delta;
+            if (this.happyTicksRemaining == 0) {
+                this.happyTicksRemaining = 40;
+                this.MaxEnergy = 100.0F;
+                this.ELvl = 100.0F;
+            }
+        }
+
+        // Prevent resetting forcedAge unless we are an adult
+        if (this.getBreedingAge() == 0 && this.forcedAge > 0) {
+            this.setBreedingAge(this.forcedAge);
+        }
+    }
+
+    @Override
     public void tick() {
         super.tick();
 
         // Only perform energy adjustments on the server side
         if (!this.getWorld().isClient) {
+
+            // Max energy is determined by age
+            if(tickAge <= 4404){
+                MaxEnergy = 10 * Math.log(5 * tickAge + 5);
+            } else if (tickAge > 4404 && tickAge < LIFESPAN) {
+                MaxEnergy = 100;
+            } else {
+                MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
+            }
+            tickAge++;
+
+            if (tickAge >= 4404 && this.isBaby()) {
+                growUp(220, true);
+            }
+
+            // Clamp the current energy level to the maximum cap
+            if (ELvl > MaxEnergy) {
+                updateEnergyLevel(MaxEnergy);
+            }
+
             // Handle panic state
             if (panicTicks > 0) {
                 panicTicks--;
                 if (panicTicks == 0) {
                     // Reset speed back to normal when panic ends
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
+                            .setBaseValue(Speed * (ELvl / MaxEnergy));
                 }
             }
 
@@ -355,29 +410,29 @@ public class CustomMooshroomEntity extends MooshroomEntity {
 
             // Adjust energy level randomly based on whether the cow is on grass
             if (isOnGrass) {
-                if (Math.random() < 0.2) { // 20% chance to gain energy
-                    updateEnergyLevel(Math.min(100.0, ELvl + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
-                }
-            } else {
-                if (Math.random() < 0.5) { // 50% chance to lose energy
-                    updateEnergyLevel(Math.max(0.0, ELvl - (0.01 + Math.random() * 0.19))); // Lose 0.01 to 0.2 energy
+                if (Math.random() < 0.3) { // 30% chance to gain energy
+                    updateEnergyLevel(Math.min(100.0, ELvl + (0.1 + Math.random() * 0.75))); // Gain 0.1 to 0.75 energy
                 }
             }
 
+            if (Math.random() < 0.5) { // 50% chance to lose energy
+                updateEnergyLevel(Math.max(0.0, ELvl - (0.05 + Math.random() * 0.3))); // Lose 0.05 to 0.3 energy
+            }
+
             // Check if energy is 100 and regenerate health if not at max
-            if (ELvl == 100.0) {
+            if (ELvl == MaxEnergy) {
                 if (this.getHealth() < this.getMaxHealth()) {
                     this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F)); // Regenerate 0.5 HP per second
                 }
             }
 
-            if (ELvl >= 90.0) {
+            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown) {
                 double searchRadius = 32.0;
 
                 List<CustomMooshroomEntity> mateCandidates = this.getWorld().getEntitiesByClass(
-                    CustomMooshroomEntity.class,
-                    this.getBoundingBox().expand(searchRadius),
-                    candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
+                        CustomMooshroomEntity.class,
+                        this.getBoundingBox().expand(searchRadius),
+                        candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
                 );
 
                 // Find the nearest candidate
@@ -394,18 +449,20 @@ public class CustomMooshroomEntity extends MooshroomEntity {
                 // If we found a mate candidate, move towards it
                 if (nearestMate != null) {
                     // Start moving towards the nearest cow; adjust speed as needed
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / 100.0));
+                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
 
                     // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
                     if (minDistanceSquared < 4.0) {
                         // Only start breeding if both cows are not already in love
                         if (!this.isInLove() && !nearestMate.isInLove()) {
-                            this.setLoveTicks(100);
-                            nearestMate.setLoveTicks(100);
+                            this.setLoveTicks(500);
+                            nearestMate.setLoveTicks(500);
+                            ticksSinceLastBreeding = 0;
                         }
                     }
                 }
             }
+            ticksSinceLastBreeding++;
 
             // If energy reaches 0, kill the cow
             if (ELvl <= 0.0) {
@@ -414,7 +471,7 @@ public class CustomMooshroomEntity extends MooshroomEntity {
                 // Update attributes dynamically if energy is greater than 0
                 if (panicTicks == 0) { // Only update speed if not in panic mode
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
+                            .setBaseValue(Speed * (ELvl / MaxEnergy));
                 }
 
                 // Update the description with the new energy level
