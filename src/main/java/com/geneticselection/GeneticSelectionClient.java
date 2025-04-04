@@ -1,19 +1,14 @@
 package com.geneticselection;
 
-import com.geneticselection.mobs.Axolotl.CustomAxolotlEntity;
 import com.geneticselection.mobs.Axolotl.CustomAxolotlRenderer;
-import com.geneticselection.mobs.Bee.CustomBeeEntity;
 import com.geneticselection.mobs.Bee.CustomBeeRenderer;
 import com.geneticselection.mobs.Camels.CustomCamelRenderer;
 import com.geneticselection.mobs.Chickens.CustomChickenRenderer;
 import com.geneticselection.mobs.Cows.CustomCowRenderer;
 import com.geneticselection.mobs.Donkeys.CustomDonkeyRenderer;
 import com.geneticselection.mobs.Fox.CustomFoxRenderer;
-import com.geneticselection.mobs.Goat.CustomGoatEntity;
 import com.geneticselection.mobs.Goat.CustomGoatRenderer;
-import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinRenderer;
-import com.geneticselection.mobs.Zoglins.CustomZoglinEntity;
 import com.geneticselection.mobs.Zoglins.CustomZoglinRenderer;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
@@ -26,12 +21,9 @@ import com.geneticselection.mobs.Wolves.CustomWolfRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.minecraft.block.MushroomBlock;
-import net.minecraft.block.MushroomPlantBlock;
 import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.entity.model.*;
 import net.minecraft.client.model.Dilation;
-import net.minecraft.entity.passive.MooshroomEntity;
 
 public class GeneticSelectionClient implements ClientModInitializer {
     public void cowMethod(){
