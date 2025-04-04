@@ -2,7 +2,6 @@ package com.geneticselection.mobs.Ocelots;
 
 import com.geneticselection.GeneticSelection;
 import com.geneticselection.mobs.ModModelLayers;
-import com.geneticselection.mobs.Wolves.CustomWolfEntity;
 import com.geneticselection.utils.DescriptionRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;

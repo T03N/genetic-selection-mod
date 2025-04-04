@@ -21,10 +21,8 @@ import net.minecraft.entity.passive.MooshroomEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsage;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -34,8 +32,6 @@ import net.minecraft.block.Blocks;
 
 import java.util.List;
 import java.util.Optional;
-
-import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomMooshroomEntity extends MooshroomEntity {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
