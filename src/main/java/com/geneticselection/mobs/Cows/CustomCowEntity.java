@@ -45,7 +45,9 @@ public class CustomCowEntity extends CowEntity {
     private int milkingCooldown;
     private int breedingCooldown;
     private long lastMilkTime = 0;
+
     private int panicTicks = 0;
+    private static int LIFESPAN = 35000;
     private static final int PANIC_DURATION = 100; // 5 seconds at 20 ticks per second
     private static final double PANIC_SPEED_MULTIPLIER = 1.25;
     private boolean wasRecentlyHit = false;
@@ -355,10 +357,10 @@ public class CustomCowEntity extends CowEntity {
             // Max energy is determined by age
             if(tickAge <= 4404){
                 MaxEnergy = 10 * Math.log(5 * tickAge + 5);
-            } else if (tickAge > 4404 && tickAge < 35000) {
+            } else if (tickAge > 4404 && tickAge < LIFESPAN) {
                 MaxEnergy = 100;
             } else {
-                MaxEnergy = -(tickAge - 35000) / 16.0 + 100;
+                MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
             }
             tickAge++;
 

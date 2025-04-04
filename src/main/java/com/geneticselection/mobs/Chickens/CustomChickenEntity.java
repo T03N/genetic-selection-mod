@@ -4,6 +4,7 @@ import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import com.geneticselection.utils.EatGrassGoal;
@@ -42,14 +43,17 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     private double Speed;
     private double MaxEnergy = 100.0F;
     private double ELvl;
-    private double LifeSpan=0;
     private double MaxMeat;
     private double MaxFeathers;
+    private int breedingCooldown;
 
     private int panicTicks = 0;
+    private static int LIFESPAN = 30000;
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 1.5;
     private boolean wasRecentlyHit = false;
+    private int tickAge = 0;
+    private int ticksSinceLastBreeding = 0;
 
     public CustomChickenEntity(EntityType<? extends ChickenEntity> entityType, World world) {
         super(entityType, world);
@@ -62,6 +66,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double feathers = global.getMaxFeathers().orElse(0.0) + (0.98 + Math.random() * 0.1);
             this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(feathers));
+            this.tickAge = 0;
         }
 
         this.MaxHp = this.mobAttributes.getMaxHealth();
@@ -77,6 +82,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         this.mobAttributes.getMaxFeathers().ifPresent(maxFeathers -> {
             this.MaxFeathers = maxFeathers;
         });
+        this.breedingCooldown = 3000 + (int)((1 - (ELvl / 100.0)) * 2000) + random.nextInt(2001);
 
 
         if (!this.getWorld().isClient)
@@ -119,7 +125,10 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 "\nSpeed: " + String.format("%.2f", ent.Speed) +
                 "\nEnergy: " + String.format("%.1f", ent.ELvl) +
                 "\nMax Meat: " + String.format("%.1f", ent.MaxMeat) +
-                "\nFeathers: " + String.format("%.1f", ent.MaxFeathers)));
+                "\nFeathers: " + String.format("%.1f", ent.MaxFeathers) +
+                        "\nBreeding Cooldown: " + ent.breedingCooldown+
+                        "\nAge: " + ent.tickAge
+                ));
     }
 
     public double getEnergyLevel(){
@@ -150,24 +159,29 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
     @Override
     public void growUp(int age, boolean overGrow) {
-        int i = this.getBreedingAge();
-        int j = i;
-        i += age * 20;
-        if (i > 0) {
-            i = 0;
+        int currentAge = this.getBreedingAge();
+        int newAge = currentAge + age; // Increment age by provided value
+
+        // Ensure cow reaches adulthood when age hits 0 (negative age counting)
+        if (newAge > 0) {
+            newAge = 0; // Reaches adulthood at age 0 (negative -> 0 for babies)
         }
 
-        int k = i - j;
-        this.setBreedingAge(i);
+        int delta = newAge - currentAge;
+        this.setBreedingAge(newAge);
+
+        // Apply forcedAge for overgrowth if necessary
         if (overGrow) {
-            this.forcedAge += k;
+            this.forcedAge += delta;
             if (this.happyTicksRemaining == 0) {
                 this.happyTicksRemaining = 40;
                 this.MaxEnergy = 100.0F;
+                this.ELvl = 100.0F;
             }
         }
 
-        if (this.getBreedingAge() == 0) {
+        // Prevent resetting forcedAge unless we are an adult
+        if (this.getBreedingAge() == 0 && this.forcedAge > 0) {
             this.setBreedingAge(this.forcedAge);
         }
     }
@@ -243,6 +257,26 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         super.tick();
 
         if (!this.getWorld().isClient) {
+
+            // Max energy is determined by age
+            if(tickAge <= 4404){
+                MaxEnergy = 10 * Math.log(5 * tickAge + 5);
+            } else if (tickAge > 4404 && tickAge < LIFESPAN) {
+                MaxEnergy = 100;
+            } else {
+                MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
+            }
+            tickAge++;
+
+            if (tickAge >= 4404 && this.isBaby()) {
+                growUp(220, true);
+            }
+
+            // Clamp the current energy level to the maximum cap
+            if (ELvl > MaxEnergy) {
+                updateEnergyLevel(MaxEnergy);
+            }
+
             // Handle panic
             if (panicTicks > 0) {
                 panicTicks--;
@@ -263,7 +297,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
             if (isOnEnergySource) {
                 if (Math.random() < 0.2) { // 20% chance to gain energy
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.01 + Math.random() * 0.19) - LifeSpan)); // Gain 0.01 to 0.2 energy
+                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
                 }
             } else {
                 if (Math.random() < 0.5) { // 50% chance to lose energy
@@ -276,13 +310,13 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
             }
 
-            if (ELvl >= 90.0) {
+            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown) {
                 double searchRadius = 32.0;
 
                 List<CustomChickenEntity> mateCandidates = this.getWorld().getEntitiesByClass(
-                    CustomChickenEntity.class,
-                    this.getBoundingBox().expand(searchRadius),
-                    candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
+                        CustomChickenEntity.class,
+                        this.getBoundingBox().expand(searchRadius),
+                        candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
                 );
 
                 // Find the nearest candidate
@@ -299,18 +333,20 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 // If we found a mate candidate, move towards it
                 if (nearestMate != null) {
                     // Start moving towards the nearest cow; adjust speed as needed
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / 100.0));
+                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
 
                     // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
                     if (minDistanceSquared < 4.0) {
                         // Only start breeding if both cows are not already in love
                         if (!this.isInLove() && !nearestMate.isInLove()) {
-                            this.setLoveTicks(100);
-                            nearestMate.setLoveTicks(100);
+                            this.setLoveTicks(500);
+                            nearestMate.setLoveTicks(500);
+                            ticksSinceLastBreeding = 0;
                         }
                     }
                 }
             }
+            ticksSinceLastBreeding++;
 
             // Kill if energy is 0
             if (ELvl <= 0.0) {
@@ -324,7 +360,6 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 updateDescription(this);
             }
         }
-        LifeSpan += 0.0001;
     }
 
     @Override
