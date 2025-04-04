@@ -11,7 +11,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomGoatRenderer extends MobEntityRenderer<CustomGoatEntity, GoatEntityModel<CustomGoatEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/goat/goat.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/goat/minecraft-goat.png");
 
     public CustomGoatRenderer(EntityRendererFactory.Context context) {
         super(context, new GoatEntityModel<>(context.getPart(ModModelLayers.CUSTOM_GOAT)), 0.6f);
