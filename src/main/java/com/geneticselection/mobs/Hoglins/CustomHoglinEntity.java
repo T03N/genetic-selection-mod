@@ -9,7 +9,11 @@ import com.geneticselection.mobs.Zoglins.CustomZoglinEntity;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
 import net.minecraft.block.Blocks;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HoglinEntity;
@@ -18,6 +22,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
@@ -130,20 +136,59 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
             return;
         }
 
-        if (ELvl <= 0.0) {
-            // Drop minimal resources
-            this.dropStack(new ItemStack(Items.LEATHER, 1));
-        } else {
-            super.onDeath(source);
-            if (!this.getWorld().isClient) {
-                // Drop leather and meat based on energy
-                int leatherAmount = (int) ((MaxLeather) * (ELvl / 100.0));
-                this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
+        if (!this.getWorld().isClient) {
+            boolean shouldDropCooked = false;
 
-                int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
-                this.dropStack(new ItemStack(Items.PORKCHOP, meatAmount));
+            // Check if the entity died from fire, lava, or burning
+            if (source.getName().equals("onFire") || source.getName().equals("inFire") || source.getName().equals("lava")) {
+                shouldDropCooked = true;
+            }
+
+            // Check if the attacker has Fire Aspect
+            if (source.getAttacker() instanceof LivingEntity attacker) {
+                ItemStack weapon = attacker.getMainHandStack();
+                RegistryEntry<Enchantment> fireAspectEntry = this.getWorld().getServer().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.FIRE_ASPECT).get();
+                if (EnchantmentHelper.getLevel(fireAspectEntry ,weapon) >= 1) {
+                    shouldDropCooked = true;
+                }
+            }
+
+            // Drop cooked or raw chicken based on conditions
+            if(shouldDropCooked) {
+                if (ELvl <= 0.0) {
+                    // Drop minimal resources
+                    this.dropStack(new ItemStack(Items.LEATHER, 1));
+                } else {
+                    super.onDeath(source);
+                    if (!this.getWorld().isClient) {
+                        // Drop leather and meat based on energy
+                        int leatherAmount = (int) ((MaxLeather) * (ELvl / 100.0));
+                        this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
+
+                        int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
+                        this.dropStack(new ItemStack(Items.COOKED_PORKCHOP, meatAmount));
+                    }
+                }
+            }
+            else{
+                if (ELvl <= 0.0) {
+                    // Drop minimal resources
+                    this.dropStack(new ItemStack(Items.LEATHER, 1));
+                } else {
+                    super.onDeath(source);
+                    if (!this.getWorld().isClient) {
+                        // Drop leather and meat based on energy
+                        int leatherAmount = (int) ((MaxLeather) * (ELvl / 100.0));
+                        this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
+
+                        int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
+                        this.dropStack(new ItemStack(Items.PORKCHOP, meatAmount));
+                    }
+                }
             }
         }
+
+
     }
 
     @Override
