@@ -41,6 +41,7 @@ public class GlobalAttributesManager {
             put(AttributeKey.MOVEMENT_SPEED, 0.2);
             put(AttributeKey.MAX_HEALTH, 8.0);
             put(AttributeKey.ENERGY, 100.0);
+            put(AttributeKey.MAX_MEAT, 3.0);
         }});
 
         ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_DONKEY, new HashMap<>() {{
