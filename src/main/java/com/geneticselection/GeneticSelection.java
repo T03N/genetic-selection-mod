@@ -526,7 +526,7 @@ public class GeneticSelection implements ModInitializer {
 		goatMethod();
 		foxMethod();
 		mooshroomMethod();
-		GlobalAttributesManager.initialize();
+		GlobalAttributesManager.initializeGlobalMap();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads
 		});
