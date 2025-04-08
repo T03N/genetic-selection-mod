@@ -48,7 +48,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     private int breedingCooldown;
 
     private int panicTicks = 0;
-    private static int LIFESPAN = 30000;
+    private static int LIFESPAN = 20000;
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 1.5;
     private boolean wasRecentlyHit = false;
@@ -259,17 +259,17 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         if (!this.getWorld().isClient) {
 
             // Max energy is determined by age
-            if(tickAge <= 4404){
-                MaxEnergy = 10 * Math.log(5 * tickAge + 5);
-            } else if (tickAge > 4404 && tickAge < LIFESPAN) {
+            if(tickAge <= 957){
+                MaxEnergy = 11.8 * Math.log(5 * tickAge + 5);
+            } else if (tickAge > 957 && tickAge < LIFESPAN) {
                 MaxEnergy = 100;
             } else {
                 MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
             }
             tickAge++;
 
-            if (tickAge >= 4404 && this.isBaby()) {
-                growUp(220, true);
+            if (tickAge >= 957 && this.isBaby()) {
+                growUp(47, true);
             }
 
             // Clamp the current energy level to the maximum cap
