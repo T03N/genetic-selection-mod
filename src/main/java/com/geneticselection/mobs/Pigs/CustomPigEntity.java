@@ -2,6 +2,7 @@ package com.geneticselection.mobs.Pigs;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
@@ -34,10 +35,16 @@ public class CustomPigEntity extends PigEntity {
     private MobAttributes mobAttributes;
     private double MaxHp;
     private double ELvl;
+    private double MaxEnergy;
     private double Speed;
     private double MinMeat;
     private double MaxMeat;
+    private int breedingCooldown;
+
     private boolean wasRecentlyHit = false;
+    private static int LIFESPAN = 35000;
+    private int tickAge = 0;
+    private int ticksSinceLastBreeding = 0;
 
     public CustomPigEntity(EntityType<? extends PigEntity> entityType, World world) {
         super(entityType, world);
@@ -60,6 +67,7 @@ public class CustomPigEntity extends PigEntity {
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
         });
+        this.breedingCooldown = 3000 + (int)((1 - (ELvl / 100.0)) * 2000) + random.nextInt(2001);
         this.setMinMeat(1.0);
 
         if (!this.getWorld().isClient) {
@@ -87,7 +95,10 @@ public class CustomPigEntity extends PigEntity {
                 "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.3f", ent.Speed) +
                 "\nEnergy: " + String.format("%.3f", ent.ELvl) +
-                "\nMax Meat: " + String.format("%.3f", ent.MaxMeat)));
+                "\nMax Meat: " + String.format("%.3f", ent.MaxMeat)+
+                "\nBreeding Cooldown: " + ent.breedingCooldown+
+                "\nAge: " + ent.tickAge)
+        );
     }
 
     public void setMinMeat(double minMeat) {
@@ -266,47 +277,73 @@ public class CustomPigEntity extends PigEntity {
     public void tick() {
         super.tick();
 
+        // Only perform energy adjustments on the server side
         if (!this.getWorld().isClient) {
+
+            // Max energy is determined by age
+            if(tickAge <= 4404){
+                MaxEnergy = 10 * Math.log(5 * tickAge + 5);
+            } else if (tickAge < LIFESPAN) {
+                MaxEnergy = 100;
+            } else {
+                MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
+            }
+            tickAge++;
+
+            if (tickAge >= 4404 && this.isBaby()) {
+                growUp(220, true);
+            }
+
+            // Clamp the current energy level to the maximum cap
+            if (ELvl > MaxEnergy) {
+                updateEnergyLevel(MaxEnergy);
+            }
+
             // Handle panic state
             if (panicTicks > 0) {
                 panicTicks--;
                 if (panicTicks == 0) {
                     // Reset speed back to normal when panic ends
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
+                            .setBaseValue(Speed * (ELvl / MaxEnergy));
                 }
             }
 
+            // Handle energy loss if the cow was recently hit
             if (wasRecentlyHit) {
-                ELvl = Math.max(0.0, ELvl * 0.8);
-                wasRecentlyHit = false;
+                // Reduce energy by 20% of its current level
+                updateEnergyLevel(Math.max(0.0, ELvl * 0.8));
+                wasRecentlyHit = false; // Reset the flag after applying the energy loss
             }
 
+            // Check if the cow is standing on grass
             boolean isOnGrass = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.GRASS_BLOCK);
 
+            // Adjust energy level randomly based on whether the cow is on grass
             if (isOnGrass) {
-                if (Math.random() < 0.2) {
-                    ELvl = Math.min(100.0, ELvl + (0.01 + Math.random() * 0.19));
-                }
-            } else {
-                if (Math.random() < 0.5) {
-                    ELvl = Math.max(0.0, ELvl - (0.01 + Math.random() * 0.19));
+                if (Math.random() < 0.3) { // 30% chance to gain energy
+                    updateEnergyLevel(Math.min(100.0, ELvl + (0.1 + Math.random() * 0.75))); // Gain 0.1 to 0.75 energy
                 }
             }
 
-            if (ELvl == 100.0) {
+            if (Math.random() < 0.5) { // 50% chance to lose energy
+                updateEnergyLevel(Math.max(0.0, ELvl - (0.05 + Math.random() * 0.3))); // Lose 0.05 to 0.3 energy
+            }
+
+            // Check if energy is 100 and regenerate health if not at max
+            if (ELvl == MaxEnergy) {
                 if (this.getHealth() < this.getMaxHealth()) {
-                    this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
+                    this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F)); // Regenerate 0.5 HP per second
                 }
             }
 
-            if (ELvl >= 90.0) {
+            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown) {
                 double searchRadius = 32.0;
 
                 List<CustomPigEntity> mateCandidates = this.getWorld().getEntitiesByClass(
-                    CustomPigEntity.class,
-                    this.getBoundingBox().expand(searchRadius),
-                    candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
+                        CustomPigEntity.class,
+                        this.getBoundingBox().expand(searchRadius),
+                        candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
                 );
 
                 // Find the nearest candidate
@@ -323,24 +360,32 @@ public class CustomPigEntity extends PigEntity {
                 // If we found a mate candidate, move towards it
                 if (nearestMate != null) {
                     // Start moving towards the nearest cow; adjust speed as needed
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / 100.0));
+                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
 
                     // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
                     if (minDistanceSquared < 4.0) {
                         // Only start breeding if both cows are not already in love
                         if (!this.isInLove() && !nearestMate.isInLove()) {
-                            this.setLoveTicks(100);
-                            nearestMate.setLoveTicks(100);
+                            this.setLoveTicks(500);
+                            nearestMate.setLoveTicks(500);
+                            ticksSinceLastBreeding = 0;
                         }
                     }
                 }
             }
+            ticksSinceLastBreeding++;
 
+            // If energy reaches 0, kill the cow
             if (ELvl <= 0.0) {
-                this.kill();
+                this.kill(); // This makes the cow die
             } else {
-                this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                        .setBaseValue(Speed * (ELvl / 100.0));
+                // Update attributes dynamically if energy is greater than 0
+                if (panicTicks == 0) { // Only update speed if not in panic mode
+                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                            .setBaseValue(Speed * (ELvl / MaxEnergy));
+                }
+
+                // Update the description with the new energy level
                 updateDescription(this);
             }
         }
