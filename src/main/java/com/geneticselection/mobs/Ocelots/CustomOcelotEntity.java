@@ -61,6 +61,7 @@ public class CustomOcelotEntity extends OcelotEntity {
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
         this.ELvl = this.mobAttributes.getEnergyLvl();
 
+        this.breedingCooldown = 3000 + (int)((1 - (ELvl / 100.0)) * 2000) + random.nextInt(2001);
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
@@ -84,7 +85,10 @@ public class CustomOcelotEntity extends OcelotEntity {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/" + String.format("%.3f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.3f", ent.Speed) +
-                "\nEnergy: " + String.format("%.3f", ent.ELvl)));
+                "\nEnergy: " + String.format("%.3f", ent.ELvl) +
+                "\nBreeding Cooldown: " + ent.breedingCooldown+
+                "\nAge: " + ent.tickAge)
+        );
     }
 
     public double getEnergyLevel() {
