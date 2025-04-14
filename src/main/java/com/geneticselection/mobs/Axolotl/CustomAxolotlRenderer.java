@@ -11,7 +11,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 public class CustomAxolotlRenderer extends MobEntityRenderer<CustomAxolotlEntity, AxolotlEntityModel<CustomAxolotlEntity>> {
-    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/axolotl/leucistic-axolotl.png");
+    private static final Identifier TEXTURE = Identifier.of(GeneticSelection.MOD_ID, "textures/entity/axolotl/axolotl.png");
 
     public CustomAxolotlRenderer(EntityRendererFactory.Context context) {
         super(context, new AxolotlEntityModel<>(context.getPart(ModModelLayers.CUSTOM_AXOLOTL)), 0.6f);
