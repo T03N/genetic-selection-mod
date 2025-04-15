@@ -3,6 +3,7 @@ package com.geneticselection.mobs.Sheep;
 import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import com.geneticselection.utils.EatGrassGoal;
@@ -36,11 +37,15 @@ public class CustomSheepEntity extends SheepEntity implements AttributeCarrier {
     private double MaxEnergy = 100.0F;
     private double MaxMeat;
     private double MaxWool;
+    private int breedingCooldown;
 
+    private static int LIFESPAN = 35000;
     private static final int PANIC_DURATION = 100; // 5 seconds at 20 ticks per second
     private static final double PANIC_SPEED_MULTIPLIER = 1.25;
     private int panicTicks = 0;
     private boolean wasRecentlyHit = false;
+    private int tickAge = 0;
+    private int ticksSinceLastBreeding = 0;
 
     public CustomSheepEntity(EntityType<? extends SheepEntity> entityType, World world) {
         super(entityType, world);
@@ -197,37 +202,37 @@ public class CustomSheepEntity extends SheepEntity implements AttributeCarrier {
 
     @Override
     public CustomSheepEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
-        if (!(mate instanceof CustomSheepEntity)) {
+        if (!(mate instanceof CustomSheepEntity))
             return (CustomSheepEntity) EntityType.SHEEP.create(serverWorld);
-        }
 
         CustomSheepEntity parent1 = this;
         CustomSheepEntity parent2 = (CustomSheepEntity) mate;
 
-        MobAttributes attr1 = parent1.mobAttributes;
-        MobAttributes attr2 = parent2.mobAttributes;
+        // Calculate the inheritance factor based on the lower energy level of the parents
+        double inheritanceFactor = Math.min(parent1.ELvl, parent2.ELvl) / MaxEnergy;
 
-        // Inherit attributes from both parents
-        MobAttributes childAttributes = inheritAttributes(attr1, attr2);
+        // Inherit attributes from parents, scaled by the inheritance factor
+        double childMaxHp = ((parent1.MaxHp + parent2.MaxHp) / 2) * inheritanceFactor;
+        double childMaxMeat = ((parent1.MaxMeat + parent2.MaxMeat) / 2) * inheritanceFactor;
+        int childBreedingCooldown = (int) (((parent1.breedingCooldown + parent2.breedingCooldown) / 2) * (1 / inheritanceFactor));
+        double childEnergy = ((parent1.ELvl + parent2.ELvl) / 2) * inheritanceFactor;
 
-        double childMaxMeat = (parent1.MaxMeat + parent2.MaxMeat) / 2;
-        double childMaxWool = (parent1.MaxWool + parent2.MaxWool) / 2;
-
+        // Create the child entity
         CustomSheepEntity child = new CustomSheepEntity(ModEntities.CUSTOM_SHEEP, serverWorld);
 
-        // Set the inherited attributes directly
-        child.mobAttributes = childAttributes;
-        applyAttributes(child, childAttributes);
-
+        // Set inherited and calculated attributes
+        child.MaxHp = childMaxHp;
         child.MaxMeat = childMaxMeat;
-        child.MaxWool = childMaxWool;
+        child.breedingCooldown = childBreedingCooldown;
+        child.ELvl = childEnergy;
+
+        // Apply stats to the child entity
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
+        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / MaxEnergy));
 
-        parent1.ELvl -= parent1.ELvl * 0.2F;
-        parent2.ELvl -= parent2.ELvl * 0.2F;
+        parent1.ELvl -= parent1.ELvl * 0.4F;
+        parent2.ELvl -= parent2.ELvl * 0.4F;
         this.resetLoveTicks();
-
-        influenceGlobalAttributes(child.getType());
 
         if (!this.getWorld().isClient)
             updateDescription(child);
@@ -236,21 +241,44 @@ public class CustomSheepEntity extends SheepEntity implements AttributeCarrier {
     }
 
     @Override
-    public void tick() {
+    public void tick()
+    {
         super.tick();
 
         // Only perform energy adjustments on the server side
-        if (!this.getWorld().isClient) {
-            if (MaxEnergy > 0.0) {
-                double t = MaxEnergy / 100.0; // Normalized progress (1 -> 0)
-                MaxEnergy -= (100.0 / 10000.0) * t * t; // Quadratic decay (ease-in)
-                if (MaxEnergy < 0.0) MaxEnergy = 0.0; // Ensure it never goes negative
+        if (!this.getWorld().isClient)
+        {
+
+            // Max energy is determined by age
+            if (tickAge <= 4404)
+            {
+                MaxEnergy = 10 * Math.log(5 * tickAge + 5);
+            } else if (tickAge < LIFESPAN)
+            {
+                MaxEnergy = 100;
+            } else
+            {
+                MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
+            }
+            tickAge++;
+
+            if (tickAge >= 4404 && this.isBaby())
+            {
+                growUp(220, true);
+            }
+
+            // Clamp the current energy level to the maximum cap
+            if (ELvl > MaxEnergy)
+            {
+                updateEnergyLevel(MaxEnergy);
             }
 
             // Handle panic state
-            if (panicTicks > 0) {
+            if (panicTicks > 0)
+            {
                 panicTicks--;
-                if (panicTicks == 0) {
+                if (panicTicks == 0)
+                {
                     // Reset speed back to normal when panic ends
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
                         .setBaseValue(Speed * (ELvl / MaxEnergy));
@@ -258,76 +286,97 @@ public class CustomSheepEntity extends SheepEntity implements AttributeCarrier {
             }
 
             // Handle energy loss if the cow was recently hit
-            if (wasRecentlyHit) {
+            if (wasRecentlyHit)
+            {
                 // Reduce energy by 20% of its current level
                 updateEnergyLevel(Math.max(0.0, ELvl * 0.8));
                 wasRecentlyHit = false; // Reset the flag after applying the energy loss
             }
 
             // Check if the cow is standing on grass
-            boolean isOnGrass = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(
-                Blocks.GRASS_BLOCK);
+            boolean isOnGrass =
+                this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.GRASS_BLOCK);
 
             // Adjust energy level randomly based on whether the cow is on grass
-            if (isOnGrass) {
-                if (Math.random() < 0.2) { // 20% chance to gain energy
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
+            if (isOnGrass)
+            {
+                if (Math.random() < 0.3)
+                { // 30% chance to gain energy
+                    updateEnergyLevel(Math.min(100.0,
+                        ELvl + (0.1 + Math.random() * 0.75))); // Gain 0.1 to 0.75 energy
                 }
-            } else {
-                if (Math.random() < 0.5) { // 50% chance to lose energy
-                    updateEnergyLevel(Math.max(0.0, ELvl - (0.01 + Math.random() * 0.19))); // Lose 0.01 to 0.2 energy
-                }
+            }
+
+            if (Math.random() < 0.5)
+            { // 50% chance to lose energy
+                updateEnergyLevel(
+                    Math.max(0.0, ELvl - (0.05 + Math.random() * 0.3))); // Lose 0.05 to 0.3 energy
             }
 
             // Check if energy is 100 and regenerate health if not at max
-            if (ELvl == MaxEnergy) {
-                if (this.getHealth() < this.getMaxHealth()) {
-                    this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F)); // Regenerate 0.5 HP per second
+            if (ELvl == MaxEnergy)
+            {
+                if (this.getHealth() < this.getMaxHealth())
+                {
+                    this.setHealth(Math.min(this.getMaxHealth(),
+                        this.getHealth() + 0.5F)); // Regenerate 0.5 HP per second
                 }
             }
 
-            if (ELvl >= 90.0) {
+            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown)
+            {
                 double searchRadius = 32.0;
 
-                List<CustomSheepEntity> mateCandidates = this.getWorld().getEntitiesByClass(
-                    CustomSheepEntity.class,
-                    this.getBoundingBox().expand(searchRadius),
-                    candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
-                );
+                List<CustomSheepEntity> mateCandidates = this.getWorld()
+                    .getEntitiesByClass(CustomSheepEntity.class,
+                        this.getBoundingBox().expand(searchRadius),
+                        candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0
+                            && !candidate.isBaby());
 
                 // Find the nearest candidate
                 CustomSheepEntity nearestMate = null;
                 double minDistanceSquared = Double.MAX_VALUE;
-                for (CustomSheepEntity candidate : mateCandidates) {
+                for (CustomSheepEntity candidate : mateCandidates)
+                {
                     double distSq = this.squaredDistanceTo(candidate);
-                    if (distSq < minDistanceSquared) {
+                    if (distSq < minDistanceSquared)
+                    {
                         minDistanceSquared = distSq;
                         nearestMate = candidate;
                     }
                 }
 
                 // If we found a mate candidate, move towards it
-                if (nearestMate != null) {
+                if (nearestMate != null)
+                {
                     // Start moving towards the nearest cow; adjust speed as needed
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
+                    this.getNavigation()
+                        .startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
 
                     // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
-                    if (minDistanceSquared < 4.0) {
+                    if (minDistanceSquared < 4.0)
+                    {
                         // Only start breeding if both cows are not already in love
-                        if (!this.isInLove() && !nearestMate.isInLove()) {
-                            this.setLoveTicks(100);
-                            nearestMate.setLoveTicks(100);
+                        if (!this.isInLove() && !nearestMate.isInLove())
+                        {
+                            this.setLoveTicks(500);
+                            nearestMate.setLoveTicks(500);
+                            ticksSinceLastBreeding = 0;
                         }
                     }
                 }
             }
+            ticksSinceLastBreeding++;
 
             // If energy reaches 0, kill the cow
-            if (ELvl <= 0.0) {
+            if (ELvl <= 0.0)
+            {
                 this.kill(); // This makes the cow die
-            } else {
+            } else
+            {
                 // Update attributes dynamically if energy is greater than 0
-                if (panicTicks == 0) { // Only update speed if not in panic mode
+                if (panicTicks == 0)
+                { // Only update speed if not in panic mode
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
                         .setBaseValue(Speed * (ELvl / MaxEnergy));
                 }
