@@ -523,7 +523,7 @@ public class GeneticSelection implements ModInitializer {
 		beeMethod();
 		axolotlMethod();
 		ocelotMethod();
-		goatMethod();
+		goatMethod(); 		
 		foxMethod();
 		mooshroomMethod();
 		GlobalAttributesManager.initializeGlobalMap();
