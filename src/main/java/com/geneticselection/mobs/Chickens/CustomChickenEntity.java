@@ -4,7 +4,6 @@ import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import com.geneticselection.utils.EatGrassGoal;
@@ -48,7 +47,8 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     private int breedingCooldown;
 
     private int panicTicks = 0;
-    private static int LIFESPAN = 20000;
+    private static final int LIFESPAN = 20000;
+    private static final int MAX_AGE = 27000; // After this age, chickens will die naturally
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 1.5;
     private boolean wasRecentlyHit = false;
@@ -123,12 +123,12 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.2f", ent.Speed) +
-                "\nEnergy: " + String.format("%.1f", ent.ELvl) +
+                "\nEnergy: " + String.format("%.1f", ent.ELvl) + "/" + String.format("%.1f", ent.MaxEnergy) +
                 "\nMax Meat: " + String.format("%.1f", ent.MaxMeat) +
                 "\nFeathers: " + String.format("%.1f", ent.MaxFeathers) +
-                        "\nBreeding Cooldown: " + ent.breedingCooldown+
-                        "\nAge: " + ent.tickAge
-                ));
+                "\nBreeding Cooldown: " + ent.breedingCooldown +
+                "\nAge: " + ent.tickAge + "/" + MAX_AGE
+        ));
     }
 
     public double getEnergyLevel(){
@@ -211,9 +211,10 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
             // Drop cooked or raw chicken based on conditions
             if(shouldDropCooked) {
-                if (ELvl <= 0.0) {
-                    // Drop minimal resources or nothing
+                if (ELvl <= 0.0 || tickAge >= MAX_AGE) {
+                    // Drop minimal resources for old or low energy chickens
                     this.dropStack(new ItemStack(Items.FEATHER, 1));
+                    this.dropStack(new ItemStack(Items.BONE, 1)); // Add bone drop for old age death
                 } else {
                     super.onDeath(source);
                     if (!this.getWorld().isClient) {
@@ -228,9 +229,10 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 }
             }
             else{
-                if (ELvl <= 0.0) {
-                    // Drop minimal resources or nothing
+                if (ELvl <= 0.0 || tickAge >= MAX_AGE) {
+                    // Drop minimal resources for old or low energy chickens
                     this.dropStack(new ItemStack(Items.FEATHER, 1));
+                    this.dropStack(new ItemStack(Items.BONE, 1)); // Add bone drop for old age death
                 } else {
                     super.onDeath(source);
                     if (!this.getWorld().isClient) {
@@ -257,6 +259,15 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         super.tick();
 
         if (!this.getWorld().isClient) {
+            // Increment age
+            tickAge++;
+
+            // Age-based death: die of old age when MAX_AGE is reached
+            if (tickAge >= MAX_AGE) {
+                // Die of old age
+                this.kill();
+                return;
+            }
 
             // Max energy is determined by age
             if(tickAge <= 957){
@@ -265,8 +276,9 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 MaxEnergy = 100;
             } else {
                 MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
+                // Ensure MaxEnergy doesn't go below 0
+                MaxEnergy = Math.max(0, MaxEnergy);
             }
-            tickAge++;
 
             if (tickAge >= 957 && this.isBaby()) {
                 growUp(47, true);
@@ -282,7 +294,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 panicTicks--;
                 if (panicTicks == 0) {
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
+                            .setBaseValue(Speed * (ELvl / MaxEnergy));
                 }
             }
 
@@ -305,12 +317,25 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 }
             }
 
-            // Health regeneration at max energy
-            if (ELvl == 100.0 && this.getHealth() < this.getMaxHealth()) {
+            // Aging effects - decreasing energy and health as the chicken gets very old
+            if (tickAge > LIFESPAN) {
+                // Additional energy drain for old age
+                double ageFactor = (tickAge - LIFESPAN) / (double)(MAX_AGE - LIFESPAN);
+                updateEnergyLevel(Math.max(0.0, ELvl - (0.05 * ageFactor))); // More energy loss based on age
+
+                // Health deterioration with old age
+                if (Math.random() < 0.1 * ageFactor) {
+                    this.damage(this.getDamageSources().generic(), 0.5f * (float)ageFactor);
+                }
+            }
+
+            // Health regeneration at max energy (only for chickens not in old age)
+            if (ELvl == MaxEnergy && this.getHealth() < this.getMaxHealth() && tickAge < LIFESPAN) {
                 this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
             }
 
-            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown) {
+            // Autonomous breeding behavior (only for chickens not in old age)
+            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown && tickAge < LIFESPAN) {
                 double searchRadius = 32.0;
 
                 List<CustomChickenEntity> mateCandidates = this.getWorld().getEntitiesByClass(
@@ -332,12 +357,12 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
                 // If we found a mate candidate, move towards it
                 if (nearestMate != null) {
-                    // Start moving towards the nearest cow; adjust speed as needed
+                    // Start moving towards the nearest chicken
                     this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
 
-                    // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
+                    // If close enough (within 2 blocks)
                     if (minDistanceSquared < 4.0) {
-                        // Only start breeding if both cows are not already in love
+                        // Only start breeding if both chickens are not already in love
                         if (!this.isInLove() && !nearestMate.isInLove()) {
                             this.setLoveTicks(500);
                             nearestMate.setLoveTicks(500);
@@ -355,7 +380,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 // Update speed
                 if (panicTicks == 0) {
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
+                            .setBaseValue(Speed * (ELvl / MaxEnergy));
                 }
                 updateDescription(this);
             }
@@ -406,7 +431,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         wasRecentlyHit = true;
         panicTicks = PANIC_DURATION;
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                .setBaseValue(Speed * (ELvl / 100.0) * PANIC_SPEED_MULTIPLIER);
+                .setBaseValue(Speed * (ELvl / MaxEnergy) * PANIC_SPEED_MULTIPLIER);
         if (!this.getWorld().isClient)
             updateDescription(this);
     }

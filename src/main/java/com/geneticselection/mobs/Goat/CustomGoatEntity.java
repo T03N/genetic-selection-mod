@@ -3,7 +3,6 @@ package com.geneticselection.mobs.Goat;
 import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
-import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
@@ -36,7 +35,8 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
     private int breedingCooldown;
 
     private int panicTicks = 0;
-    private static int LIFESPAN = 35000;
+    private static final int LIFESPAN = 35000;
+    private static final int MAX_AGE = 45000; // After this age, goats will die naturally
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 2.0;
     private boolean wasRecentlyHit = false;
@@ -92,9 +92,9 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.2f", ent.Speed) +
-                "\nEnergy: " + String.format("%.1f", ent.ELvl)+
+                "\nEnergy: " + String.format("%.1f", ent.ELvl) + "/" + String.format("%.1f", ent.MaxEnergy) +
                 "\nBreeding Cooldown: " + ent.breedingCooldown+
-                "\nAge: " + ent.tickAge)
+                "\nAge: " + ent.tickAge + "/" + MAX_AGE)
         );
     }
 
@@ -126,12 +126,28 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
             return;
         }
 
-        if (ELvl <= 0.0) {
-            // Drop minimal resources
+        if (ELvl <= 0.0 || tickAge >= MAX_AGE) {
+            // Drop minimal resources or bones for old age
             this.dropStack(new ItemStack(Items.LEATHER, 1));
+
+            if (tickAge >= MAX_AGE) {
+                // Drop bones if died of old age
+                this.dropStack(new ItemStack(Items.BONE, 1 + random.nextInt(2)));
+            }
         } else {
             super.onDeath(source);
             if (!this.getWorld().isClient) {
+                // Drop mutton based on energy
+                if (this.isOnFire()) {
+                    int meatAmount = (int) (3 * (ELvl / 100.0));
+                    this.dropStack(new ItemStack(Items.COOKED_MUTTON, Math.max(1, meatAmount)));
+                } else {
+                    int meatAmount = (int) (3 * (ELvl / 100.0));
+                    this.dropStack(new ItemStack(Items.MUTTON, Math.max(1, meatAmount)));
+                }
+
+                // Drop wool
+                this.dropStack(new ItemStack(Items.WHITE_WOOL, 1));
             }
         }
     }
@@ -142,6 +158,15 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
 
         // Only perform energy adjustments on the server side
         if (!this.getWorld().isClient) {
+            // Increment age
+            tickAge++;
+
+            // Age-based death: die of old age when MAX_AGE is reached
+            if (tickAge >= MAX_AGE) {
+                // Die of old age
+                this.kill();
+                return;
+            }
 
             // Max energy is determined by age
             if(tickAge <= 4404){
@@ -150,8 +175,9 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
                 MaxEnergy = 100;
             } else {
                 MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
+                // Ensure MaxEnergy doesn't go below 0
+                MaxEnergy = Math.max(0, MaxEnergy);
             }
-            tickAge++;
 
             if (tickAge >= 4404 && this.isBaby()) {
                 growUp(220, true);
@@ -172,35 +198,49 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
                 }
             }
 
-            // Handle energy loss if the cow was recently hit
+            // Handle energy loss if the goat was recently hit
             if (wasRecentlyHit) {
                 // Reduce energy by 20% of its current level
                 updateEnergyLevel(Math.max(0.0, ELvl * 0.8));
                 wasRecentlyHit = false; // Reset the flag after applying the energy loss
             }
 
-            // Check if the cow is standing on grass
+            // Check if the goat is standing on grass
             boolean isOnGrass = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.GRASS_BLOCK);
 
-            // Adjust energy level randomly based on whether the cow is on grass
+            // Adjust energy level randomly based on whether the goat is on grass
             if (isOnGrass) {
                 if (Math.random() < 0.3) { // 30% chance to gain energy
-                    updateEnergyLevel(Math.min(100.0, ELvl + (0.1 + Math.random() * 0.75))); // Gain 0.1 to 0.75 energy
+                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.1 + Math.random() * 0.75))); // Gain 0.1 to 0.75 energy
                 }
             }
 
+            // Standard energy loss over time
             if (Math.random() < 0.5) { // 50% chance to lose energy
                 updateEnergyLevel(Math.max(0.0, ELvl - (0.05 + Math.random() * 0.3))); // Lose 0.05 to 0.3 energy
             }
 
-            // Check if energy is 100 and regenerate health if not at max
-            if (ELvl == MaxEnergy) {
+            // Aging effects - decreasing energy and health as the goat gets very old
+            if (tickAge > LIFESPAN) {
+                // Additional energy drain for old age
+                double ageFactor = (tickAge - LIFESPAN) / (double)(MAX_AGE - LIFESPAN);
+                updateEnergyLevel(Math.max(0.0, ELvl - (0.05 * ageFactor))); // More energy loss based on age
+
+                // Health deterioration with old age
+                if (Math.random() < 0.1 * ageFactor) {
+                    this.damage(this.getDamageSources().generic(), 0.5f * (float)ageFactor);
+                }
+            }
+
+            // Check if energy is at max and regenerate health if not at max (only if not too old)
+            if (ELvl == MaxEnergy && tickAge < LIFESPAN) {
                 if (this.getHealth() < this.getMaxHealth()) {
                     this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F)); // Regenerate 0.5 HP per second
                 }
             }
 
-            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown) {
+            // Auto-breeding behavior (only for goats not too old)
+            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown && tickAge < LIFESPAN) {
                 double searchRadius = 32.0;
 
                 List<CustomGoatEntity> mateCandidates = this.getWorld().getEntitiesByClass(
@@ -222,12 +262,12 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
 
                 // If we found a mate candidate, move towards it
                 if (nearestMate != null) {
-                    // Start moving towards the nearest cow; adjust speed as needed
+                    // Start moving towards the nearest goat
                     this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
 
-                    // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
+                    // If close enough (within 2 blocks)
                     if (minDistanceSquared < 4.0) {
-                        // Only start breeding if both cows are not already in love
+                        // Only start breeding if both goats are not already in love
                         if (!this.isInLove() && !nearestMate.isInLove()) {
                             this.setLoveTicks(500);
                             nearestMate.setLoveTicks(500);
@@ -238,14 +278,22 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
             }
             ticksSinceLastBreeding++;
 
-            // If energy reaches 0, kill the cow
+            // If energy reaches 0, kill the goat
             if (ELvl <= 0.0) {
-                this.kill(); // This makes the cow die
+                this.kill(); // This makes the goat die
             } else {
                 // Update attributes dynamically if energy is greater than 0
                 if (panicTicks == 0) { // Only update speed if not in panic mode
+                    double speedModifier = ELvl / MaxEnergy;
+
+                    // Reduce speed for older goats
+                    if (tickAge > LIFESPAN) {
+                        double ageFactor = 1.0 - (0.5 * (tickAge - LIFESPAN) / (MAX_AGE - LIFESPAN));
+                        speedModifier *= ageFactor;
+                    }
+
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / MaxEnergy));
+                            .setBaseValue(Speed * speedModifier);
                 }
 
                 // Update the description with the new energy level
@@ -263,6 +311,9 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
         CustomGoatEntity parent1 = this;
         CustomGoatEntity parent2 = (CustomGoatEntity) mate;
 
+        // Calculate inheritance factor based on parents' energy levels
+        double inheritanceFactor = Math.min(parent1.ELvl, parent2.ELvl) / MaxEnergy;
+
         MobAttributes attr1 = parent1.mobAttributes;
         MobAttributes attr2 = parent2.mobAttributes;
 
@@ -273,8 +324,11 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
         child.mobAttributes = childAttributes;
         applyAttributes(child, childAttributes);
 
-        child.MaxHp = childAttributes.getMaxHealth();
-        child.ELvl = childAttributes.getEnergyLvl();
+        // Apply energy-based inheritance factor
+        child.MaxHp = childAttributes.getMaxHealth() * inheritanceFactor;
+        child.ELvl = childAttributes.getEnergyLvl() * inheritanceFactor;
+        child.breedingCooldown = (int)(((parent1.breedingCooldown + parent2.breedingCooldown) / 2) * (1 / inheritanceFactor));
+
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
         child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
 
@@ -296,7 +350,7 @@ public class CustomGoatEntity extends GoatEntity implements AttributeCarrier {
         wasRecentlyHit = true;
         panicTicks = PANIC_DURATION;
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                .setBaseValue(Speed * (ELvl / 100.0) * PANIC_SPEED_MULTIPLIER);
+                .setBaseValue(Speed * (ELvl / MaxEnergy) * PANIC_SPEED_MULTIPLIER);
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
