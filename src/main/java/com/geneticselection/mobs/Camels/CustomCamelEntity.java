@@ -44,7 +44,8 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     private double MinLeather;
     private double MaxLeather;
     private int breedingCooldown;
-    private static int LIFESPAN = 50000; // Camels live longer than cows
+    private static final int LIFESPAN = 50000; // Camels live longer than cows
+    private static final int MAX_AGE = 65000; // After this age, camels will die naturally
 
     private int panicTicks = 0;
     private static final int PANIC_DURATION = 100;
@@ -134,7 +135,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
                 "\nMax Meat: " + String.format("%.1f", ent.MaxMeat) +
                 "\nMax Leather: " + String.format("%.1f", ent.MaxLeather) +
                 "\nBreeding Cooldown: " + ent.breedingCooldown +
-                "\nAge: " + ent.tickAge +
+                "\nAge: " + ent.tickAge + "/" + MAX_AGE +
                 (isSitting ? "\nSitting" : "")));
     }
 
@@ -362,8 +363,18 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         super.onDeath(source);
 
         if (!this.getWorld().isClient) {
+            // Determine drop quantities based on energy level and age
             int meatAmount = (int) (MaxMeat * (ELvl / MaxEnergy));
             int leatherAmount = (int) (MaxLeather * (ELvl / MaxEnergy));
+
+            // Reduce drops if the camel died of old age
+            if (tickAge >= MAX_AGE) {
+                meatAmount = Math.max(1, meatAmount / 2);
+                leatherAmount = Math.max(1, leatherAmount / 2);
+
+                // Always drop bones for old age death
+                this.dropStack(new ItemStack(Items.BONE, 2 + random.nextInt(3)));
+            }
 
             boolean shouldDropCooked = false;
 
@@ -390,8 +401,8 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
 
             this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
 
-            // Special drop: saddle if camel was high quality
-            if (humpSize > 80 && ELvl > 80 && Math.random() < 0.2) {
+            // Special drop: saddle if camel was high quality and didn't die of old age
+            if (humpSize > 80 && ELvl > 80 && tickAge < MAX_AGE && Math.random() < 0.2) {
                 this.dropStack(new ItemStack(Items.SADDLE, 1));
             }
         }
@@ -462,6 +473,16 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
 
         // Only perform energy and water adjustments on the server side
         if (!this.getWorld().isClient) {
+            // Increment age
+            tickAge++;
+
+            // Age-based death: die of old age when MAX_AGE is reached
+            if (tickAge >= MAX_AGE) {
+                // Die of old age
+                this.damage(this.getDamageSources().starve(), 1.0F);
+                return;
+            }
+
             // Max energy is determined by age
             if (tickAge <= 6000) {
                 MaxEnergy = 10 * Math.log(5 * tickAge + 5);
@@ -469,8 +490,9 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
                 MaxEnergy = 100;
             } else {
                 MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
+                // Ensure MaxEnergy doesn't go below 0
+                MaxEnergy = Math.max(0, MaxEnergy);
             }
-            tickAge++;
 
             // Grow up baby camel after certain age
             if (tickAge >= 6000 && this.isBaby()) {
@@ -532,6 +554,32 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
                 }
             }
 
+            // Aging effects - modify attributes as camel gets older
+            if (tickAge > LIFESPAN) {
+                // Calculate aging factor (0 to 1) based on how far past LIFESPAN
+                double agingFactor = (double)(tickAge - LIFESPAN) / (MAX_AGE - LIFESPAN);
+
+                // Decrease energy faster with age
+                if (Math.random() < 0.3 * agingFactor) {
+                    updateEnergyLevel(Math.max(0.0, ELvl - (0.1 + 0.2 * agingFactor)));
+                }
+
+                // Decrease hump size with age (less efficient metabolism)
+                if (tickAge % 2400 == 0 && humpSize > 20) { // Every 2 minutes for older camels
+                    humpSize--;
+                }
+
+                // Water reserves deplete faster with age
+                if (tickAge % (200 - (int)(100 * agingFactor)) == 0) {
+                    waterReserve = Math.max(0, waterReserve - (int)(3 * agingFactor));
+                }
+
+                // Occasional health deterioration with old age
+                if (Math.random() < 0.05 * agingFactor) {
+                    this.damage(this.getDamageSources().generic(), 0.5f * (float)agingFactor);
+                }
+            }
+
             // Check if the camel is standing on sand or sandstone (desert biome blocks)
             boolean isOnSand = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.SAND) ||
                     this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.SANDSTONE) ||
@@ -564,14 +612,14 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
             }
 
             // Check if energy and water are high for health regeneration
-            if (ELvl > 90.0 && waterReserve > MAX_WATER_RESERVE * 0.8) {
+            if (ELvl > 90.0 && waterReserve > MAX_WATER_RESERVE * 0.8 && tickAge < LIFESPAN) {
                 if (this.getHealth() < this.getMaxHealth()) {
                     this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F)); // Regenerate 0.5 HP per tick
                 }
             }
 
             // Auto-breeding behavior when optimal conditions are met
-            if (ELvl >= 90.0 && waterReserve >= MAX_WATER_RESERVE * 0.7 && humpSize >= 70 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown) {
+            if (ELvl >= 90.0 && waterReserve >= MAX_WATER_RESERVE * 0.7 && humpSize >= 70 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown && tickAge < LIFESPAN) {
                 double searchRadius = 32.0;
 
                 List<CustomCamelEntity> mateCandidates = this.getWorld().getEntitiesByClass(
@@ -623,8 +671,15 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
                     double energyFactor = ELvl / MaxEnergy;
                     double waterFactor = Math.max(0.5, waterReserve / (double)MAX_WATER_RESERVE);
                     double humpFactor = 0.8 + (0.4 * (humpSize / 100.0)); // Larger humps provide better movement efficiency
+
+                    // Apply age factor to reduce movement speed for older camels
+                    double ageFactor = 1.0;
+                    if (tickAge > LIFESPAN) {
+                        ageFactor = 1.0 - (0.5 * (tickAge - LIFESPAN) / (MAX_AGE - LIFESPAN));
+                    }
+
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * energyFactor * waterFactor * humpFactor);
+                            .setBaseValue(Speed * energyFactor * waterFactor * humpFactor * ageFactor);
                 } else if (isSitting) {
                     // Completely stop movement while sitting
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
