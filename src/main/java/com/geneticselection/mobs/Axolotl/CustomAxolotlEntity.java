@@ -7,13 +7,19 @@ import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.goal.FleeEntityGoal;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.AxolotlEntity;
+import net.minecraft.entity.passive.FishEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -21,10 +27,14 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
-import static com.geneticselection.genetics.ChildInheritance.*;
+import static com.geneticselection.genetics.ChildInheritance.applyAttributes;
+import static com.geneticselection.genetics.ChildInheritance.influenceGlobalAttributes;
+import static com.geneticselection.genetics.ChildInheritance.inheritAttributes;
 
 public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
@@ -32,162 +42,172 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
     private double Speed;
     private double ELvl;
     private double MaxEnergy;
+    private int tickAge = 0;
+    private int ticksSinceLastBreeding = 0;
+    private int breedingCooldown;
 
     private int panicTicks = 0;
     private static final int PANIC_DURATION = 100;
-    private static final double PANIC_SPEED_MULTIPLIER = 2.0;
+    private static final double PANIC_SPEED_MULTIPLIER = 1.5;
     private boolean wasRecentlyHit = false;
 
-    // New fields for breeding and age
-    private int breedingCooldown;
-    private int ticksSinceLastBreeding = 0;
-    private int tickAge = 0;
-    private static int LIFESPAN = 35000;
-    private int happyTicksRemaining = 0;
-    private int forcedAge = 0;
+    private static final int LIFESPAN = 28000; // 2 minecraft days
+    private static final int MAX_AGE = 36000;
+
+    // Evolution Attributes
+    private double bonusAttack = 0.0;
+    private double bonusHealth = 0.0;
+    private double bonusSpeed = 0.0;
+    private int killCount = 0;
 
     public CustomAxolotlEntity(EntityType<? extends AxolotlEntity> entityType, World world) {
         super(entityType, world);
 
         if (this.mobAttributes == null) {
-            MobAttributes global = GlobalAttributesManager.getAttributes(entityType);
-            double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
-            double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
-            double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+            initFromGlobalAttributes(entityType);
         }
 
-        this.MaxHp = this.mobAttributes.getMaxHealth();
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        this.setHealth((float)this.MaxHp);
-        this.Speed = this.mobAttributes.getMovementSpeed();
-        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+        this.MaxEnergy = 10.0;
         this.ELvl = this.mobAttributes.getEnergyLvl();
-        this.MaxEnergy = 100.0;
+        this.breedingCooldown = 3000 + random.nextInt(3000);
 
-        // Initialize breeding cooldown
-        this.breedingCooldown = 3000 + (int)((1 - (ELvl / 100.0)) * 2000) + random.nextInt(2001);
+        applyBonuses();
 
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
 
-    public void updateEnergyLevel(double newEnergyLevel) {
-        this.ELvl = newEnergyLevel;
+    private void initFromGlobalAttributes(EntityType<?> entityType) {
+        this.mobAttributes = GlobalAttributesManager.getAttributes(entityType);
+        this.MaxHp = this.mobAttributes.getMaxHealth();
+        this.Speed = this.mobAttributes.getMovementSpeed();
+    }
 
-        // Sync energy level with server if needed
-        if (!this.getWorld().isClient) {
-            this.syncEnergyLevelToClient();
+    @Override
+    protected void initGoals() {
+        super.initGoals();
+        this.goalSelector.add(1, new HuntFishGoal(this, 1.2, 80));
+        this.goalSelector.add(2, new FleeEntityGoal<>(this, PlayerEntity.class, 8.0F, 1.6, 1.4, (livingEntity) -> true));
+        this.goalSelector.add(3, new MeleeAttackGoal(this, 1.2, true));
+    }
+
+    private void applyBonuses() {
+        if (this.mobAttributes == null) {
+            initFromGlobalAttributes(this.getType());
+        }
+
+        double inherentMaxHp = this.mobAttributes.getMaxHealth();
+        double inherentSpeed = this.mobAttributes.getMovementSpeed();
+        double inherentAttack = 2.0; // Axolotls have a base attack damage
+
+        double effectiveMaxHp = Math.max(1.0, inherentMaxHp + this.bonusHealth);
+        double speedMultiplier = Math.max(0.1, 1.0 + this.bonusSpeed);
+        double effectiveSpeed = inherentSpeed * speedMultiplier;
+        double effectiveAttack = inherentAttack + this.bonusAttack;
+
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(effectiveMaxHp);
+        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(effectiveSpeed);
+        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(effectiveAttack);
+
+        if(this.getHealth() > this.getMaxHealth()) {
+            this.setHealth(this.getMaxHealth());
         }
     }
 
-    private void syncEnergyLevelToClient() {
-        PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
-        data.writeInt(this.getId());  // Send entity ID
-        data.writeDouble(this.ELvl);  // Send the updated energy level
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putDouble("ELvl", this.ELvl);
+        nbt.putDouble("MaxEnergy", this.MaxEnergy);
+        nbt.putInt("BreedingCooldown", this.breedingCooldown);
+        nbt.putInt("TickAge", this.tickAge);
+        nbt.putInt("TicksSinceLastBreeding", this.ticksSinceLastBreeding);
+        nbt.putDouble("BonusAttack", this.bonusAttack);
+        nbt.putDouble("BonusHealth", this.bonusHealth);
+        nbt.putDouble("BonusSpeed", this.bonusSpeed);
+        nbt.putInt("KillCount", this.killCount);
+    }
+
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        if (this.mobAttributes == null) {
+            initFromGlobalAttributes(this.getType());
+        }
+        super.readCustomDataFromNbt(nbt);
+        this.ELvl = nbt.getDouble("ELvl");
+        this.MaxEnergy = nbt.getDouble("MaxEnergy");
+        this.breedingCooldown = nbt.getInt("BreedingCooldown");
+        this.tickAge = nbt.getInt("TickAge");
+        this.ticksSinceLastBreeding = nbt.getInt("TicksSinceLastBreeding");
+        this.bonusAttack = nbt.getDouble("BonusAttack");
+        this.bonusHealth = nbt.getDouble("BonusHealth");
+        this.bonusSpeed = nbt.getDouble("BonusSpeed");
+        this.killCount = nbt.getInt("KillCount");
+
+        applyBonuses();
+        if (!this.getWorld().isClient) updateDescription(this);
+    }
+
+    public void onSuccessfulKill(LivingEntity killedEntity) {
+        if (!this.getWorld().isClient) {
+            this.killCount++;
+            double energyGain = Math.min(15.0, killedEntity.getMaxHealth() * 2.0);
+            updateEnergyLevel(this.ELvl + energyGain);
+            this.heal(this.getMaxHealth() * 0.25f);
+
+            float evolutionChance = 0.08f + (float)Math.min(this.killCount, 150) / 2500.0f;
+            if (this.random.nextFloat() < evolutionChance) {
+                int statChoice = this.random.nextInt(3);
+                switch(statChoice) {
+                    case 0: bonusAttack += 0.06 + random.nextDouble() * 0.1; break;
+                    case 1: bonusHealth += 0.1 + random.nextDouble() * 0.4; break;
+                    case 2: bonusSpeed += 0.002 + random.nextDouble() * 0.003; break;
+                }
+                this.bonusAttack = Math.min(this.bonusAttack, 5.0);
+                this.bonusHealth = Math.min(this.bonusHealth, 12.0);
+                this.bonusSpeed = Math.min(this.bonusSpeed, 0.25);
+
+                applyBonuses();
+                updateDescription(this);
+            }
+        }
+    }
+
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.ELvl = Math.max(0.0, Math.min(newEnergyLevel, this.MaxEnergy));
     }
 
     private void updateDescription(CustomAxolotlEntity ent) {
-        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-                "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
-                "\nSpeed: " + String.format("%.2f", ent.Speed) +
-                "\nEnergy: " + String.format("%.1f", ent.ELvl) + "/" + String.format("%.1f", ent.MaxEnergy) +
-                "\nBreeding Cooldown: " + ent.breedingCooldown +
-                "\nAge: " + ent.tickAge));
+        if (ent.getWorld().isClient() || !ent.isAlive()) return;
+
+        double currentMaxHp = ent.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH);
+        double currentSpeed = ent.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        double currentAttack = ent.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+
+        DescriptionRenderer.setDescription(ent, Text.of(
+            "HP: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", currentMaxHp) +
+                " | Atk: " + String.format("%.2f", currentAttack) +
+                "\nSpd: " + String.format("%.3f", currentSpeed) +
+                " | Energy: " + String.format("%.1f", ent.ELvl) + "/" + String.format("%.1f", ent.MaxEnergy) +
+                "\nAge: " + String.format("%.1f", ent.tickAge / 24000.0) + "d" +
+                " | Kills: " + ent.killCount
+        ));
     }
 
     public double getEnergyLevel() {
         return this.ELvl;
     }
 
-    // Override isBaby for custom aging logic
-    @Override
-    public boolean isBaby() {
-        return this.tickAge < 4404 || super.isBaby();
-    }
-
-    // Add method for custom growth
-    public void growUp(int age, boolean overGrow) {
-        super.growUp(age, overGrow);
-
-        if (overGrow) {
-            this.forcedAge += age;
-            if (this.happyTicksRemaining == 0) {
-                this.happyTicksRemaining = 40;
-                this.MaxEnergy = 100.0;
-                this.ELvl = 100.0;
-            }
-        }
-
-        // Set age to adult stage if it reaches maturity
-        if (this.tickAge + age >= 4404) {
-            this.tickAge = 4404;
-            this.setBaby(false);
-        } else {
-            this.tickAge += age;
-        }
-    }
-
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
-        ItemStack offHandStack = player.getOffHandStack();
-        boolean isTropicalFish = itemStack.isOf(Items.TROPICAL_FISH) || offHandStack.isOf(Items.TROPICAL_FISH);
 
-        if (isTropicalFish) {
-            // Handle main hand or offhand fish logic
-            Hand usedHand = itemStack.isOf(Items.TROPICAL_FISH) ? hand : Hand.OFF_HAND;
-            ItemStack usedItem = itemStack.isOf(Items.TROPICAL_FISH) ? itemStack : offHandStack;
-
-            if (this.isBaby()) {
-                if (!player.isCreative()) {
-                    usedItem.decrement(1);
-                }
-                this.growUp((int)(this.getBreedingAge() / 20 * -0.1F), true);
-                return ActionResult.SUCCESS;
-            }
-
-            // If the axolotl is in love mode
-            if (this.isInLove()) {
-                if (ELvl < MaxEnergy) {
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + 10.0)); // Gain energy (up to max)
-                    player.sendMessage(Text.of("The axolotl has gained energy! Current energy: " + String.format("%.1f", ELvl)), true);
-
-                    if (!player.isCreative()) { // Only consume fish if not in Creative mode
-                        usedItem.decrement(1);
-                    }
-
-                    updateDescription(this); // Update description with new energy level
-                    return ActionResult.SUCCESS;
-                } else {
-                    // Axolotl is in love mode and at max energy; do nothing
-                    player.sendMessage(Text.of("The axolotl is already at maximum energy!"), true);
-                    return ActionResult.PASS;
-                }
-            }
-
+        if (itemStack.isOf(Items.TROPICAL_FISH_BUCKET)) {
             if (ELvl < 20.0) {
-                updateEnergyLevel(Math.min(MaxEnergy, ELvl + 10.0)); // Gain energy (up to max)
-                player.sendMessage(Text.of("This axolotl cannot breed due to low energy. Energy increased to: " + String.format("%.1f", ELvl)), true);
-
-                if (!player.isCreative()) { // Only consume fish if not in Creative mode
-                    usedItem.decrement(1);
-                }
-
-                updateDescription(this); // Update description with new energy level
-                return ActionResult.SUCCESS;
-            } else {
-                // If energy is sufficient, trigger breeding
-                this.lovePlayer(player);
-                player.sendMessage(Text.of("The axolotl is now in breed mode!"), true);
-
-                if (!player.isCreative()) { // Only consume fish if not in Creative mode
-                    usedItem.decrement(1);
-                }
-
-                updateDescription(this); // Update description
-                return ActionResult.SUCCESS;
+                player.sendMessage(Text.of("This axolotl cannot breed because it has low energy."), true);
+                return ActionResult.FAIL;
             }
+            return super.interactMob(player, hand);
         }
 
         if (itemStack.isEmpty()) {
@@ -196,24 +216,7 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
             }
             return ActionResult.SUCCESS;
         }
-
         return super.interactMob(player, hand);
-    }
-
-    @Override
-    public void onDeath(DamageSource source) {
-        if (this.isBaby()) {
-            return;
-        }
-
-        if (ELvl <= 0.0) {
-            // No specific drops for axolotls
-        } else {
-            super.onDeath(source);
-            if (!this.getWorld().isClient) {
-                // No specific resource drops
-            }
-        }
     }
 
     @Override
@@ -221,177 +224,124 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
         super.tick();
 
         if (!this.getWorld().isClient) {
-            // Max energy is determined by age
-            if(tickAge <= 4404){
-                MaxEnergy = 10 * Math.log(5 * tickAge + 5);
-            } else if (tickAge < LIFESPAN) {
-                MaxEnergy = 100;
-            } else {
-                MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
+            LivingEntity currentTarget = this.getTarget();
+            if (currentTarget != null && currentTarget.isDead()) {
+                if (currentTarget instanceof FishEntity) {
+                    onSuccessfulKill(currentTarget);
+                }
+                this.setTarget(null);
             }
+
+            if (tickAge >= MAX_AGE) {
+                this.damage(this.getDamageSources().starve(), this.getHealth() + 1.0f);
+                return;
+            }
+
+            if (tickAge <= 12000) { MaxEnergy = 10.0 + 90.0 * (tickAge / 12000.0); }
+            else if (tickAge <= LIFESPAN) { MaxEnergy = 100.0; }
+            else { MaxEnergy = Math.max(20.0, 100.0 - (tickAge - LIFESPAN) / 240.0); }
             tickAge++;
 
-            // Grow up if reached adult age
-            if (tickAge >= 4404 && this.isBaby()) {
-                growUp(220, true);
+            if (tickAge >= 12000 && this.isBaby()) {
+                this.growUp(this.getBreedingAge() * -1, false);
             }
 
-            // Clamp energy level to maximum cap
-            if (ELvl > MaxEnergy) {
-                updateEnergyLevel(MaxEnergy);
-            }
-
-            // Handle panic
             if (panicTicks > 0) {
                 panicTicks--;
-                if (panicTicks == 0) {
-                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / MaxEnergy));
-                }
             }
 
-            // Handle energy loss from damage
             if (wasRecentlyHit) {
-                ELvl = Math.max(0.0, ELvl * 0.8);
+                updateEnergyLevel(this.ELvl * 0.8);
                 wasRecentlyHit = false;
             }
 
-            // Energy gain/loss based on environment
-            boolean isOnEnergySource = this.submergedInWater;
-
-            if (isOnEnergySource) {
-                if (Math.random() < 0.3) { // 30% chance to gain energy when in water
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.1 + Math.random() * 0.75))); // Gain 0.1 to 0.75 energy
-                }
+            boolean inWater = this.isSubmergedInWater();
+            if (inWater) {
+                updateEnergyLevel(this.ELvl + 0.1);
             } else {
-                if (Math.random() < 0.5) { // 50% chance to lose energy when not in water
-                    updateEnergyLevel(Math.max(0.0, ELvl - (0.05 + Math.random() * 0.3))); // Lose 0.05 to 0.3 energy
-                }
+                updateEnergyLevel(this.ELvl - 0.1);
             }
 
-            // Health regeneration at max energy
-            if (ELvl == MaxEnergy && this.getHealth() < this.getMaxHealth()) {
-                this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
+            if (ELvl >= MaxEnergy * 0.95 && this.getHealth() < this.getMaxHealth()) {
+                this.heal(0.25F);
             }
 
-            // Autonomous breeding behavior
-            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown) {
-                double searchRadius = 32.0;
-
-                List<CustomAxolotlEntity> mateCandidates = this.getWorld().getEntitiesByClass(
-                        CustomAxolotlEntity.class,
-                        this.getBoundingBox().expand(searchRadius),
-                        candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
-                );
-
-                // Find the nearest candidate
-                CustomAxolotlEntity nearestMate = null;
-                double minDistanceSquared = Double.MAX_VALUE;
-                for (CustomAxolotlEntity candidate : mateCandidates) {
-                    double distSq = this.squaredDistanceTo(candidate);
-                    if (distSq < minDistanceSquared) {
-                        minDistanceSquared = distSq;
-                        nearestMate = candidate;
-                    }
-                }
-
-                // If we found a mate candidate, move towards it
-                if (nearestMate != null) {
-                    // Start moving towards the nearest axolotl
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
-
-                    // If close enough (within 2 blocks)
-                    if (minDistanceSquared < 4.0) {
-                        // Only start breeding if both axolotls are not already in love
-                        if (!this.isInLove() && !nearestMate.isInLove()) {
-                            this.setLoveTicks(600);
-                            nearestMate.setLoveTicks(600);
-                            ticksSinceLastBreeding = 0;
-                        }
-                    }
-                }
+            if (canAutoBreed()) {
+                findMateAndBreed();
             }
-            ticksSinceLastBreeding++;
 
-            // Kill if energy is 0
+            if (!this.isInLove()) {
+                ticksSinceLastBreeding++;
+            }
+
             if (ELvl <= 0.0) {
-                this.kill();
+                this.damage(this.getDamageSources().starve(), this.getHealth() + 1.0f);
             } else {
-                // Update speed
-                if (panicTicks == 0) {
-                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / MaxEnergy));
-                }
-                updateDescription(this);
+                double speedMultiplier = wasRecentlyHit ? PANIC_SPEED_MULTIPLIER : 1.0;
+                double energyFactor = Math.max(0.5, this.ELvl / this.MaxEnergy);
+                this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed * (1.0 + this.bonusSpeed) * energyFactor * speedMultiplier);
+            }
+
+            if (tickAge % 40 == 0) updateDescription(this);
+        }
+    }
+
+    private boolean canAutoBreed() {
+        return !this.isBaby() && this.ELvl >= this.MaxEnergy * 0.9 && ticksSinceLastBreeding >= breedingCooldown && !this.isInLove();
+    }
+
+    private void findMateAndBreed() {
+        double searchRadius = 24.0;
+        List<CustomAxolotlEntity> mateCandidates = this.getWorld().getEntitiesByClass(
+            CustomAxolotlEntity.class, this.getBoundingBox().expand(searchRadius),
+            candidate -> candidate != this && candidate.canAutoBreed());
+
+        if (!mateCandidates.isEmpty()) {
+            CustomAxolotlEntity nearestMate = mateCandidates.get(0); // Simple selection
+            this.getNavigation().startMovingTo(nearestMate, 1.2);
+            if (this.squaredDistanceTo(nearestMate) < 9.0) {
+                this.setLoveTicks(600);
+                nearestMate.setLoveTicks(600);
+                this.ticksSinceLastBreeding = 0;
+                nearestMate.ticksSinceLastBreeding = 0;
             }
         }
     }
 
     @Override
     public CustomAxolotlEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
-        if (!(mate instanceof CustomAxolotlEntity)) {
-            return (CustomAxolotlEntity) EntityType.AXOLOTL.create(serverWorld);
+        if (!(mate instanceof CustomAxolotlEntity parent2)) {
+            return null;
         }
 
+        CustomAxolotlEntity child = ModEntities.CUSTOM_AXOLOTL.create(serverWorld);
+        if (child == null) return null;
+
         CustomAxolotlEntity parent1 = this;
-        CustomAxolotlEntity parent2 = (CustomAxolotlEntity) mate;
 
-        // Calculate the inheritance factor based on the lower energy level of the parents
-        double inheritanceFactor = Math.min(parent1.ELvl, parent2.ELvl) / MaxEnergy;
+        // Inherit Base Attributes
+        MobAttributes childBaseAttributes = inheritAttributes(parent1.mobAttributes, parent2.mobAttributes);
+        child.mobAttributes = childBaseAttributes;
+        child.Speed = childBaseAttributes.getMovementSpeed();
+        child.MaxHp = childBaseAttributes.getMaxHealth();
 
-        // Get attributes for inheritance
-        MobAttributes attr1 = parent1.mobAttributes;
-        MobAttributes attr2 = parent2.mobAttributes;
+        // Inherit Bonus Stats
+        double inheritanceFactor = Math.max(0.2, Math.min(parent1.getEnergyLevel(), parent2.getEnergyLevel()) / 100.0);
+        double randomFactor = 0.9 + random.nextDouble() * 0.2;
+        child.bonusAttack = Math.max(0, ((parent1.bonusAttack + parent2.bonusAttack) / 2.0) * inheritanceFactor * randomFactor);
+        child.bonusHealth = Math.max(0, ((parent1.bonusHealth + parent2.bonusHealth) / 2.0) * inheritanceFactor * randomFactor);
+        child.bonusSpeed = Math.max(0, ((parent1.bonusSpeed + parent2.bonusSpeed) / 2.0) * inheritanceFactor * randomFactor);
+        child.killCount = (int)(((parent1.killCount + parent2.killCount) / 2.0) * inheritanceFactor);
 
-        // Inherit attributes using existing method, but factor in energy levels
-        MobAttributes childAttributes = inheritAttributes(attr1, attr2);
+        // Apply final attributes
+        child.applyBonuses();
 
-        // Modify inherited attributes based on energy factor
-        double adjustedHealth = childAttributes.getMaxHealth() * inheritanceFactor;
-        double adjustedSpeed = childAttributes.getMovementSpeed() * inheritanceFactor;
-        double childEnergy = ((parent1.ELvl + parent2.ELvl) / 2) * inheritanceFactor;
-
-        // Create adjusted attributes with energy factor
-        MobAttributes adjustedAttributes = new MobAttributes(
-                adjustedSpeed,
-                adjustedHealth,
-                childEnergy,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty()
-        );
-
-        // Create child entity
-        CustomAxolotlEntity child = new CustomAxolotlEntity(ModEntities.CUSTOM_AXOLOTL, serverWorld);
-
-        // Set child's variant (color)
-        child.setVariant(this.getVariant());
-
-        // Apply attributes
-        child.mobAttributes = adjustedAttributes;
-        applyAttributes(child, adjustedAttributes);
-
-        // Set specific properties
-        child.MaxHp = adjustedAttributes.getMaxHealth();
-        child.Speed = adjustedAttributes.getMovementSpeed();
-        child.ELvl = childEnergy;
-        child.tickAge = 0; // Start as baby
-
-        // Apply breeding cooldown based on parents
-        child.breedingCooldown = (int)(((parent1.breedingCooldown + parent2.breedingCooldown) / 2) * (1 / inheritanceFactor));
-
-        // Apply stats to the child entity
-        child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
-        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / MaxEnergy));
-
-        // Parents lose energy after breeding
-        parent1.ELvl -= parent1.ELvl * 0.4F;
-        parent2.ELvl -= parent2.ELvl * 0.4F;
+        // Reduce parent energy
+        parent1.updateEnergyLevel(parent1.getEnergyLevel() * 0.5);
+        parent2.updateEnergyLevel(parent2.getEnergyLevel() * 0.5);
         this.resetLoveTicks();
+        parent2.resetLoveTicks();
 
-        // Influence global attributes for evolution
         influenceGlobalAttributes(child.getType());
 
         if (!this.getWorld().isClient)
@@ -405,14 +355,71 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
         super.applyDamage(source, amount);
         wasRecentlyHit = true;
         panicTicks = PANIC_DURATION;
-        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                .setBaseValue(Speed * (ELvl / MaxEnergy) * PANIC_SPEED_MULTIPLIER);
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
 
     @Override
     public void applyCustomAttributes(MobAttributes attributes) {
-        // This method can be expanded if needed
+    }
+
+    static class HuntFishGoal extends Goal {
+        private final CustomAxolotlEntity axolotl;
+        private final double speed;
+        private final int energyThreshold;
+        private FishEntity targetFish;
+
+        public HuntFishGoal(CustomAxolotlEntity axolotl, double speed, int energyThreshold) {
+            this.axolotl = axolotl;
+            this.speed = speed;
+            this.energyThreshold = energyThreshold;
+            this.setControls(EnumSet.of(Goal.Control.MOVE, Goal.Control.LOOK));
+        }
+
+        @Override
+        public boolean canStart() {
+            if (this.axolotl.getEnergyLevel() < (this.axolotl.MaxEnergy * (this.energyThreshold / 100.0))) {
+                List<FishEntity> list = this.axolotl.getWorld().getEntitiesByClass(FishEntity.class, this.axolotl.getBoundingBox().expand(12.0D), (fish) -> true);
+                if (!list.isEmpty()) {
+                    this.targetFish = list.get(this.axolotl.random.nextInt(list.size()));
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public void start() {
+            if (this.targetFish != null) {
+                this.axolotl.getNavigation().startMovingTo(this.targetFish, this.speed);
+                this.axolotl.setTarget(this.targetFish);
+            }
+        }
+
+        @Override
+        public boolean shouldContinue() {
+            return this.targetFish != null && this.targetFish.isAlive() && this.axolotl.getEnergyLevel() < this.axolotl.MaxEnergy * 0.95 && !this.axolotl.getNavigation().isIdle();
+        }
+
+        @Override
+        public void stop() {
+            this.axolotl.setTarget(null);
+            this.targetFish = null;
+        }
+
+        @Override
+        public void tick() {
+            if (this.targetFish != null) {
+                this.axolotl.getLookControl().lookAt(this.targetFish);
+                if (this.axolotl.getBoundingBox().intersects(this.targetFish.getBoundingBox())) {
+                    this.axolotl.tryAttack(this.targetFish);
+                    this.targetFish.damage(this.axolotl.getDamageSources().mobAttack(this.axolotl), (float)this.axolotl.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
+                    if (this.targetFish.isDead()) {
+                        this.axolotl.onSuccessfulKill(this.targetFish);
+                        this.stop();
+                    }
+                }
+            }
+        }
     }
 }
