@@ -21,6 +21,7 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -29,6 +30,9 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,8 +40,6 @@ import java.util.Optional;
 public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
     private double MaxHp;
-    private double ELvl;
-    private double MaxEnergy = 100.0; // Maximum energy level
     private double Speed;
     private double MinMeat;
     private double MaxMeat;
@@ -58,6 +60,11 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     private boolean isSitting = false;
     private int sittingTicks = 0;
     private int humpSize = 50; // Camel hump size (affects water storage and energy retention)
+
+    private static final TrackedData<Float> MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> ELVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public CustomCamelEntity(EntityType<? extends CamelEntity> entityType, World world) {
         super(entityType, world);
@@ -94,55 +101,31 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         this.setMinLeather(0.0);
         this.breedingCooldown = 5000 + (int)((1 - (ELvl / 100.0)) * 3000) + random.nextInt(2001);
 
-        if (!this.getWorld().isClient) {
-            updateDescription(this);
+        if (!world.isClient) {
+            this.dataTracker.set(MAX_HP, (float)this.mobAttributes.getMaxHealth());
+            this.dataTracker.set(ELVL, (float)this.mobAttributes.getEnergyLvl());
+            this.dataTracker.set(MAX_ENERGY, (float)this.MaxEnergy);
+            this.dataTracker.set(TICK_AGE, 0);
         }
     }
 
-    public void updateEnergyLevel(double newEnergyLevel) {
-        this.ELvl = newEnergyLevel;
-
-        // If the energy level changes, notify the renderer to update.
-        if (this.getWorld().isClient) {
-            // In case this is client-side, trigger a re-render.
-            this.markForRenderUpdate();
-        }
-
-        // Sync energy level with server if needed
-        if (!this.getWorld().isClient) {
-            this.syncEnergyLevelToClient();
-        }
+    @Override
+    protected void initDataTracker(DataTracker.Builder builder) {
+        super.initDataTracker(builder);
+        builder.add(MAX_HP, 20.0f);
+        builder.add(ELVL, 100.0f);
+        builder.add(MAX_ENERGY, 100.0f);
+        builder.add(TICK_AGE, 0);
     }
 
-    private void syncEnergyLevelToClient() {
-        PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
-        data.writeInt(this.getId());  // Send entity ID
-        data.writeDouble(this.ELvl);  // Send the updated energy level
-    }
-
-    public void markForRenderUpdate() {
-        // This triggers the renderer to update the texture the next time it's rendered
-        MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(this).render(this, 0, 0, new MatrixStack(), MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers(), 0);
-    }
-
-    private void updateDescription(CustomCamelEntity ent) {
-        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-                "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
-                "\nSpeed: " + String.format("%.2f", ent.Speed) +
-                "\nEnergy: " + String.format("%.1f", ent.ELvl) + "/" + String.format("%.1f", ent.MaxEnergy) +
-                "\nWater Reserve: " + waterReserve + "/" + MAX_WATER_RESERVE +
-                "\nHump Size: " + humpSize + "/100" +
-                "\nMax Meat: " + String.format("%.1f", ent.MaxMeat) +
-                "\nMax Leather: " + String.format("%.1f", ent.MaxLeather) +
-                "\nBreeding Cooldown: " + ent.breedingCooldown +
-                "\nAge: " + ent.tickAge + "/" + MAX_AGE +
-                (isSitting ? "\nSitting" : "")));
-    }
-
-    // Add this getter for energy level
-    public double getEnergyLevel() {
-        return this.ELvl;
-    }
+    public float getMaxHpTracked() { return this.dataTracker.get(MAX_HP); }
+    public double getEnergyLevel() { return this.dataTracker.get(ELVL); }
+    public float getMaxEnergy() { return this.dataTracker.get(MAX_ENERGY); }
+    public int getTickAge() { return this.dataTracker.get(TICK_AGE); }
+    public double getSpeed() { return this.Speed; }
+    public double getMaxMeat() { return this.MaxMeat; }
+    public double getMaxLeather() { return this.MaxLeather; }
+    public int getBreedingCooldown() { return this.breedingCooldown; }
 
     public void setMinMeat(double minMeat) {
         this.MinMeat = minMeat;
@@ -473,6 +456,11 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
 
         // Only perform energy and water adjustments on the server side
         if (!this.getWorld().isClient) {
+            int currentTickAge = this.getTickAge();
+            float currentMaxEnergy = 100.0f;
+            this.dataTracker.set(TICK_AGE, currentTickAge + 1);
+            this.dataTracker.set(MAX_ENERGY, currentMaxEnergy);
+
             // Increment age
             tickAge++;
 
@@ -696,5 +684,27 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     public void applyCustomAttributes(MobAttributes attributes) {
         // This is from the AttributeCarrier interface
         // We can optionally add custom implementation here
+    }
+
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putDouble("MaxMeat", this.MaxMeat);
+        nbt.putDouble("MaxLeather", this.MaxLeather);
+        nbt.putFloat("MaxHp", this.getMaxHpTracked());
+        nbt.putFloat("ELvl", (float)this.getEnergyLevel());
+        nbt.putFloat("MaxEnergy", this.getMaxEnergy());
+        nbt.putInt("TickAge", this.getTickAge());
+    }
+
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        this.MaxMeat = nbt.getDouble("MaxMeat");
+        this.MaxLeather = nbt.getDouble("MaxLeather");
+        this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
+        this.dataTracker.set(ELVL, nbt.getFloat("ELvl"));
+        this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
+        this.dataTracker.set(TICK_AGE, nbt.getInt("TickAge"));
     }
 }
