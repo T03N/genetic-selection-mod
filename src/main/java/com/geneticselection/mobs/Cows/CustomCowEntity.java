@@ -146,25 +146,14 @@ public class CustomCowEntity extends CowEntity {
         return this.dataTracker.get(E_LVL).doubleValue();
     }
 
-    private void syncEnergyLevelToClient() {
-        PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
-        data.writeInt(this.getId());  // Send entity ID
-        data.writeDouble(this.ELvl);  // Send the updated energy level
-    }
-
-    public void markForRenderUpdate() {
-        // This triggers the renderer to update the texture the next time it's rendered
-        MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(this).render(this, 0, 0, new MatrixStack(), MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers(), 0);
-    }
-
     public void setMinMeat(double minMeat)
     {
         this.MinMeat = minMeat;
     }
 
-    public void setMaxMeat(double maxMeat)
+    public void setMaxMeat(float maxMeat)
     {
-        this.MaxMeat = maxMeat;
+        this.dataTracker.set(MAX_MEAT, maxMeat);
     }
 
     public void setMinLeather(double minLeather)
@@ -172,70 +161,65 @@ public class CustomCowEntity extends CowEntity {
         this.MinLeather = minLeather;
     }
 
-    public void setMaxLeather(double maxLeather)
+    public void setMaxLeather(float maxLeather)
     {
-        this.MaxLeather = maxLeather;
+        this.dataTracker.set(MAX_LEATHER, maxLeather);
     }
 
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
-        ItemStack offHandStack = player.getOffHandStack();  // Get the item in the offhand
-        boolean isWheat = itemStack.isOf(Items.WHEAT) || offHandStack.isOf(Items.WHEAT); // Check both hands for wheat
+        ItemStack offHandStack = player.getOffHandStack();
+        boolean isWheat = itemStack.isOf(Items.WHEAT) || offHandStack.isOf(Items.WHEAT);
 
         if (isWheat) {
-            // Handle main hand or offhand wheat logic
             Hand usedHand = itemStack.isOf(Items.WHEAT) ? hand : Hand.OFF_HAND;
             ItemStack usedItem = itemStack.isOf(Items.WHEAT) ? itemStack : offHandStack;
 
             if (this.isBaby()) {
-                return ActionResult.PASS; // Do nothing if the cow is a baby
+                return ActionResult.PASS;
             }
 
-            // If the cow is in love mode
             if (this.isInLove()) {
-                if (ELvl < MaxEnergy) {
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + 10.0)); // Gain energy (up to max 100)
-                    player.sendMessage(Text.of("The cow has gained energy! Current energy: " + String.format("%.1f", ELvl)), true);
+                if (getEnergyLevel() < this.dataTracker.get(MAX_ENERGY)) {
+                    updateEnergyLevel(Math.min(this.dataTracker.get(MAX_ENERGY), getEnergyLevel() + 10.0));
+                    player.sendMessage(Text.of("The cow has gained energy! Current energy: " + String.format("%.1f", getEnergyLevel())), true);
 
-                    if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
+                    if (!player.isCreative()) {
                         usedItem.decrement(1);
                     }
 
-                    updateDescription(this); // Update description with new energy level
+                    updateDescription(this);
                     return ActionResult.SUCCESS;
                 } else {
-                    // Cow is in love mode and at max energy; do nothing
                     player.sendMessage(Text.of("The cow is already at maximum energy!"), true);
                     return ActionResult.PASS;
                 }
             }
 
-            if (ELvl < 20.0) {
-                updateEnergyLevel(Math.min(MaxEnergy, ELvl + 10.0)); // Gain energy (up to max 100)
-                player.sendMessage(Text.of("This cow cannot breed due to low energy. Energy increased to: " + String.format("%.1f", ELvl)), true);
+            if (getEnergyLevel() < 20.0) {
+                updateEnergyLevel(Math.min(this.dataTracker.get(MAX_ENERGY), getEnergyLevel() + 10.0));
+                player.sendMessage(Text.of("This cow cannot breed due to low energy. Energy increased to: " + String.format("%.1f", getEnergyLevel())), true);
 
-                if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
+                if (!player.isCreative()) {
                     usedItem.decrement(1);
                 }
 
-                updateDescription(this); // Update description with new energy level
+                updateDescription(this);
                 return ActionResult.SUCCESS;
             } else {
-                // If energy is sufficient, trigger breeding
                 this.lovePlayer(player);
                 player.sendMessage(Text.of("The cow is now in breed mode!"), true);
 
-                if (!player.isCreative()) { // Only consume wheat if the player is NOT in Creative mode
+                if (!player.isCreative()) {
                     usedItem.decrement(1);
                 }
 
-                updateDescription(this); // Update description
+                updateDescription(this);
                 return ActionResult.SUCCESS;
             }
         }
 
-        // Handle other interactions (e.g., milking, empty hand, etc.)
         return super.interactMob(player, hand);
     }
 
@@ -243,15 +227,11 @@ public class CustomCowEntity extends CowEntity {
     protected void applyDamage(DamageSource source, float amount) {
         super.applyDamage(source, amount);
 
-        // Mark the cow as recently hit
         wasRecentlyHit = true;
-
-        // Start panic mode
         panicTicks = PANIC_DURATION;
 
-        // Increase speed temporarily
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-            .setBaseValue(Speed * (ELvl / MaxEnergy) * PANIC_SPEED_MULTIPLIER);
+            .setBaseValue(Speed * (getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)) * PANIC_SPEED_MULTIPLIER);
 
         if (!this.getWorld().isClient) {
             updateDescription(this);
@@ -261,27 +241,24 @@ public class CustomCowEntity extends CowEntity {
     @Override
     public void growUp(int age, boolean overGrow) {
         int currentAge = this.getBreedingAge();
-        int newAge = currentAge + age; // Increment age by provided value
+        int newAge = currentAge + age;
 
-        // Ensure cow reaches adulthood when age hits 0 (negative age counting)
         if (newAge > 0) {
-            newAge = 0; // Reaches adulthood at age 0 (negative -> 0 for babies)
+            newAge = 0;
         }
 
         int delta = newAge - currentAge;
         this.setBreedingAge(newAge);
 
-        // Apply forcedAge for overgrowth if necessary
         if (overGrow) {
             this.forcedAge += delta;
             if (this.happyTicksRemaining == 0) {
                 this.happyTicksRemaining = 40;
-                this.MaxEnergy = 100.0F;
-                this.ELvl = 100.0F;
+                this.dataTracker.set(MAX_ENERGY, 100.0F);
+                this.updateEnergyLevel(100.0f);
             }
         }
 
-        // Prevent resetting forcedAge unless we are an adult
         if (this.getBreedingAge() == 0 && this.forcedAge > 0) {
             this.setBreedingAge(this.forcedAge);
         }
