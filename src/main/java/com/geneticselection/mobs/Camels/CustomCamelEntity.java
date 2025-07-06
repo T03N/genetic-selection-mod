@@ -3,6 +3,7 @@ package com.geneticselection.mobs.Camels;
 import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
@@ -62,7 +63,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     private int humpSize = 50; // Camel hump size (affects water storage and energy retention)
 
     private static final TrackedData<Float> MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> ELVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
@@ -89,7 +90,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         this.setHealth((float)this.MaxHp);
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
-        this.ELvl = this.mobAttributes.getEnergyLvl();
+        this.dataTracker.set(E_LVL, (float)this.mobAttributes.getEnergyLvl());
 
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
@@ -99,13 +100,10 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         });
         this.setMinMeat(1.0);
         this.setMinLeather(0.0);
-        this.breedingCooldown = 5000 + (int)((1 - (ELvl / 100.0)) * 3000) + random.nextInt(2001);
+        this.breedingCooldown = 5000 + (int)((1 - (getEnergyLevel() / 100.0)) * 3000) + random.nextInt(2001);
 
-        if (!world.isClient) {
-            this.dataTracker.set(MAX_HP, (float)this.mobAttributes.getMaxHealth());
-            this.dataTracker.set(ELVL, (float)this.mobAttributes.getEnergyLvl());
-            this.dataTracker.set(MAX_ENERGY, (float)this.MaxEnergy);
-            this.dataTracker.set(TICK_AGE, 0);
+        if (!this.getWorld().isClient) {
+            updateDescription(this);
         }
     }
 
@@ -113,13 +111,18 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     protected void initDataTracker(DataTracker.Builder builder) {
         super.initDataTracker(builder);
         builder.add(MAX_HP, 20.0f);
-        builder.add(ELVL, 100.0f);
+        builder.add(E_LVL, 100.0f);
         builder.add(MAX_ENERGY, 100.0f);
         builder.add(TICK_AGE, 0);
     }
 
     public float getMaxHpTracked() { return this.dataTracker.get(MAX_HP); }
-    public double getEnergyLevel() { return this.dataTracker.get(ELVL); }
+    public double getEnergyLevel() {
+        return this.dataTracker.get(E_LVL).doubleValue();
+    }
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.dataTracker.set(E_LVL, (float)newEnergyLevel);
+    }
     public float getMaxEnergy() { return this.dataTracker.get(MAX_ENERGY); }
     public int getTickAge() { return this.dataTracker.get(TICK_AGE); }
     public double getSpeed() { return this.Speed; }
@@ -149,6 +152,20 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         if (isSitting) {
             sittingTicks = 0;
         }
+    }
+
+    private void updateDescription(CustomCamelEntity ent) {
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
+            "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.dataTracker.get(MAX_HP)) +
+            "\nSpeed: " + String.format("%.2f", ent.Speed) +
+            "\nEnergy: " + String.format("%.1f", ent.getEnergyLevel()) + "/" + String.format("%.1f", ent.dataTracker.get(MAX_ENERGY)) +
+            "\nWater Reserve: " + waterReserve + "/" + MAX_WATER_RESERVE +
+            "\nHump Size: " + humpSize + "/100" +
+            "\nMax Meat: " + String.format("%.1f", ent.MaxMeat) +
+            "\nMax Leather: " + String.format("%.1f", ent.MaxLeather) +
+            "\nBreeding Cooldown: " + ent.breedingCooldown +
+            "\nAge: " + ent.tickAge + "/" + MAX_AGE +
+            (isSitting ? "\nSitting" : "")));
     }
 
     @Override
@@ -220,9 +237,9 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
 
             // If the camel is in love mode
             if (this.isInLove()) {
-                if (ELvl < MaxEnergy) {
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + 10.0)); // Gain energy (up to max)
-                    player.sendMessage(Text.of("The camel has gained energy! Current energy: " + String.format("%.1f", ELvl)), true);
+                if (getEnergyLevel() < this.dataTracker.get(MAX_ENERGY)) {
+                    updateEnergyLevel(Math.min(this.dataTracker.get(MAX_ENERGY), getEnergyLevel() + 10.0)); // Gain energy (up to max)
+                    player.sendMessage(Text.of("The camel has gained energy! Current energy: " + String.format("%.1f", getEnergyLevel())), true);
 
                     if (!player.isCreative()) { // Only consume hay if the player is NOT in Creative mode
                         usedItem.decrement(1);
@@ -237,10 +254,10 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
                 }
             }
 
-            if (ELvl < 20.0 || waterReserve < 1000 || humpSize < 30) {
-                if (ELvl < 20.0) {
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + 10.0)); // Gain energy (up to max)
-                    player.sendMessage(Text.of("This camel cannot breed due to low energy. Energy increased to: " + String.format("%.1f", ELvl)), true);
+            if (getEnergyLevel() < 20.0 || waterReserve < 1000 || humpSize < 30) {
+                if (getEnergyLevel() < 20.0) {
+                    updateEnergyLevel(Math.min(this.dataTracker.get(MAX_ENERGY), getEnergyLevel() + 10.0)); // Gain energy (up to max)
+                    player.sendMessage(Text.of("This camel cannot breed due to low energy. Energy increased to: " + String.format("%.1f", getEnergyLevel())), true);
                 } else if (waterReserve < 1000) {
                     player.sendMessage(Text.of("This camel cannot breed due to low water reserves."), true);
                 } else {
@@ -295,7 +312,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
 
         // Increase speed temporarily
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                .setBaseValue(Speed * (ELvl / MaxEnergy) * PANIC_SPEED_MULTIPLIER);
+                .setBaseValue(Speed * (getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)) * PANIC_SPEED_MULTIPLIER);
 
         // Force camel to stand if it was sitting
         if (isSitting) {
@@ -325,8 +342,8 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
             this.forcedAge += delta;
             if (this.happyTicksRemaining == 0) {
                 this.happyTicksRemaining = 40;
-                this.MaxEnergy = 100.0F;
-                this.ELvl = 100.0F;
+                this.dataTracker.set(MAX_ENERGY, 100.0F);
+                this.updateEnergyLevel(100.0F);
             }
         }
 
@@ -347,8 +364,8 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
 
         if (!this.getWorld().isClient) {
             // Determine drop quantities based on energy level and age
-            int meatAmount = (int) (MaxMeat * (ELvl / MaxEnergy));
-            int leatherAmount = (int) (MaxLeather * (ELvl / MaxEnergy));
+            int meatAmount = (int) (MaxMeat * (getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)));
+            int leatherAmount = (int) (MaxLeather * (getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)));
 
             // Reduce drops if the camel died of old age
             if (tickAge >= MAX_AGE) {
@@ -385,7 +402,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
             this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
 
             // Special drop: saddle if camel was high quality and didn't die of old age
-            if (humpSize > 80 && ELvl > 80 && tickAge < MAX_AGE && Math.random() < 0.2) {
+            if (humpSize > 80 && getEnergyLevel() > 80 && tickAge < MAX_AGE && Math.random() < 0.2) {
                 this.dropStack(new ItemStack(Items.SADDLE, 1));
             }
         }
@@ -400,8 +417,8 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         CustomCamelEntity parent2 = (CustomCamelEntity) mate;
 
         // Calculate the inheritance factor based on energy, water reserves, and hump size
-        double parent1Factor = (parent1.ELvl / MaxEnergy) * (parent1.waterReserve / (double)MAX_WATER_RESERVE) * (parent1.humpSize / 100.0);
-        double parent2Factor = (parent2.ELvl / MaxEnergy) * (parent2.waterReserve / (double)MAX_WATER_RESERVE) * (parent2.humpSize / 100.0);
+        double parent1Factor = (parent1.getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)) * (parent1.waterReserve / (double)MAX_WATER_RESERVE) * (parent1.humpSize / 100.0);
+        double parent2Factor = (parent2.getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)) * (parent2.waterReserve / (double)MAX_WATER_RESERVE) * (parent2.humpSize / 100.0);
         double inheritanceFactor = Math.min(1.0, (parent1Factor + parent2Factor) / 2.0);
 
         // Inherit attributes from parents with some randomness, scaled by the inheritance factor
@@ -412,7 +429,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         double childMinLeather = ((parent1.MinLeather + parent2.MinLeather) / 2) * inheritanceFactor;
         double childMaxLeather = ((parent1.MaxLeather + parent2.MaxLeather) / 2) * (inheritanceFactor * 0.9 + Math.random() * 0.2);
         int childBreedingCooldown = (int) (((parent1.breedingCooldown + parent2.breedingCooldown) / 2) * (1 / inheritanceFactor));
-        double childEnergy = ((parent1.ELvl + parent2.ELvl) / 2) * inheritanceFactor;
+        double childEnergy = ((parent1.getEnergyLevel() + parent2.getEnergyLevel()) / 2) * inheritanceFactor;
         int childHumpSize = (int)(((parent1.humpSize + parent2.humpSize) / 2) * inheritanceFactor);
 
         // Create the child entity
@@ -426,17 +443,17 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         child.MinLeather = childMinLeather;
         child.MaxLeather = childMaxLeather;
         child.breedingCooldown = childBreedingCooldown;
-        child.ELvl = childEnergy;
+        child.updateEnergyLevel(childEnergy);
         child.waterReserve = (int)(Math.min(parent1.waterReserve, parent2.waterReserve) * 0.5); // Child starts with 50% of the lower parent's water
         child.humpSize = childHumpSize;
 
         // Apply stats to the child entity
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
-        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / MaxEnergy));
+        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)));
 
         // Parents lose energy and water after breeding
-        parent1.ELvl -= parent1.ELvl * 0.4F;
-        parent2.ELvl -= parent2.ELvl * 0.4F;
+        parent1.updateEnergyLevel(parent1.getEnergyLevel() - parent1.getEnergyLevel() * 0.4F);
+        parent2.updateEnergyLevel(parent2.getEnergyLevel() - parent2.getEnergyLevel() * 0.4F);
         parent1.waterReserve -= parent1.waterReserve * 0.3;
         parent2.waterReserve -= parent2.waterReserve * 0.3;
         parent1.humpSize = Math.max(30, parent1.humpSize - 15);
@@ -473,13 +490,13 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
 
             // Max energy is determined by age
             if (tickAge <= 6000) {
-                MaxEnergy = 10 * Math.log(5 * tickAge + 5);
+                this.dataTracker.set(MAX_ENERGY, (float)(10 * Math.log(5 * tickAge + 5)));
             } else if (tickAge > 6000 && tickAge < LIFESPAN) {
-                MaxEnergy = 100;
+                this.dataTracker.set(MAX_ENERGY, 100.0F);
             } else {
-                MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
+                this.dataTracker.set(MAX_ENERGY, (float)(-(tickAge - LIFESPAN) / 16.0 + 100));
                 // Ensure MaxEnergy doesn't go below 0
-                MaxEnergy = Math.max(0, MaxEnergy);
+                this.dataTracker.set(MAX_ENERGY, Math.max(0, this.dataTracker.get(MAX_ENERGY)));
             }
 
             // Grow up baby camel after certain age
@@ -488,8 +505,8 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
             }
 
             // Clamp energy level to maximum
-            if (ELvl > MaxEnergy) {
-                updateEnergyLevel(MaxEnergy);
+            if (getEnergyLevel() > this.dataTracker.get(MAX_ENERGY)) {
+                updateEnergyLevel(this.dataTracker.get(MAX_ENERGY));
             }
 
             // Handle panic state
@@ -498,14 +515,14 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
                 if (panicTicks == 0) {
                     // Reset speed back to normal when panic ends
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / MaxEnergy));
+                            .setBaseValue(Speed * (getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)));
                 }
             }
 
             // Handle energy loss if the camel was recently hit
             if (wasRecentlyHit) {
                 // Reduce energy by 15% of its current level (camels are more resilient than cows)
-                updateEnergyLevel(Math.max(0.0, ELvl * 0.85));
+                updateEnergyLevel(Math.max(0.0, getEnergyLevel() * 0.85));
                 wasRecentlyHit = false; // Reset the flag after applying the energy loss
             }
 
@@ -516,7 +533,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
                 // While sitting, regenerate energy faster (based on hump size)
                 if (sittingTicks % 20 == 0) { // Every second
                     double energyGain = 0.3 + (0.5 * (humpSize / 100.0)); // Larger humps provide more energy while sitting
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + energyGain));
+                    updateEnergyLevel(Math.min(this.dataTracker.get(MAX_ENERGY), getEnergyLevel() + energyGain));
                 }
 
                 // Camels conserve water while sitting (based on hump size)
@@ -549,7 +566,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
 
                 // Decrease energy faster with age
                 if (Math.random() < 0.3 * agingFactor) {
-                    updateEnergyLevel(Math.max(0.0, ELvl - (0.1 + 0.2 * agingFactor)));
+                    updateEnergyLevel(Math.max(0.0, getEnergyLevel() - (0.1 + 0.2 * agingFactor)));
                 }
 
                 // Decrease hump size with age (less efficient metabolism)
@@ -579,7 +596,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
             // Adjust energy level based on environment
             if (isOnSand && !isSitting) {
                 if (Math.random() < 0.3) { // 30% chance to gain energy on sand
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.2 + Math.random() * 0.5))); // Gain 0.2 to 0.7 energy
+                    updateEnergyLevel(Math.min(this.dataTracker.get(MAX_ENERGY), getEnergyLevel() + (0.2 + Math.random() * 0.5))); // Gain 0.2 to 0.7 energy
                 }
             }
 
@@ -589,25 +606,25 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
 
                 // But reduce energy slightly while in water (camels don't like swimming)
                 if (Math.random() < 0.5) {
-                    updateEnergyLevel(Math.max(0.0, ELvl - 0.5));
+                    updateEnergyLevel(Math.max(0.0, getEnergyLevel() - 0.5));
                 }
             }
 
             // Regular energy consumption if not sitting
             if (!isSitting && Math.random() < 0.3) { // 30% chance to lose energy
                 double energyLoss = (0.03 + Math.random() * 0.2) * (1.0 - (humpSize / 200.0)); // Larger humps reduce energy loss
-                updateEnergyLevel(Math.max(0.0, ELvl - energyLoss));
+                updateEnergyLevel(Math.max(0.0, getEnergyLevel() - energyLoss));
             }
 
             // Check if energy and water are high for health regeneration
-            if (ELvl > 90.0 && waterReserve > MAX_WATER_RESERVE * 0.8 && tickAge < LIFESPAN) {
+            if (getEnergyLevel() > 90.0 && waterReserve > MAX_WATER_RESERVE * 0.8 && tickAge < LIFESPAN) {
                 if (this.getHealth() < this.getMaxHealth()) {
                     this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F)); // Regenerate 0.5 HP per tick
                 }
             }
 
             // Auto-breeding behavior when optimal conditions are met
-            if (ELvl >= 90.0 && waterReserve >= MAX_WATER_RESERVE * 0.7 && humpSize >= 70 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown && tickAge < LIFESPAN) {
+            if (getEnergyLevel() >= 90.0 && waterReserve >= MAX_WATER_RESERVE * 0.7 && humpSize >= 70 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown && tickAge < LIFESPAN) {
                 double searchRadius = 32.0;
 
                 List<CustomCamelEntity> mateCandidates = this.getWorld().getEntitiesByClass(
@@ -635,7 +652,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
                     }
 
                     // Start moving towards the nearest camel
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 3.0F * (this.ELvl / MaxEnergy));
+                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 3.0F * (this.getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)));
 
                     // If close enough (within 3 blocks)
                     if (minDistanceSquared < 9.0) {
@@ -651,12 +668,12 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
             ticksSinceLastBreeding++;
 
             // If energy or water reaches critical levels, kill the camel
-            if (ELvl <= 0.0 || (waterReserve <= 0 && tickAge % 1000 == 0)) {
+            if (getEnergyLevel() <= 0.0 || (waterReserve <= 0 && tickAge % 1000 == 0)) {
                 this.damage(this.getDamageSources().starve(), 1.0F); // Use starve damage instead of instant kill
             } else {
                 // Update movement speed based on energy if not in panic mode
                 if (panicTicks == 0 && !isSitting) {
-                    double energyFactor = ELvl / MaxEnergy;
+                    double energyFactor = getEnergyLevel() / this.dataTracker.get(MAX_ENERGY);
                     double waterFactor = Math.max(0.5, waterReserve / (double)MAX_WATER_RESERVE);
                     double humpFactor = 0.8 + (0.4 * (humpSize / 100.0)); // Larger humps provide better movement efficiency
 
@@ -692,7 +709,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         nbt.putDouble("MaxMeat", this.MaxMeat);
         nbt.putDouble("MaxLeather", this.MaxLeather);
         nbt.putFloat("MaxHp", this.getMaxHpTracked());
-        nbt.putFloat("ELvl", (float)this.getEnergyLevel());
+        nbt.putFloat("E_LVL", (float)this.getEnergyLevel());
         nbt.putFloat("MaxEnergy", this.getMaxEnergy());
         nbt.putInt("TickAge", this.getTickAge());
     }
@@ -703,7 +720,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         this.MaxMeat = nbt.getDouble("MaxMeat");
         this.MaxLeather = nbt.getDouble("MaxLeather");
         this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
-        this.dataTracker.set(ELVL, nbt.getFloat("ELvl"));
+        this.dataTracker.set(E_LVL, nbt.getFloat("E_LVL"));
         this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
         this.dataTracker.set(TICK_AGE, nbt.getInt("TickAge"));
     }
