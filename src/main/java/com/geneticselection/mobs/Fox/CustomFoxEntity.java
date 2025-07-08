@@ -3,6 +3,7 @@ package com.geneticselection.mobs.Fox;
 import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.ModEntities; // Use your ModEntities
 import com.geneticselection.utils.DescriptionRenderer;
 
@@ -54,14 +55,10 @@ public class CustomFoxEntity extends FoxEntity {
     // --- Custom Instance Attributes ---
     // Base attributes inherited from species average
     private MobAttributes mobAttributes;
-    private double MaxHp; // Base MaxHp from mobAttributes
     private double Speed; // Base Speed from mobAttributes
 
     // Instance-specific dynamic state
-    private double ELvl;
-    private double MaxEnergy;
     private int breedingCooldown; // In ticks
-    private int tickAge = 0;
     private int ticksSinceLastBreeding = 0;
 
     // Instance-specific evolution bonuses
@@ -81,6 +78,12 @@ public class CustomFoxEntity extends FoxEntity {
         OTHER_TRUSTED = DataTracker.registerData(CustomFoxEntity.class, TrackedDataHandlerRegistry.OPTIONAL_UUID);
         PICKABLE_DROP_FILTER = (item) -> !item.cannotPickup() && item.isAlive();
     }
+
+    private static final TrackedData<Float>
+        MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     // --- Target Predicates ---
     // Defines what this fox considers prey

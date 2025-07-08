@@ -2,6 +2,7 @@ package com.geneticselection.mobs.Ocelots;
 
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.Mooshroom.CustomMooshroomEntity;
 import com.geneticselection.utils.DescriptionRenderer;
@@ -10,6 +11,9 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.OcelotEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -30,10 +34,7 @@ import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomOcelotEntity extends OcelotEntity {
     private MobAttributes mobAttributes;
-    private double MaxHp;
     private double Speed;
-    private double MaxEnergy;
-    private double ELvl;
     private int breedingCooldown;
 
     private int panicTicks = 0;
@@ -41,8 +42,13 @@ public class CustomOcelotEntity extends OcelotEntity {
     private static final int PANIC_DURATION = 100; // 5 seconds at 20 ticks per second
     private static final double PANIC_SPEED_MULTIPLIER = 1.25;
     private boolean wasRecentlyHit = false;
-    private int tickAge = 0;
     private int ticksSinceLastBreeding = 0;
+
+    private static final TrackedData<Float>
+        MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public CustomOcelotEntity(EntityType<? extends OcelotEntity> entityType, World world) {
         super(entityType, world);

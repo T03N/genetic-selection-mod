@@ -3,6 +3,7 @@ package com.geneticselection.mobs.Wolves;
 import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities; // Assuming your custom entities are registered here
 import com.geneticselection.utils.DescriptionRenderer;
@@ -17,6 +18,7 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker; // Required for tracked data
 import net.minecraft.entity.data.TrackedData; // Required for tracked data
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.AbstractSkeletonEntity;
 import net.minecraft.entity.passive.*; // Import passive entities like SheepEntity, RabbitEntity, etc.
 import net.minecraft.entity.player.PlayerEntity;
@@ -44,12 +46,8 @@ import static com.geneticselection.genetics.ChildInheritance.*;
 public class CustomWolfEntity extends WolfEntity
 {
     private MobAttributes mobAttributes;
-    private double MaxHp; // Base MaxHp from mobAttributes
     private double Speed; // Base Speed from mobAttributes
-    private double ELvl; // Current Energy Level (Instance Specific)
-    private double MaxEnergy; // Max Energy Capacity (Instance Specific, dynamic)
     private int breedingCooldown; // (Instance Specific)
-    private int tickAge = 0; // (Instance Specific)
     private int ticksSinceLastBreeding = 0; // (Instance Specific)
 
     // Evolution / Hunting Bonus Attributes (Instance Specific)
@@ -57,6 +55,12 @@ public class CustomWolfEntity extends WolfEntity
     private double bonusHealth = 0.0;
     private double bonusSpeed = 0.0; // Multiplier bonus
     private int killCount = 0;
+
+    private static final TrackedData<Float>
+        MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     // State variable (Instance Specific)
     private boolean wasRecentlyHit = false;

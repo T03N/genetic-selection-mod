@@ -77,7 +77,7 @@ public class CustomCowEntity extends CowEntity {
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.mobAttributes.getMaxHealth());
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
-        this.dataTracker.set(E_LVL, (float)this.mobAttributes.getEnergyLvl());
+        this.dataTracker.set(E_LVL, (float) this.mobAttributes.getEnergyLvl());
 
 
         this.dataTracker.set(MAX_MEAT, this.mobAttributes.getMaxMeat().map(Double::floatValue).orElse(0.0f));

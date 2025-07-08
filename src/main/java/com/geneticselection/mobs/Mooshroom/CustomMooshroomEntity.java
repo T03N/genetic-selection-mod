@@ -1,4 +1,5 @@
 package com.geneticselection.mobs.Mooshroom;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.Cows.CustomCowEntity;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.MinecraftClient;
@@ -7,6 +8,9 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -35,9 +39,6 @@ import java.util.Optional;
 
 public class CustomMooshroomEntity extends MooshroomEntity {
     private MobAttributes mobAttributes; // Directly store MobAttributes for this entity
-    private double MaxHp;
-    private double ELvl;
-    private double MaxEnergy;
     private double Speed;
     private double MinMeat;
     private double MaxMeat;
@@ -52,8 +53,13 @@ public class CustomMooshroomEntity extends MooshroomEntity {
     private static final int PANIC_DURATION = 100; // 5 seconds at 20 ticks per second
     private static final double PANIC_SPEED_MULTIPLIER = 1.25;
     private boolean wasRecentlyHit = false;
-    private int tickAge = 0;
     private int ticksSinceLastBreeding = 0;
+
+    private static final TrackedData<Float>
+        MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public CustomMooshroomEntity(EntityType<? extends MooshroomEntity> entityType, World world) {
         super(entityType, world);

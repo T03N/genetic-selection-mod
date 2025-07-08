@@ -3,6 +3,7 @@ package com.geneticselection.mobs.Zoglins;
 import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
@@ -13,6 +14,9 @@ import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.LookTargetUtil;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.ZoglinEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -30,10 +34,7 @@ import java.util.Optional;
 
 public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
-    private double MaxHp;
     private double Speed;
-    private double ELvl;
-    private double MaxEnergy;
     private double MaxMeat;
     private double MaxLeather;
 
@@ -45,11 +46,16 @@ public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier
     // New breeding-related fields
     private int breedingCooldown;
     private int ticksSinceLastBreeding = 0;
-    private int tickAge = 0;
     private static int LIFESPAN = 35000;
     private int happyTicksRemaining = 0;
     private int forcedAge = 0;
     private int loveTicks = 0;
+
+    private static final TrackedData<Float>
+        MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public CustomZoglinEntity(EntityType<? extends ZoglinEntity> entityType, World world) {
         super(entityType, world);

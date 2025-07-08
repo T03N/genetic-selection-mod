@@ -3,6 +3,7 @@ package com.geneticselection.mobs.Axolotl;
 import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
@@ -13,6 +14,9 @@ import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.passive.AxolotlEntity;
 import net.minecraft.entity.passive.FishEntity;
 import net.minecraft.entity.passive.PassiveEntity;
@@ -35,17 +39,10 @@ import java.util.function.Predicate;
 import static com.geneticselection.genetics.ChildInheritance.applyAttributes;
 import static com.geneticselection.genetics.ChildInheritance.influenceGlobalAttributes;
 import static com.geneticselection.genetics.ChildInheritance.inheritAttributes;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 
 public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
-    private double MaxHp;
     private double Speed;
-    private double ELvl;
-    private double MaxEnergy;
-    private int tickAge = 0;
     private int ticksSinceLastBreeding = 0;
     private int breedingCooldown;
 
@@ -63,26 +60,27 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
     private double bonusSpeed = 0.0;
     private int killCount = 0;
 
-    private static final TrackedData<Float> MAX_HP = DataTracker.registerData(CustomAxolotlEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> ELVL = DataTracker.registerData(CustomAxolotlEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomAxolotlEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomAxolotlEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Float>
+        MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public CustomAxolotlEntity(EntityType<? extends AxolotlEntity> entityType, World world) {
         super(entityType, world);
+
         if (this.mobAttributes == null) {
             initFromGlobalAttributes(entityType);
         }
+
         this.MaxEnergy = 10.0;
         this.ELvl = this.mobAttributes.getEnergyLvl();
         this.breedingCooldown = 3000 + random.nextInt(3000);
+
         applyBonuses();
-        if (!world.isClient) {
-            this.dataTracker.set(MAX_HP, (float)this.mobAttributes.getMaxHealth());
-            this.dataTracker.set(ELVL, (float)this.mobAttributes.getEnergyLvl());
-            this.dataTracker.set(MAX_ENERGY, (float)this.MaxEnergy);
-            this.dataTracker.set(TICK_AGE, 0);
-        }
+
+        if (!this.getWorld().isClient)
+            updateDescription(this);
     }
 
     private void initFromGlobalAttributes(EntityType<?> entityType) {
@@ -123,37 +121,37 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
     }
 
     @Override
-    protected void initDataTracker(DataTracker.Builder builder) {
-        super.initDataTracker(builder);
-        builder.add(MAX_HP, 10.0f);
-        builder.add(ELVL, 100.0f);
-        builder.add(MAX_ENERGY, 100.0f);
-        builder.add(TICK_AGE, 0);
-    }
-
-    public float getMaxHpTracked() { return this.dataTracker.get(MAX_HP); }
-    public double getEnergyLevel() { return this.dataTracker.get(ELVL); }
-    public float getMaxEnergy() { return this.dataTracker.get(MAX_ENERGY); }
-    public int getTickAge() { return this.dataTracker.get(TICK_AGE); }
-    public double getSpeed() { return this.Speed; }
-    public int getBreedingCooldown() { return this.breedingCooldown; }
-
-    @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
-        nbt.putFloat("MaxHp", this.getMaxHpTracked());
-        nbt.putFloat("ELvl", (float)this.getEnergyLevel());
-        nbt.putFloat("MaxEnergy", this.getMaxEnergy());
-        nbt.putInt("TickAge", this.getTickAge());
+        nbt.putDouble("ELvl", this.ELvl);
+        nbt.putDouble("MaxEnergy", this.MaxEnergy);
+        nbt.putInt("BreedingCooldown", this.breedingCooldown);
+        nbt.putInt("TickAge", this.tickAge);
+        nbt.putInt("TicksSinceLastBreeding", this.ticksSinceLastBreeding);
+        nbt.putDouble("BonusAttack", this.bonusAttack);
+        nbt.putDouble("BonusHealth", this.bonusHealth);
+        nbt.putDouble("BonusSpeed", this.bonusSpeed);
+        nbt.putInt("KillCount", this.killCount);
     }
 
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
+        if (this.mobAttributes == null) {
+            initFromGlobalAttributes(this.getType());
+        }
         super.readCustomDataFromNbt(nbt);
-        this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
-        this.dataTracker.set(ELVL, nbt.getFloat("ELvl"));
-        this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
-        this.dataTracker.set(TICK_AGE, nbt.getInt("TickAge"));
+        this.ELvl = nbt.getDouble("ELvl");
+        this.MaxEnergy = nbt.getDouble("MaxEnergy");
+        this.breedingCooldown = nbt.getInt("BreedingCooldown");
+        this.tickAge = nbt.getInt("TickAge");
+        this.ticksSinceLastBreeding = nbt.getInt("TicksSinceLastBreeding");
+        this.bonusAttack = nbt.getDouble("BonusAttack");
+        this.bonusHealth = nbt.getDouble("BonusHealth");
+        this.bonusSpeed = nbt.getDouble("BonusSpeed");
+        this.killCount = nbt.getInt("KillCount");
+
+        applyBonuses();
+        if (!this.getWorld().isClient) updateDescription(this);
     }
 
     public void onSuccessfulKill(LivingEntity killedEntity) {
@@ -176,25 +174,62 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
                 this.bonusSpeed = Math.min(this.bonusSpeed, 0.25);
 
                 applyBonuses();
+                updateDescription(this);
             }
         }
     }
 
     public void updateEnergyLevel(double newEnergyLevel) {
-        if (!this.getWorld().isClient) {
-            this.dataTracker.set(ELVL, (float)newEnergyLevel);
+        this.ELvl = Math.max(0.0, Math.min(newEnergyLevel, this.MaxEnergy));
+    }
+
+    private void updateDescription(CustomAxolotlEntity ent) {
+        if (ent.getWorld().isClient() || !ent.isAlive()) return;
+
+        double currentMaxHp = ent.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH);
+        double currentSpeed = ent.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        double currentAttack = ent.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+
+        DescriptionRenderer.setDescription(ent, Text.of(
+            "HP: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", currentMaxHp) +
+                " | Atk: " + String.format("%.2f", currentAttack) +
+                "\nSpd: " + String.format("%.3f", currentSpeed) +
+                " | Energy: " + String.format("%.1f", ent.ELvl) + "/" + String.format("%.1f", ent.MaxEnergy) +
+                "\nAge: " + String.format("%.1f", ent.tickAge / 24000.0) + "d" +
+                " | Kills: " + ent.killCount
+        ));
+    }
+
+    public double getEnergyLevel() {
+        return this.ELvl;
+    }
+
+    @Override
+    public ActionResult interactMob(PlayerEntity player, Hand hand) {
+        ItemStack itemStack = player.getStackInHand(hand);
+
+        if (itemStack.isOf(Items.TROPICAL_FISH_BUCKET)) {
+            if (ELvl < 20.0) {
+                player.sendMessage(Text.of("This axolotl cannot breed because it has low energy."), true);
+                return ActionResult.FAIL;
+            }
+            return super.interactMob(player, hand);
         }
+
+        if (itemStack.isEmpty()) {
+            if (!this.getWorld().isClient) {
+                updateDescription(this);
+            }
+            return ActionResult.SUCCESS;
+        }
+        return super.interactMob(player, hand);
     }
 
     @Override
     public void tick() {
         super.tick();
-        if (!this.getWorld().isClient) {
-            int currentTickAge = this.getTickAge();
-            float currentMaxEnergy = 100.0f;
-            this.dataTracker.set(TICK_AGE, currentTickAge + 1);
-            this.dataTracker.set(MAX_ENERGY, currentMaxEnergy);
 
+        if (!this.getWorld().isClient) {
             LivingEntity currentTarget = this.getTarget();
             if (currentTarget != null && currentTarget.isDead()) {
                 if (currentTarget instanceof FishEntity) {
@@ -255,8 +290,6 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
 
             if (tickAge % 40 == 0) updateDescription(this);
         }
-        var maxHealthAttr = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
-        if (maxHealthAttr != null) maxHealthAttr.setBaseValue(this.getMaxHpTracked());
     }
 
     private boolean canAutoBreed() {
@@ -317,6 +350,9 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
 
         influenceGlobalAttributes(child.getType());
 
+        if (!this.getWorld().isClient)
+            updateDescription(child);
+
         return child;
     }
 
@@ -325,6 +361,8 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
         super.applyDamage(source, amount);
         wasRecentlyHit = true;
         panicTicks = PANIC_DURATION;
+        if (!this.getWorld().isClient)
+            updateDescription(this);
     }
 
     @Override
@@ -391,4 +429,3 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
         }
     }
 }
-

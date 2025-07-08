@@ -4,6 +4,7 @@ import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
@@ -11,6 +12,9 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.passive.DonkeyEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -29,10 +33,7 @@ import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
-    private double MaxHp;
     private double Speed;
-    private double MaxEnergy;
-    private double ELvl;
     private double MaxLeather;
     private int breedingCooldown;
 
@@ -40,10 +41,14 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
     private int panicTicks = 0;
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 1.25;
-    private int tickAge = 0;
     private boolean wasRecentlyHit = false;
     private int ticksSinceLastBreeding = 0;
 
+    private static final TrackedData<Float>
+        MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public CustomDonkeyEntity(EntityType<? extends DonkeyEntity> entityType, World world) {
         super(entityType, world);
