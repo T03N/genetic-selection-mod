@@ -1,4 +1,5 @@
 package com.geneticselection.mobs.Cows;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.math.MatrixStack;
@@ -43,6 +44,7 @@ public class CustomCowEntity extends CowEntity {
     private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> MAX_MEAT = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> MAX_LEATHER = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     private MobAttributes mobAttributes;
     private double Speed;
@@ -57,7 +59,6 @@ public class CustomCowEntity extends CowEntity {
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 1.25;
     private boolean wasRecentlyHit = false;
-    private int tickAge = 0;
     private int ticksSinceLastBreeding = 0;
 
     public CustomCowEntity(EntityType<? extends CowEntity> entityType, World world) {
@@ -71,7 +72,7 @@ public class CustomCowEntity extends CowEntity {
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double leather = global.getMaxLeather().orElse(0.0) * (0.98 + Math.random() * 0.1);
             this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.of(leather), Optional.empty(), Optional.empty(), Optional.empty());
-            this.tickAge = 0;
+            this.dataTracker.set(TICK_AGE, getTickAge());
         }
 
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.mobAttributes.getMaxHealth());
@@ -109,7 +110,7 @@ public class CustomCowEntity extends CowEntity {
         nbt.putFloat("MaxEnergy", this.dataTracker.get(MAX_ENERGY));
         nbt.putFloat("MaxMeat", this.dataTracker.get(MAX_MEAT));
         nbt.putFloat("MaxLeather", this.dataTracker.get(MAX_LEATHER));
-        nbt.putInt("tickAge", this.tickAge);
+        nbt.putInt("tickAge", this.dataTracker.get(TICK_AGE));
     }
 
     @Override
@@ -120,9 +121,8 @@ public class CustomCowEntity extends CowEntity {
         this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
         this.dataTracker.set(MAX_MEAT, nbt.getFloat("MaxMeat"));
         this.dataTracker.set(MAX_LEATHER, nbt.getFloat("MaxLeather"));
-        this.tickAge = nbt.getInt("tickAge");
+        this.dataTracker.set(TICK_AGE, nbt.getInt("tickAge"));
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.dataTracker.get(MAX_HP));
-
     }
 
     public void updateEnergyLevel(double newEnergyLevel) {
@@ -131,19 +131,27 @@ public class CustomCowEntity extends CowEntity {
 
     private void updateDescription(CustomCowEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-            "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.dataTracker.get(MAX_HP)) +
+            "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", getMaxHP()) +
             "\nSpeed: " + String.format("%.3f", ent.Speed) +
             "\nEnergy: " + String.format("%.3f", ent.getEnergyLevel()) +
-            "\nMax Meat: " + String.format("%.3f", ent.dataTracker.get(MAX_MEAT)) +
-            "\nMax Leather: " + String.format("%.3f", ent.dataTracker.get(MAX_LEATHER))+
+            "\nMax Meat: " + String.format("%.3f", getMaxMeat()) +
+            "\nMax Leather: " + String.format("%.3f", getMaxLeather())+
             "\nCooldown: " + ent.milkingCooldown+
             "\nBreeding Cooldown: " + ent.breedingCooldown+
-            "\nAge: " + ent.tickAge)
+            "\nAge: " + getTickAge())
         );
+    }
+
+    public double getMaxHP() {
+        return this.dataTracker.get(MAX_HP).doubleValue();
     }
 
     public double getEnergyLevel() {
         return this.dataTracker.get(E_LVL).doubleValue();
+    }
+
+    public int getTickAge() {
+        return this.dataTracker.get(TICK_AGE).intValue();
     }
 
     public void setMinMeat(double minMeat)
@@ -156,6 +164,11 @@ public class CustomCowEntity extends CowEntity {
         this.dataTracker.set(MAX_MEAT, maxMeat);
     }
 
+    public float getMaxMeat()
+    {
+        return this.dataTracker.get(MAX_MEAT);
+    }
+
     public void setMinLeather(double minLeather)
     {
         this.MinLeather = minLeather;
@@ -164,6 +177,11 @@ public class CustomCowEntity extends CowEntity {
     public void setMaxLeather(float maxLeather)
     {
         this.dataTracker.set(MAX_LEATHER, maxLeather);
+    }
+
+    public float getMaxLeather()
+    {
+        return this.dataTracker.get(MAX_LEATHER);
     }
 
     @Override
@@ -342,16 +360,16 @@ public class CustomCowEntity extends CowEntity {
 
         if (!this.getWorld().isClient) {
 
-            if(tickAge <= 4404){
-                this.dataTracker.set(MAX_ENERGY, (float)(10 * Math.log(5 * tickAge + 5)));
-            } else if (tickAge < LIFESPAN) {
+            if(getTickAge() <= 4404){
+                this.dataTracker.set(MAX_ENERGY, (float)(10 * Math.log(5 * getTickAge() + 5)));
+            } else if (getTickAge() < LIFESPAN) {
                 this.dataTracker.set(MAX_ENERGY, 100.0f);
             } else {
-                this.dataTracker.set(MAX_ENERGY, (float)(-(tickAge - LIFESPAN) / 16.0 + 100));
+                this.dataTracker.set(MAX_ENERGY, (float)(-(getTickAge() - LIFESPAN) / 16.0 + 100));
             }
-            tickAge++;
+            this.dataTracker.set(TICK_AGE, this.dataTracker.get(TICK_AGE) + 1);
 
-            if (tickAge >= 4404 && this.isBaby()) {
+            if (getTickAge() >= 4404 && this.isBaby()) {
                 growUp(220, true);
             }
 
