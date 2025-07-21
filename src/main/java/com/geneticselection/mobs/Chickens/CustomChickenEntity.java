@@ -4,6 +4,7 @@ import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import com.geneticselection.utils.EatGrassGoal;
@@ -42,10 +43,7 @@ import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomChickenEntity extends ChickenEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
-    private double MaxHp;
     private double Speed;
-    private double MaxEnergy = 100.0F;
-    private double ELvl;
     private double MaxMeat;
     private double MaxFeathers;
     private int breedingCooldown;
@@ -60,7 +58,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     private int ticksSinceLastBreeding = 0;
 
     private static final TrackedData<Float> MAX_HP = DataTracker.registerData(CustomChickenEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> ELVL = DataTracker.registerData(CustomChickenEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomChickenEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomChickenEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomChickenEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
@@ -78,12 +76,12 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             this.tickAge = 0;
         }
 
-        this.MaxHp = this.mobAttributes.getMaxHealth();
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        this.setHealth((float)this.MaxHp);
+        updateMaxHP(this.mobAttributes.getMaxHealth());
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(getMaxHP());
+        this.setHealth(getMaxHealth());
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
-        this.ELvl = this.mobAttributes.getEnergyLvl();
+        updateEnergyLevel(this.mobAttributes.getEnergyLvl());
 
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
@@ -91,7 +89,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         this.mobAttributes.getMaxFeathers().ifPresent(maxFeathers -> {
             this.MaxFeathers = maxFeathers;
         });
-        this.breedingCooldown = 3000 + (int)((1 - (ELvl / 100.0)) * 2000) + random.nextInt(2001);
+        this.breedingCooldown = 3000 + (int)((1 - (getEnergyLevel() / 100.0)) * 2000) + random.nextInt(2001);
 
 
         if (!this.getWorld().isClient)
@@ -102,28 +100,95 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     protected void initDataTracker(DataTracker.Builder builder) {
         super.initDataTracker(builder);
         builder.add(MAX_HP, 6.0f);
-        builder.add(ELVL, 100.0f);
+        builder.add(E_LVL, 100.0f);
         builder.add(MAX_ENERGY, 100.0f);
         builder.add(TICK_AGE, 0);
     }
 
-    public float getMaxHpTracked() { return this.dataTracker.get(MAX_HP); }
-    public float getEnergyLevel() { return this.dataTracker.get(ELVL); }
-    public float getMaxEnergy() { return this.dataTracker.get(MAX_ENERGY); }
-    public int getTickAge() { return this.dataTracker.get(TICK_AGE); }
     public double getSpeed() { return this.Speed; }
-    public double getMaxMeat() { return this.MaxMeat; }
     public double getMaxFeathers() { return this.MaxFeathers; }
     public int getBreedingCooldown() { return this.breedingCooldown; }
+
+    private void updateDescription(CustomCowEntity ent) {
+        DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
+            "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", getMaxHP()) +
+            "\nSpeed: " + String.format("%.3f", getSpeed()) +
+            "\nEnergy: " + String.format("%.3f", ent.getEnergyLevel()) +
+            "\nMax Meat: " + String.format("%.3f", getMaxMeat()) +
+            "\nMax Leather: " + String.format("%.3f", getMaxLeather())+
+            // "\nBreeding Cooldown: " + ent.breedingCooldown+
+            "\nAge: " + getTickAge())
+        );
+    }
+
+    public double getMaxHP() {
+        return this.dataTracker.get(MAX_HP).doubleValue();
+    }
+
+    public void updateMaxHP(double newMaxHP) {
+        this.dataTracker.set(MAX_HP, (float)newMaxHP);
+    }
+
+    public double getEnergyLevel() {
+        return this.dataTracker.get(E_LVL).doubleValue();
+    }
+
+    public void updateEnergyLevel(float newEnergyLevel) {
+        this.dataTracker.set(E_LVL, newEnergyLevel);
+    }
+
+    public void updateMaxEnergy(float newMaxEnergy)
+    {
+        this.dataTracker.set(MAX_ENERGY, newMaxEnergy);
+    }
+
+    public float getMaxEnergy() {
+        return this.dataTracker.get(MAX_ENERGY);
+    }
+
+    public int getTickAge() {
+        return this.dataTracker.get(TICK_AGE).intValue();
+    }
+
+    public void setMinMeat(double minMeat)
+    {
+        this.MinMeat = minMeat;
+    }
+
+    public void setMaxMeat(float maxMeat)
+    {
+        this.dataTracker.set(MAX_MEAT, maxMeat);
+    }
+
+    public float getMaxMeat()
+    {
+        return this.dataTracker.get(MAX_MEAT);
+    }
+
+    public void setMinLeather(double minLeather)
+    {
+        this.MinLeather = minLeather;
+    }
+
+    public void setMaxLeather(float maxLeather)
+    {
+        this.dataTracker.set(MAX_LEATHER, maxLeather);
+    }
+
+    public float getMaxLeather()
+    {
+        return this.dataTracker.get(MAX_LEATHER);
+    }
+
 
     @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putDouble("MaxMeat", this.MaxMeat);
         nbt.putDouble("MaxFeathers", this.MaxFeathers);
-        nbt.putFloat("MaxHp", this.getMaxHpTracked());
+        nbt.putFloat("MaxHp", getMaxHP());
         nbt.putFloat("ELvl", this.getEnergyLevel());
-        nbt.putFloat("MaxEnergy", this.getMaxEnergy());
+        nbt.putFloat("MaxEnergy", getMaxEnergy());
         nbt.putInt("TickAge", this.getTickAge());
     }
 
@@ -133,14 +198,14 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         this.MaxMeat = nbt.getDouble("MaxMeat");
         this.MaxFeathers = nbt.getDouble("MaxFeathers");
         this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
-        this.dataTracker.set(ELVL, nbt.getFloat("ELvl"));
+        this.dataTracker.set(E_LVL, nbt.getFloat("ELvl"));
         this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
         this.dataTracker.set(TICK_AGE, nbt.getInt("TickAge"));
     }
 
     public void updateEnergyLevel(double newEnergyLevel) {
         if (!this.getWorld().isClient) {
-            this.dataTracker.set(ELVL, (float)newEnergyLevel);
+            this.dataTracker.set(E_LVL, (float)newEnergyLevel);
         }
     }
 
@@ -163,7 +228,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.2f", ent.Speed) +
-                "\nEnergy: " + String.format("%.1f", ent.ELvl) + "/" + String.format("%.1f", ent.MaxEnergy) +
+                "\nEnergy: " + String.format("%.1f", getEnergyLevel()) + "/" + String.format("%.1f", ent.MaxEnergy) +
                 "\nMax Meat: " + String.format("%.1f", ent.MaxMeat) +
                 "\nFeathers: " + String.format("%.1f", ent.MaxFeathers) +
                 "\nBreeding Cooldown: " + ent.breedingCooldown +
@@ -176,7 +241,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         ItemStack itemStack = player.getStackInHand(hand);
 
         if (itemStack.isOf(Items.WHEAT_SEEDS)) {
-            if (ELvl < 20.0) {
+            if (getEnergyLevel() < 20.0) {
                 player.sendMessage(Text.of("This chicken cannot breed because it has low energy."), true);
                 return ActionResult.FAIL;
             }
@@ -247,7 +312,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
             // Drop cooked or raw chicken based on conditions
             if(shouldDropCooked) {
-                if (ELvl <= 0.0 || tickAge >= MAX_AGE) {
+                if (getEnergyLevel() <= 0.0 || tickAge >= MAX_AGE) {
                     // Drop minimal resources for old or low energy chickens
                     this.dropStack(new ItemStack(Items.FEATHER, 1));
                     this.dropStack(new ItemStack(Items.BONE, 1)); // Add bone drop for old age death
@@ -255,17 +320,17 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                     super.onDeath(source);
                     if (!this.getWorld().isClient) {
                         // Drop feathers based on energy
-                        int feathersAmount = (int) ((MaxFeathers) * (ELvl / 100.0));
+                        int feathersAmount = (int) ((MaxFeathers) * (getEnergyLevel() / 100.0));
                         this.dropStack(new ItemStack(Items.FEATHER, feathersAmount));
 
                         // Drop chicken meat based on energy
-                        int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
+                        int meatAmount = (int) ((MaxMeat) * (getEnergyLevel() / 100.0));
                         this.dropStack(new ItemStack(Items.COOKED_CHICKEN, meatAmount));
                     }
                 }
             }
             else{
-                if (ELvl <= 0.0 || tickAge >= MAX_AGE) {
+                if (getEnergyLevel() <= 0.0 || tickAge >= MAX_AGE) {
                     // Drop minimal resources for old or low energy chickens
                     this.dropStack(new ItemStack(Items.FEATHER, 1));
                     this.dropStack(new ItemStack(Items.BONE, 1)); // Add bone drop for old age death
@@ -273,11 +338,11 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                     super.onDeath(source);
                     if (!this.getWorld().isClient) {
                         // Drop feathers based on energy
-                        int feathersAmount = (int) ((MaxFeathers) * (ELvl / 100.0));
+                        int feathersAmount = (int) ((MaxFeathers) * (getEnergyLevel() / 100.0));
                         this.dropStack(new ItemStack(Items.FEATHER, feathersAmount));
 
                         // Drop chicken meat based on energy
-                        int meatAmount = (int) ((MaxMeat) * (ELvl / 100.0));
+                        int meatAmount = (int) ((MaxMeat) * (getEnergyLevel() / 100.0));
                         this.dropStack(new ItemStack(Items.CHICKEN, meatAmount));
                     }
                 }
@@ -326,7 +391,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             }
 
             // Clamp the current energy level to the maximum cap
-            if (ELvl > MaxEnergy) {
+            if (getEnergyLevel() > MaxEnergy) {
                 updateEnergyLevel(MaxEnergy);
             }
 
@@ -335,13 +400,13 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 panicTicks--;
                 if (panicTicks == 0) {
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / MaxEnergy));
+                            .setBaseValue(Speed * (getEnergyLevel() / MaxEnergy));
                 }
             }
 
             // Handle energy loss from damage
             if (wasRecentlyHit) {
-                ELvl = Math.max(0.0, ELvl * 0.8);
+                ELvl = Math.max(0.0, getEnergyLevel() * 0.8);
                 wasRecentlyHit = false;
             }
 
@@ -350,11 +415,11 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
             if (isOnEnergySource) {
                 if (Math.random() < 0.2) { // 20% chance to gain energy
-                    updateEnergyLevel(Math.min(MaxEnergy, ELvl + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
+                    updateEnergyLevel(Math.min(MaxEnergy, getEnergyLevel() + (0.01 + Math.random() * 0.19))); // Gain 0.01 to 0.2 energy
                 }
             } else {
                 if (Math.random() < 0.5) { // 50% chance to lose energy
-                    updateEnergyLevel(Math.max(0.0, ELvl - (0.01 + Math.random() * 0.19))); // Lose 0.01 to 0.2 energy
+                    updateEnergyLevel(Math.max(0.0, getEnergyLevel() - (0.01 + Math.random() * 0.19))); // Lose 0.01 to 0.2 energy
                 }
             }
 
@@ -362,7 +427,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             if (tickAge > LIFESPAN) {
                 // Additional energy drain for old age
                 double ageFactor = (tickAge - LIFESPAN) / (double)(MAX_AGE - LIFESPAN);
-                updateEnergyLevel(Math.max(0.0, ELvl - (0.05 * ageFactor))); // More energy loss based on age
+                updateEnergyLevel(Math.max(0.0, getEnergyLevel() - (0.05 * ageFactor))); // More energy loss based on age
 
                 // Health deterioration with old age
                 if (Math.random() < 0.1 * ageFactor) {
@@ -371,12 +436,12 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             }
 
             // Health regeneration at max energy (only for chickens not in old age)
-            if (ELvl == MaxEnergy && this.getHealth() < this.getMaxHealth() && tickAge < LIFESPAN) {
+            if (getEnergyLevel() == MaxEnergy && this.getHealth() < this.getMaxHealth() && tickAge < LIFESPAN) {
                 this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
             }
 
             // Autonomous breeding behavior (only for chickens not in old age)
-            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown && tickAge < LIFESPAN) {
+            if (getEnergyLevel() >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown && tickAge < LIFESPAN) {
                 double searchRadius = 32.0;
 
                 List<CustomChickenEntity> mateCandidates = this.getWorld().getEntitiesByClass(
@@ -399,7 +464,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                 // If we found a mate candidate, move towards it
                 if (nearestMate != null) {
                     // Start moving towards the nearest chicken
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
+                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.getEnergyLevel() / MaxEnergy));
 
                     // If close enough (within 2 blocks)
                     if (minDistanceSquared < 4.0) {
@@ -415,13 +480,13 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             ticksSinceLastBreeding++;
 
             // Kill if energy is 0
-            if (ELvl <= 0.0) {
+            if (getEnergyLevel() <= 0.0) {
                 this.kill();
             } else {
                 // Update speed
                 if (panicTicks == 0) {
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / MaxEnergy));
+                            .setBaseValue(Speed * (getEnergyLevel() / MaxEnergy));
                 }
                 updateDescription(this);
             }
@@ -453,10 +518,10 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         child.MaxMeat = childAttributes.get(AttributeKey.MAX_MEAT);
         child.MaxFeathers = childAttributes.get(AttributeKey.MAX_FEATHERS);
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
-        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
+        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.getEnergyLevel() / 100.0));
 
-        parent1.ELvl -= parent1.ELvl * 0.4F;
-        parent2.ELvl -= parent2.ELvl * 0.4F;
+        parent1.ELvl -= parent1.getEnergyLevel() * 0.4F;
+        parent2.ELvl -= parent2.getEnergyLevel() * 0.4F;
         this.resetLoveTicks();
 
         influenceGlobalAttributes(child.getType());
@@ -473,7 +538,7 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         wasRecentlyHit = true;
         panicTicks = PANIC_DURATION;
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                .setBaseValue(Speed * (ELvl / MaxEnergy) * PANIC_SPEED_MULTIPLIER);
+                .setBaseValue(Speed * (getEnergyLevel() / MaxEnergy) * PANIC_SPEED_MULTIPLIER);
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
