@@ -47,7 +47,7 @@ public class CustomCowEntity extends CowEntity {
     private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     private MobAttributes mobAttributes;
-    private double Speed;
+    private static final TrackedData<Float> SPEED = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private double MinMeat;
     private double MinLeather;
     private int milkingCooldown;
@@ -72,15 +72,13 @@ public class CustomCowEntity extends CowEntity {
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double leather = global.getMaxLeather().orElse(0.0) * (0.98 + Math.random() * 0.1);
             this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.of(leather), Optional.empty(), Optional.empty(), Optional.empty());
-            this.dataTracker.set(TICK_AGE, getTickAge());
+            updateTickAge(0);
         }
 
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.mobAttributes.getMaxHealth());
-        this.Speed = this.mobAttributes.getMovementSpeed();
-        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
-        this.dataTracker.set(E_LVL, (float) this.mobAttributes.getEnergyLvl());
-
-
+        this.updateSpeed(this.mobAttributes.getMovementSpeed());
+        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.getSpeed());
+        updateEnergyLevel(this.mobAttributes.getEnergyLvl());
         this.dataTracker.set(MAX_MEAT, this.mobAttributes.getMaxMeat().map(Double::floatValue).orElse(0.0f));
         this.dataTracker.set(MAX_LEATHER, this.mobAttributes.getMaxLeather().map(Double::floatValue).orElse(0.0f));
         this.setMinMeat(1.0);
@@ -122,23 +120,19 @@ public class CustomCowEntity extends CowEntity {
         this.dataTracker.set(MAX_MEAT, nbt.getFloat("MaxMeat"));
         this.dataTracker.set(MAX_LEATHER, nbt.getFloat("MaxLeather"));
         this.dataTracker.set(TICK_AGE, nbt.getInt("tickAge"));
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.dataTracker.get(MAX_HP));
-    }
-
-    public void updateEnergyLevel(double newEnergyLevel) {
-        this.dataTracker.set(E_LVL, (float)newEnergyLevel);
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(getMaxHP());
     }
 
     private void updateDescription(CustomCowEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-            "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", getMaxHP()) +
-            "\nSpeed: " + String.format("%.3f", ent.Speed) +
+            "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", ent.getMaxHP()) +
+            "\nSpeed: " + String.format("%.3f", ent.getSpeed()) +
             "\nEnergy: " + String.format("%.3f", ent.getEnergyLevel()) +
-            "\nMax Meat: " + String.format("%.3f", getMaxMeat()) +
-            "\nMax Leather: " + String.format("%.3f", getMaxLeather())+
+            "\nMax Meat: " + String.format("%.3f", ent.getMaxMeat()) +
+            "\nMax Leather: " + String.format("%.3f", ent.getMaxLeather())+
             "\nCooldown: " + ent.milkingCooldown+
             "\nBreeding Cooldown: " + ent.breedingCooldown+
-            "\nAge: " + getTickAge())
+            "\nAge: " + ent.getTickAge())
         );
     }
 
@@ -146,12 +140,32 @@ public class CustomCowEntity extends CowEntity {
         return this.dataTracker.get(MAX_HP).doubleValue();
     }
 
+    public void updateMaxHP(double newMaxHP) {
+        this.dataTracker.set(MAX_HP, (float)newMaxHP);
+    }
+
+    public double getSpeed() {
+        return this.dataTracker.get(SPEED).doubleValue();
+    }
+
+    public void updateSpeed(double newSpeed) {
+        this.dataTracker.set(SPEED, (float)newSpeed);
+    }
+
     public double getEnergyLevel() {
         return this.dataTracker.get(E_LVL).doubleValue();
     }
 
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.dataTracker.set(E_LVL, (float)newEnergyLevel);
+    }
+
     public int getTickAge() {
         return this.dataTracker.get(TICK_AGE).intValue();
+    }
+
+    public void updateTickAge(int age) {
+        this.dataTracker.set(TICK_AGE, age);
     }
 
     public void setMinMeat(double minMeat)
@@ -184,6 +198,15 @@ public class CustomCowEntity extends CowEntity {
         return this.dataTracker.get(MAX_LEATHER);
     }
 
+    public void updateMaxEnergy(float newMaxEnergy)
+    {
+        this.dataTracker.set(MAX_ENERGY, newMaxEnergy);
+    }
+
+    public float getMaxEnergy() {
+        return this.dataTracker.get(MAX_ENERGY);
+    }
+
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
@@ -199,8 +222,8 @@ public class CustomCowEntity extends CowEntity {
             }
 
             if (this.isInLove()) {
-                if (getEnergyLevel() < this.dataTracker.get(MAX_ENERGY)) {
-                    updateEnergyLevel(Math.min(this.dataTracker.get(MAX_ENERGY), getEnergyLevel() + 10.0));
+                if (getEnergyLevel() < getMaxEnergy()) {
+                    updateEnergyLevel(Math.min(getMaxEnergy(), getEnergyLevel() + 10.0));
                     player.sendMessage(Text.of("The cow has gained energy! Current energy: " + String.format("%.1f", getEnergyLevel())), true);
 
                     if (!player.isCreative()) {
@@ -216,7 +239,7 @@ public class CustomCowEntity extends CowEntity {
             }
 
             if (getEnergyLevel() < 20.0) {
-                updateEnergyLevel(Math.min(this.dataTracker.get(MAX_ENERGY), getEnergyLevel() + 10.0));
+                updateEnergyLevel(Math.min(getMaxEnergy(), getEnergyLevel() + 10.0));
                 player.sendMessage(Text.of("This cow cannot breed due to low energy. Energy increased to: " + String.format("%.1f", getEnergyLevel())), true);
 
                 if (!player.isCreative()) {
@@ -249,7 +272,7 @@ public class CustomCowEntity extends CowEntity {
         panicTicks = PANIC_DURATION;
 
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-            .setBaseValue(Speed * (getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)) * PANIC_SPEED_MULTIPLIER);
+            .setBaseValue(getSpeed() * (getEnergyLevel() / getMaxEnergy()) * PANIC_SPEED_MULTIPLIER);
 
         if (!this.getWorld().isClient) {
             updateDescription(this);
@@ -272,8 +295,8 @@ public class CustomCowEntity extends CowEntity {
             this.forcedAge += delta;
             if (this.happyTicksRemaining == 0) {
                 this.happyTicksRemaining = 40;
-                this.dataTracker.set(MAX_ENERGY, 100.0F);
-                this.updateEnergyLevel(100.0f);
+                updateMaxEnergy(100.0f);
+                updateEnergyLevel(100.0f);
             }
         }
 
@@ -319,7 +342,7 @@ public class CustomCowEntity extends CowEntity {
         CustomCowEntity parent1 = this;
         CustomCowEntity parent2 = (CustomCowEntity) mate;
 
-        double inheritanceFactor = Math.min(parent1.getEnergyLevel(), parent2.getEnergyLevel()) / this.dataTracker.get(MAX_ENERGY);
+        double inheritanceFactor = Math.min(parent1.getEnergyLevel(), parent2.getEnergyLevel()) / getMaxEnergy();
 
         double childMaxHp = ((parent1.dataTracker.get(MAX_HP) + parent2.dataTracker.get(MAX_HP)) / 2) * inheritanceFactor;
         double childMinMeat = ((parent1.MinMeat + parent2.MinMeat) / 2) * inheritanceFactor;
@@ -342,7 +365,7 @@ public class CustomCowEntity extends CowEntity {
         child.updateEnergyLevel(childEnergy);
 
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.dataTracker.get(MAX_HP));
-        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)));
+        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.getSpeed() * (child.getEnergyLevel() / getMaxEnergy()));
 
         parent1.updateEnergyLevel(parent1.getEnergyLevel() - parent1.getEnergyLevel() * 0.4F);
         parent2.updateEnergyLevel(parent2.getEnergyLevel() - parent2.getEnergyLevel() * 0.4F);
@@ -361,27 +384,27 @@ public class CustomCowEntity extends CowEntity {
         if (!this.getWorld().isClient) {
 
             if(getTickAge() <= 4404){
-                this.dataTracker.set(MAX_ENERGY, (float)(10 * Math.log(5 * getTickAge() + 5)));
+                updateMaxEnergy((float)(10 * Math.log(5 * getTickAge() + 5)));
             } else if (getTickAge() < LIFESPAN) {
-                this.dataTracker.set(MAX_ENERGY, 100.0f);
+                updateMaxEnergy(100.0f);
             } else {
-                this.dataTracker.set(MAX_ENERGY, (float)(-(getTickAge() - LIFESPAN) / 16.0 + 100));
+                updateMaxEnergy((float)(-(getTickAge() - LIFESPAN) / 16.0 + 100));
             }
-            this.dataTracker.set(TICK_AGE, this.dataTracker.get(TICK_AGE) + 1);
+            updateTickAge(this.getTickAge() + 1);
 
             if (getTickAge() >= 4404 && this.isBaby()) {
                 growUp(220, true);
             }
 
-            if (getEnergyLevel() > this.dataTracker.get(MAX_ENERGY)) {
-                updateEnergyLevel(this.dataTracker.get(MAX_ENERGY));
+            if (getEnergyLevel() > getMaxEnergy()) {
+                updateEnergyLevel(getMaxEnergy());
             }
 
             if (panicTicks > 0) {
                 panicTicks--;
                 if (panicTicks == 0) {
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                        .setBaseValue(Speed * (getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)));
+                        .setBaseValue(getSpeed() * (getEnergyLevel() / getMaxEnergy()));
                 }
             }
 
@@ -402,7 +425,7 @@ public class CustomCowEntity extends CowEntity {
                 updateEnergyLevel(Math.max(0.0, getEnergyLevel() - (0.05 + Math.random() * 0.3)));
             }
 
-            if (getEnergyLevel() == this.dataTracker.get(MAX_ENERGY)) {
+            if (getEnergyLevel() == getMaxEnergy()) {
                 if (this.getHealth() < this.getMaxHealth()) {
                     this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
                 }
@@ -428,7 +451,7 @@ public class CustomCowEntity extends CowEntity {
                 }
 
                 if (nearestMate != null) {
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)));
+                    this.getNavigation().startMovingTo(nearestMate, this.getSpeed() * 5.0F * (this.getEnergyLevel() / getMaxEnergy()));
 
                     if (minDistanceSquared < 4.0) {
                         if (!this.isInLove() && !nearestMate.isInLove()) {
@@ -446,7 +469,7 @@ public class CustomCowEntity extends CowEntity {
             } else {
                 if (panicTicks == 0) {
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                        .setBaseValue(Speed * (getEnergyLevel() / this.dataTracker.get(MAX_ENERGY)));
+                        .setBaseValue(getSpeed() * (getEnergyLevel() / getMaxEnergy()));
                 }
                 updateDescription(this);
             }
