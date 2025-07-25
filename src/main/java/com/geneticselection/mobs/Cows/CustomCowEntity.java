@@ -140,10 +140,6 @@ public class CustomCowEntity extends CowEntity {
         return this.dataTracker.get(MAX_HP).doubleValue();
     }
 
-    public void updateMaxHP(double newMaxHP) {
-        this.dataTracker.set(MAX_HP, (float)newMaxHP);
-    }
-
     public double getSpeed() {
         return this.dataTracker.get(SPEED).doubleValue();
     }
@@ -154,10 +150,6 @@ public class CustomCowEntity extends CowEntity {
 
     public double getEnergyLevel() {
         return this.dataTracker.get(E_LVL).doubleValue();
-    }
-
-    public void updateEnergyLevel(double newEnergyLevel) {
-        this.dataTracker.set(E_LVL, (float)newEnergyLevel);
     }
 
     public int getTickAge() {
@@ -198,13 +190,21 @@ public class CustomCowEntity extends CowEntity {
         return this.dataTracker.get(MAX_LEATHER);
     }
 
+    public float getMaxEnergy() {
+        return this.dataTracker.get(MAX_ENERGY);
+    }
+
+    public void updateMaxHP(double newMaxHP) {
+        this.dataTracker.set(MAX_HP, (float)newMaxHP);
+    }
+
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.dataTracker.set(E_LVL, (float)newEnergyLevel);
+    }
+
     public void updateMaxEnergy(float newMaxEnergy)
     {
         this.dataTracker.set(MAX_ENERGY, newMaxEnergy);
-    }
-
-    public float getMaxEnergy() {
-        return this.dataTracker.get(MAX_ENERGY);
     }
 
     @Override
