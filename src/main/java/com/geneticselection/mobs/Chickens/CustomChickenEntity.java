@@ -44,8 +44,6 @@ import static com.geneticselection.genetics.ChildInheritance.*;
 public class CustomChickenEntity extends ChickenEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
     private double Speed;
-    private double MaxMeat;
-    private double MaxFeathers;
     private int breedingCooldown;
 
     private int panicTicks = 0;
@@ -61,6 +59,9 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomChickenEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomChickenEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomChickenEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Float> MAX_MEAT = DataTracker.registerData(CustomChickenEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_FEATHERS = DataTracker.registerData(CustomChickenEntity.class, TrackedDataHandlerRegistry.FLOAT);
+
 
     public CustomChickenEntity(EntityType<? extends ChickenEntity> entityType, World world) {
         super(entityType, world);
@@ -83,12 +84,8 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
         updateEnergyLevel(this.mobAttributes.getEnergyLvl());
 
-        this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
-            this.MaxMeat = maxMeat;
-        });
-        this.mobAttributes.getMaxFeathers().ifPresent(maxFeathers -> {
-            this.MaxFeathers = maxFeathers;
-        });
+        this.dataTracker.set(MAX_MEAT, this.mobAttributes.getMaxMeat().map(Double::floatValue).orElse(0.0f));
+        this.dataTracker.set(MAX_FEATHERS, this.mobAttributes.getMaxFeather().map(Double::floatValue).orElse(0.0f));
         this.breedingCooldown = 3000 + (int)((1 - (getEnergyLevel() / 100.0)) * 2000) + random.nextInt(2001);
 
 
@@ -105,8 +102,6 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         builder.add(TICK_AGE, 0);
     }
 
-    public double getSpeed() { return this.Speed; }
-    public double getMaxFeathers() { return this.MaxFeathers; }
     public int getBreedingCooldown() { return this.breedingCooldown; }
 
     private void updateDescription(CustomCowEntity ent) {
@@ -115,18 +110,17 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             "\nSpeed: " + String.format("%.3f", getSpeed()) +
             "\nEnergy: " + String.format("%.3f", ent.getEnergyLevel()) +
             "\nMax Meat: " + String.format("%.3f", getMaxMeat()) +
-            "\nMax Leather: " + String.format("%.3f", getMaxLeather())+
+            "\nMax Feather: " + String.format("%.3f", getMaxFeather())+
             // "\nBreeding Cooldown: " + ent.breedingCooldown+
             "\nAge: " + getTickAge())
         );
     }
 
+    public double getSpeed() { return this.Speed; }
+    public double getMaxFeathers() { return this.dataTracker.get(MAX_FEATHERS); }
+
     public double getMaxHP() {
         return this.dataTracker.get(MAX_HP).doubleValue();
-    }
-
-    public void updateMaxHP(double newMaxHP) {
-        this.dataTracker.set(MAX_HP, (float)newMaxHP);
     }
 
     public double getEnergyLevel() {
@@ -137,22 +131,12 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         this.dataTracker.set(E_LVL, newEnergyLevel);
     }
 
-    public void updateMaxEnergy(float newMaxEnergy)
-    {
-        this.dataTracker.set(MAX_ENERGY, newMaxEnergy);
-    }
-
     public float getMaxEnergy() {
         return this.dataTracker.get(MAX_ENERGY);
     }
 
     public int getTickAge() {
         return this.dataTracker.get(TICK_AGE).intValue();
-    }
-
-    public void setMinMeat(double minMeat)
-    {
-        this.MinMeat = minMeat;
     }
 
     public void setMaxMeat(float maxMeat)
@@ -165,29 +149,46 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
         return this.dataTracker.get(MAX_MEAT);
     }
 
-    public void setMinLeather(double minLeather)
+    public void setMaxFeather(float maxFeather)
     {
-        this.MinLeather = minLeather;
+        this.dataTracker.set(MAX_FEATHERS, maxFeather);
     }
 
-    public void setMaxLeather(float maxLeather)
+    public float getMaxFeather()
     {
-        this.dataTracker.set(MAX_LEATHER, maxLeather);
+        return this.dataTracker.get(MAX_FEATHERS);
     }
 
-    public float getMaxLeather()
-    {
-        return this.dataTracker.get(MAX_LEATHER);
+    public void updateMaxHP(double newMaxHP) {
+        this.dataTracker.set(MAX_HP, (float)newMaxHP);
     }
 
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.dataTracker.set(E_LVL, (float)newEnergyLevel);
+    }
+
+    public void updateMaxEnergy(float newMaxEnergy)
+    {
+        this.dataTracker.set(MAX_ENERGY, newMaxEnergy);
+    }
+
+    public void updateMaxMeat(float newMaxMeat)
+    {
+        this.dataTracker.set(MAX_MEAT, newMaxMeat);
+    }
+
+    public void updateMaxFeathers(float newMaxFeather)
+    {
+        this.dataTracker.set(MAX_FEATHERS, newMaxFeather);
+    }
 
     @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
-        nbt.putDouble("MaxMeat", this.MaxMeat);
-        nbt.putDouble("MaxFeathers", this.MaxFeathers);
-        nbt.putFloat("MaxHp", getMaxHP());
-        nbt.putFloat("ELvl", this.getEnergyLevel());
+        nbt.putDouble("MaxMeat", this.getMaxMeat());
+        nbt.putDouble("MaxFeathers", this.getMaxFeather());
+        nbt.putDouble("MaxHp", this.getMaxHP());
+        nbt.putDouble("ELvl", this.getEnergyLevel());
         nbt.putFloat("MaxEnergy", getMaxEnergy());
         nbt.putInt("TickAge", this.getTickAge());
     }
@@ -195,18 +196,12 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
-        this.MaxMeat = nbt.getDouble("MaxMeat");
-        this.MaxFeathers = nbt.getDouble("MaxFeathers");
+        this.updateMaxMeat(nbt.getFloat("MaxMeat"));
+        this.updateMaxFeathers(nbt.getFloat("MaxFeathers"));
         this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
         this.dataTracker.set(E_LVL, nbt.getFloat("ELvl"));
         this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
         this.dataTracker.set(TICK_AGE, nbt.getInt("TickAge"));
-    }
-
-    public void updateEnergyLevel(double newEnergyLevel) {
-        if (!this.getWorld().isClient) {
-            this.dataTracker.set(E_LVL, (float)newEnergyLevel);
-        }
     }
 
     @Override
@@ -226,11 +221,11 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
 
     private void updateDescription(CustomChickenEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-                "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
+                "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.getMaxHP()) +
                 "\nSpeed: " + String.format("%.2f", ent.Speed) +
-                "\nEnergy: " + String.format("%.1f", getEnergyLevel()) + "/" + String.format("%.1f", ent.MaxEnergy) +
-                "\nMax Meat: " + String.format("%.1f", ent.MaxMeat) +
-                "\nFeathers: " + String.format("%.1f", ent.MaxFeathers) +
+                "\nEnergy: " + String.format("%.1f", getEnergyLevel()) + "/" + String.format("%.1f", ent.getMaxEnergy()) +
+                "\nMax Meat: " + String.format("%.1f", ent.getMaxMeat()) +
+                "\nFeathers: " + String.format("%.1f", ent.getMaxFeathers()) +
                 "\nBreeding Cooldown: " + ent.breedingCooldown +
                 "\nAge: " + ent.tickAge + "/" + MAX_AGE
         ));
@@ -276,8 +271,9 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
             this.forcedAge += delta;
             if (this.happyTicksRemaining == 0) {
                 this.happyTicksRemaining = 40;
-                this.MaxEnergy = 100.0F;
-                this.ELvl = 100.0F;
+
+                updateMaxEnergy(100.0F);
+                updateEnergyLevel(100.0F);
             }
         }
 
@@ -320,11 +316,11 @@ public class CustomChickenEntity extends ChickenEntity implements AttributeCarri
                     super.onDeath(source);
                     if (!this.getWorld().isClient) {
                         // Drop feathers based on energy
-                        int feathersAmount = (int) ((MaxFeathers) * (getEnergyLevel() / 100.0));
+                        int feathersAmount = (int) ((getMaxFeather()) * (getEnergyLevel() / 100.0));
                         this.dropStack(new ItemStack(Items.FEATHER, feathersAmount));
 
                         // Drop chicken meat based on energy
-                        int meatAmount = (int) ((MaxMeat) * (getEnergyLevel() / 100.0));
+                        int meatAmount = (int) ((getMaxMeat()) * (getEnergyLevel() / 100.0));
                         this.dropStack(new ItemStack(Items.COOKED_CHICKEN, meatAmount));
                     }
                 }
