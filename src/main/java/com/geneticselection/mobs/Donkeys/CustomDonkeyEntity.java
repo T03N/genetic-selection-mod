@@ -5,6 +5,7 @@ import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
 import com.geneticselection.mobs.Camels.CustomCamelEntity;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
@@ -33,8 +34,6 @@ import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
-    private double Speed;
-    private double MaxLeather;
     private int breedingCooldown;
 
     private static int LIFESPAN = 35000;
@@ -49,6 +48,9 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
     private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Float> MAX_LEATHER = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_MEAT = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> SPEED = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
 
     public CustomDonkeyEntity(EntityType<? extends DonkeyEntity> entityType, World world) {
         super(entityType, world);
@@ -62,53 +64,101 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
             this.mobAttributes = new MobAttributes(speed, health, energy, Optional.empty(), Optional.of(leather), Optional.empty(), Optional.empty(), Optional.empty());
         }
 
-        this.MaxHp = this.mobAttributes.getMaxHealth();
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        this.setHealth((float)this.MaxHp);
-        this.Speed = this.mobAttributes.getMovementSpeed();
-        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
-        this.ELvl = this.mobAttributes.getEnergyLvl();
+        this.updateMaxHP(this.mobAttributes.getMaxHealth());
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getMaxHP());
+        this.setHealth((float)this.getMaxHP());
+        this.updateSpeed(this.mobAttributes.getMovementSpeed());
+        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.getSpeed());
+        this.updateEnergyLevel(this.mobAttributes.getEnergyLvl());
 
         this.mobAttributes.getMaxLeather().ifPresent(maxLeather -> {
-            this.MaxLeather = maxLeather;
+            this.setMaxLeather(maxLeather);
         });
-        this.breedingCooldown = 3000 + (int)((1 - (ELvl / 100.0)) * 2000) + random.nextInt(2001);
+        this.breedingCooldown = 3000 + (int)((1 - (getMaxEnergy() / 100.0)) * 2000) + random.nextInt(2001);
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
 
-    public void updateEnergyLevel(double newEnergyLevel) {
-        this.ELvl = newEnergyLevel;
-
-        // Sync energy level with server if needed
-        if (!this.getWorld().isClient) {
-            this.syncEnergyLevelToClient();
-        }
+    public double getMaxHP() {
+        return this.dataTracker.get(MAX_HP).doubleValue();
     }
 
-    public double getEnergyLevel(){
-        return this.ELvl;
+    public double getSpeed() {
+        return this.dataTracker.get(SPEED).doubleValue();
+    }
+
+    public void updateSpeed(double newSpeed) {
+        this.dataTracker.set(SPEED, (float)newSpeed);
+    }
+
+    public double getEnergyLevel() {
+        return this.dataTracker.get(E_LVL).doubleValue();
+    }
+
+    public int getTickAge() {
+        return this.dataTracker.get(TICK_AGE).intValue();
+    }
+
+    public void updateTickAge(int age) {
+        this.dataTracker.set(TICK_AGE, age);
+    }
+
+    public void setMaxMeat(float maxMeat)
+    {
+        this.dataTracker.set(MAX_MEAT, maxMeat);
+    }
+
+    public float getMaxMeat()
+    {
+        return this.dataTracker.get(MAX_MEAT);
+    }
+
+    public void setMaxLeather(float maxLeather)
+    {
+        this.dataTracker.set(MAX_LEATHER, maxLeather);
+    }
+
+    public float getMaxLeather()
+    {
+        return this.dataTracker.get(MAX_LEATHER);
+    }
+
+    public float getMaxEnergy() {
+        return this.dataTracker.get(MAX_ENERGY);
+    }
+
+    public void updateMaxHP(double newMaxHP) {
+        this.dataTracker.set(MAX_HP, (float)newMaxHP);
+    }
+
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.dataTracker.set(E_LVL, (float)newEnergyLevel);
+    }
+
+    public void updateMaxEnergy(float newMaxEnergy)
+    {
+        this.dataTracker.set(MAX_ENERGY, newMaxEnergy);
     }
 
     private void syncEnergyLevelToClient() {
         PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
         data.writeInt(this.getId());  // Send entity ID
-        data.writeDouble(this.ELvl);  // Send the updated energy level
+        data.writeDouble(this.getEnergyLevel());  // Send the updated energy level
     }
 
     private void updateDescription(CustomDonkeyEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-                "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
-                "\nSpeed: " + String.format("%.2f", ent.Speed) +
-                "\nEnergy: " + String.format("%.1f", ent.ELvl) +
-                "\nMax Leather: " + String.format("%.1f", ent.MaxLeather)+
+                "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.getMaxHP()) +
+                "\nSpeed: " + String.format("%.2f", ent.getSpeed()) +
+                "\nEnergy: " + String.format("%.1f", ent.getEnergyLevel()) +
+                "\nMax Leather: " + String.format("%.1f", ent.getMaxLeather())+
                 "\nBreeding Cooldown: " + ent.breedingCooldown+
-                "\nAge: " + ent.tickAge)
+                "\nAge: " + ent.getTickAge())
         );
     }
 
     public void setMaxLeather(double maxLeather) {
-        this.MaxLeather = maxLeather;
+        this.setMaxLeather(maxLeather);
     }
 
     @Override
@@ -116,7 +166,7 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
         ItemStack itemStack = player.getStackInHand(hand);
 
         if (itemStack.isOf(Items.HAY_BLOCK)) {
-            if (ELvl < 20.0) {
+            if (getEnergyLevel() < 20.0) {
                 player.sendMessage(Text.of("This donkey cannot breed because it has low energy."), true);
                 return ActionResult.FAIL;
             }
@@ -139,14 +189,14 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
             return;
         }
 
-        if (ELvl <= 0.0) {
+        if (getEnergyLevel() <= 0.0) {
             // Drop minimal resources
             this.dropStack(new ItemStack(Items.LEATHER, 1));
         } else {
             super.onDeath(source);
             if (!this.getWorld().isClient) {
                 // Drop leather based on energy
-                int leatherAmount = (int) ((MaxLeather) * (ELvl / 100.0));
+                int leatherAmount = (int) ((getMaxLeather()) * (getEnergyLevel() / 100.0));
                 this.dropStack(new ItemStack(Items.LEATHER, leatherAmount));
             }
         }
