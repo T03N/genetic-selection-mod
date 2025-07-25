@@ -355,7 +355,7 @@ public class CustomCowEntity extends CowEntity {
 
         CustomCowEntity child = new CustomCowEntity(ModEntities.CUSTOM_COW, serverWorld);
 
-        child.dataTracker.set(MAX_HP, (float)childMaxHp);
+        child.updateMaxHP((float)childMaxHp);
         child.MinMeat = childMinMeat;
         child.dataTracker.set(MAX_MEAT, (float)childMaxMeat);
         child.MinLeather = childMinLeather;
