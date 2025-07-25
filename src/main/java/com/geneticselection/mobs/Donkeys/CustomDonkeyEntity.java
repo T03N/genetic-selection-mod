@@ -45,12 +45,11 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
 
     private static final TrackedData<Float>
         MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Float> MAX_LEATHER = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> MAX_MEAT = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> SPEED = DataTracker.registerData(CustomCowEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomDonkeyEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomDonkeyEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomDonkeyEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Float> MAX_LEATHER = DataTracker.registerData(CustomDonkeyEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> SPEED = DataTracker.registerData(CustomDonkeyEntity.class, TrackedDataHandlerRegistry.FLOAT);
 
     public CustomDonkeyEntity(EntityType<? extends DonkeyEntity> entityType, World world) {
         super(entityType, world);
@@ -101,16 +100,6 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
 
     public void updateTickAge(int age) {
         this.dataTracker.set(TICK_AGE, age);
-    }
-
-    public void setMaxMeat(float maxMeat)
-    {
-        this.dataTracker.set(MAX_MEAT, maxMeat);
-    }
-
-    public float getMaxMeat()
-    {
-        return this.dataTracker.get(MAX_MEAT);
     }
 
     public void setMaxLeather(float maxLeather)
@@ -210,22 +199,22 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
         if (!this.getWorld().isClient) {
 
             // Max energy is determined by age
-            if(tickAge <= 4404){
-                MaxEnergy = 10 * Math.log(5 * tickAge + 5);
-            } else if (tickAge > 4404 && tickAge < LIFESPAN) {
-                MaxEnergy = 100;
+            if(getTickAge() <= 4404){
+                updateMaxEnergy((float)(10 * Math.log(5 * getTickAge() + 5)));
+            } else if (getTickAge() > 4404 && getTickAge() < LIFESPAN) {
+                updateMaxEnergy(100.0F);
             } else {
-                MaxEnergy = -(tickAge - LIFESPAN) / 16.0 + 100;
+                updateMaxEnergy((float)(-(getTickAge() - LIFESPAN) / 16.0 + 100));
             }
-            tickAge++;
+            updateTickAge(getTickAge() + 1);
 
-            if (tickAge >= 4404 && this.isBaby()) {
+            if (getTickAge() >= 4404 && this.isBaby()) {
                 growUp(220, true);
             }
 
             // Clamp the current energy level to the maximum cap
-            if (ELvl > MaxEnergy) {
-                updateEnergyLevel(MaxEnergy);
+            if (getEnergyLevel() > getMaxEnergy()) {
+                updateEnergyLevel(getMaxEnergy());
             }
 
             // Handle panic state
@@ -234,14 +223,14 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
                 if (panicTicks == 0) {
                     // Reset speed back to normal when panic ends
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / MaxEnergy));
+                            .setBaseValue(getSpeed() * (getEnergyLevel() / getMaxEnergy()));
                 }
             }
 
             // Handle energy loss if the cow was recently hit
             if (wasRecentlyHit) {
                 // Reduce energy by 20% of its current level
-                updateEnergyLevel(Math.max(0.0, ELvl * 0.8));
+                updateEnergyLevel(Math.max(0.0, getEnergyLevel() * 0.8));
                 wasRecentlyHit = false; // Reset the flag after applying the energy loss
             }
 
@@ -251,22 +240,22 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
             // Adjust energy level randomly based on whether the cow is on grass
             if (isOnGrass) {
                 if (Math.random() < 0.3) { // 30% chance to gain energy
-                    updateEnergyLevel(Math.min(100.0, ELvl + (0.1 + Math.random() * 0.75))); // Gain 0.1 to 0.75 energy
+                    updateEnergyLevel(Math.min(100.0, getEnergyLevel() + (0.1 + Math.random() * 0.75))); // Gain 0.1 to 0.75 energy
                 }
             }
 
             if (Math.random() < 0.5) { // 50% chance to lose energy
-                updateEnergyLevel(Math.max(0.0, ELvl - (0.05 + Math.random() * 0.3))); // Lose 0.05 to 0.3 energy
+                updateEnergyLevel(Math.max(0.0, getEnergyLevel() - (0.05 + Math.random() * 0.3))); // Lose 0.05 to 0.3 energy
             }
 
             // Check if energy is 100 and regenerate health if not at max
-            if (ELvl == MaxEnergy) {
+            if (getEnergyLevel() == getMaxEnergy()) {
                 if (this.getHealth() < this.getMaxHealth()) {
                     this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F)); // Regenerate 0.5 HP per second
                 }
             }
 
-            if (ELvl >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown) {
+            if (getEnergyLevel() >= 90.0 && !isBaby() && ticksSinceLastBreeding >= breedingCooldown) {
                 double searchRadius = 32.0;
 
                 List<CustomDonkeyEntity> mateCandidates = this.getWorld().getEntitiesByClass(
@@ -289,7 +278,7 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
                 // If we found a mate candidate, move towards it
                 if (nearestMate != null) {
                     // Start moving towards the nearest cow; adjust speed as needed
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / MaxEnergy));
+                    this.getNavigation().startMovingTo(nearestMate, this.getSpeed() * 5.0F * (this.getEnergyLevel() / getMaxEnergy()));
 
                     // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
                     if (minDistanceSquared < 4.0) {
@@ -305,13 +294,13 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
             ticksSinceLastBreeding++;
 
             // If energy reaches 0, kill the cow
-            if (ELvl <= 0.0) {
+            if (getEnergyLevel() <= 0.0) {
                 this.kill(); // This makes the cow die
             } else {
                 // Update attributes dynamically if energy is greater than 0
                 if (panicTicks == 0) { // Only update speed if not in panic mode
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / MaxEnergy));
+                            .setBaseValue(getSpeed() * (getEnergyLevel() / getMaxEnergy()));
                 }
 
                 // Update the description with the new energy level
@@ -322,34 +311,33 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
 
     @Override
     public CustomDonkeyEntity createChild(ServerWorld serverWorld, PassiveEntity mate) {
-        if (!(mate instanceof CustomDonkeyEntity)) {
+        if (!(mate instanceof CustomDonkeyEntity))
             return (CustomDonkeyEntity) EntityType.DONKEY.create(serverWorld);
-        }
 
         CustomDonkeyEntity parent1 = this;
         CustomDonkeyEntity parent2 = (CustomDonkeyEntity) mate;
 
-        MobAttributes attr1 = parent1.mobAttributes;
-        MobAttributes attr2 = parent2.mobAttributes;
+        double inheritanceFactor = Math.min(parent1.getEnergyLevel(), parent2.getEnergyLevel()) / getMaxEnergy();
 
-        MobAttributes childAttributes = inheritAttributes(attr1, attr2);
+        double childMaxHp = ((parent1.getMaxHP() + parent2.getMaxHP()) / 2) * inheritanceFactor;
+        double childMaxLeather = ((parent1.getMaxLeather() + parent2.getMaxLeather()) / 2) * inheritanceFactor;
+        int childBreedingCooldown = (int) ((
+			(double) (parent1.breedingCooldown + parent2.breedingCooldown) / 2) * (1 / inheritanceFactor));
+        double childEnergy = ((parent1.getEnergyLevel() + parent2.getEnergyLevel()) / 2) * inheritanceFactor;
 
         CustomDonkeyEntity child = new CustomDonkeyEntity(ModEntities.CUSTOM_DONKEY, serverWorld);
 
-        child.mobAttributes = childAttributes;
-        applyAttributes(child, childAttributes);
+        child.updateMaxHP((float)childMaxHp);
+        child.dataTracker.set(MAX_LEATHER, (float)childMaxLeather);
+        child.breedingCooldown = childBreedingCooldown;
+        child.updateEnergyLevel(childEnergy);
 
-        child.MaxHp = childAttributes.getMaxHealth();
-        child.ELvl = childAttributes.getEnergyLvl();
-        child.MaxLeather = childAttributes.get(AttributeKey.MAX_LEATHER);
-        child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
-        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
+        child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.dataTracker.get(MAX_HP));
+        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.getSpeed() * (child.getEnergyLevel() / getMaxEnergy()));
 
-        parent1.ELvl -= parent1.ELvl * 0.4F;
-        parent2.ELvl -= parent2.ELvl * 0.4F;
+        parent1.updateEnergyLevel(parent1.getEnergyLevel() - parent1.getEnergyLevel() * 0.4F);
+        parent2.updateEnergyLevel(parent2.getEnergyLevel() - parent2.getEnergyLevel() * 0.4F);
         this.resetLoveTicks();
-
-        influenceGlobalAttributes(child.getType());
 
         if (!this.getWorld().isClient)
             updateDescription(child);
@@ -363,13 +351,13 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
         wasRecentlyHit = true;
         panicTicks = PANIC_DURATION;
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                .setBaseValue(Speed * (ELvl / 100.0) * PANIC_SPEED_MULTIPLIER);
+                .setBaseValue(getSpeed() * (getEnergyLevel() / 100.0) * PANIC_SPEED_MULTIPLIER);
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
 
     @Override
     public void applyCustomAttributes(MobAttributes attributes) {
-        attributes.getMaxLeather().ifPresent(leather -> MaxLeather = leather);
+        attributes.getMaxLeather().ifPresent(leather -> setMaxLeather(leather.floatValue()));
     }
 }
