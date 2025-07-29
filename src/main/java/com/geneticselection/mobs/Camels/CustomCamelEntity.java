@@ -116,6 +116,25 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
         builder.add(TICK_AGE, 0);
     }
 
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putFloat("MaxHp", this.dataTracker.get(MAX_HP));
+        nbt.putFloat("ELvl", this.dataTracker.get(E_LVL));
+        nbt.putFloat("MaxEnergy", this.dataTracker.get(MAX_ENERGY));
+        nbt.putInt("tickAge", this.dataTracker.get(TICK_AGE));
+    }
+
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
+        this.dataTracker.set(E_LVL, nbt.getFloat("ELvl"));
+        this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
+        this.dataTracker.set(TICK_AGE, nbt.getInt("tickAge"));
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.dataTracker.get(MAX_HP));
+    }
+
     public float getMaxHpTracked() { return this.dataTracker.get(MAX_HP); }
     public double getEnergyLevel() {
         return this.dataTracker.get(E_LVL).doubleValue();
@@ -701,27 +720,5 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
     public void applyCustomAttributes(MobAttributes attributes) {
         // This is from the AttributeCarrier interface
         // We can optionally add custom implementation here
-    }
-
-    @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt);
-        nbt.putDouble("MaxMeat", this.MaxMeat);
-        nbt.putDouble("MaxLeather", this.MaxLeather);
-        nbt.putFloat("MaxHp", this.getMaxHpTracked());
-        nbt.putFloat("E_LVL", (float)this.getEnergyLevel());
-        nbt.putFloat("MaxEnergy", this.getMaxEnergy());
-        nbt.putInt("TickAge", this.getTickAge());
-    }
-
-    @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
-        super.readCustomDataFromNbt(nbt);
-        this.MaxMeat = nbt.getDouble("MaxMeat");
-        this.MaxLeather = nbt.getDouble("MaxLeather");
-        this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
-        this.dataTracker.set(E_LVL, nbt.getFloat("E_LVL"));
-        this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
-        this.dataTracker.set(TICK_AGE, nbt.getInt("TickAge"));
     }
 }

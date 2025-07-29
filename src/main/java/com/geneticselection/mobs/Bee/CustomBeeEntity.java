@@ -42,10 +42,10 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
     private boolean wasRecentlyHit = false;
 
     private static final TrackedData<Float>
-        MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
+        MAX_HP = DataTracker.registerData(CustomBeeEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomBeeEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomBeeEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomBeeEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public CustomBeeEntity(EntityType<? extends BeeEntity> entityType, World world) {
         super(entityType, world);
