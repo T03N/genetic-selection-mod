@@ -118,11 +118,11 @@ public class CustomFoxEntity extends FoxEntity {
         }
 
         // Initialize instance-specific stats
-        this.MaxEnergy = 10.0; // Start low
-        this.ELvl = this.mobAttributes.getEnergyLvl(); // Initialize from base default
+        this.updateMaxEnergy((float)10.0); // Start low
+        this.updateEnergyLevel(this.mobAttributes.getEnergyLvl()); // Initialize from base default
         this.breedingCooldown = 4000 + random.nextInt(4000); // Default 3-6 mins cooldown
         this.ticksSinceLastBreeding = 0;
-        this.tickAge = 0;
+        this.updateTickAge(0);
         this.bonusAttack = 0.0;
         this.bonusHealth = 0.0;
         this.bonusSpeed = 0.0;
@@ -139,7 +139,7 @@ public class CustomFoxEntity extends FoxEntity {
     // Helper to initialize from global attributes
     private void initFromGlobalAttributes(EntityType<?> entityType) {
         this.mobAttributes = GlobalAttributesManager.getAttributes(entityType);
-        this.MaxHp = this.mobAttributes.getMaxHealth(); // Store base value
+        this.updateMaxEnergy(this.mobAttributes.getMaxHealth()); // Store base value
         this.Speed = this.mobAttributes.getMovementSpeed(); // Store base value
     }
 
@@ -213,49 +213,38 @@ public class CustomFoxEntity extends FoxEntity {
         }
     }
 
-    // --- NBT Saving/Loading ---
-    // Save only INSTANCE-SPECIFIC custom data + call super
     @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt); // Saves vanilla Fox data (Type, Flags, Trusted UUIDs, Held Item)
-
-        // Custom instance data
-        nbt.putDouble("ELvl", this.ELvl);
-        nbt.putDouble("MaxEnergy", this.MaxEnergy);
+        super.writeCustomDataToNbt(nbt);
+        nbt.putFloat("MaxHp", this.dataTracker.get(MAX_HP));
+        nbt.putFloat("ELvl", this.dataTracker.get(E_LVL));
+        nbt.putFloat("MaxEnergy", this.dataTracker.get(MAX_ENERGY));
+        nbt.putInt("tickAge", this.dataTracker.get(TICK_AGE));
         nbt.putInt("BreedingCooldown", this.breedingCooldown);
-        nbt.putInt("TickAge", this.tickAge);
         nbt.putInt("TicksSinceLastBreeding", this.ticksSinceLastBreeding);
         nbt.putDouble("BonusAttack", this.bonusAttack);
         nbt.putDouble("BonusHealth", this.bonusHealth);
         nbt.putDouble("BonusSpeed", this.bonusSpeed);
         nbt.putInt("KillCount", this.killCount);
-        // Base inherited stats (MaxHp, Speed) are stored in mobAttributes, no need to save per entity
     }
 
-    // Load only INSTANCE-SPECIFIC custom data + call super
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
-        // Ensure mobAttributes is initialized before loading super or applying bonuses
-        if (this.mobAttributes == null) {
-            initFromGlobalAttributes(this.getType());
-        }
+        super.readCustomDataFromNbt(nbt);
+        this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
+        this.dataTracker.set(E_LVL, nbt.getFloat("ELvl"));
+        this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
+        this.dataTracker.set(TICK_AGE, nbt.getInt("tickAge"));
 
-        super.readCustomDataFromNbt(nbt); // Loads vanilla Fox data
-
-        // Custom instance data
-        this.ELvl = nbt.getDouble("ELvl");
-        this.MaxEnergy = nbt.getDouble("MaxEnergy");
         this.breedingCooldown = nbt.getInt("BreedingCooldown");
-        this.tickAge = nbt.getInt("TickAge");
         this.ticksSinceLastBreeding = nbt.getInt("TicksSinceLastBreeding");
         this.bonusAttack = nbt.getDouble("BonusAttack");
         this.bonusHealth = nbt.getDouble("BonusHealth");
         this.bonusSpeed = nbt.getDouble("BonusSpeed");
         this.killCount = nbt.getInt("KillCount");
 
-        // Re-apply attributes after loading instance data
-        applyBonuses();
-        if (!this.getWorld().isClient) updateDescription(this);
+
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(getMaxHP());
     }
 
     // --- Description Update ---
@@ -272,8 +261,8 @@ public class CustomFoxEntity extends FoxEntity {
             "HP: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", currentMaxHp) +
                 " | Atk: " + String.format("%.2f", currentAttack) +
                 "\nSpd: " + String.format("%.3f", currentSpeed) + // Show current speed influenced by energy
-                " | Energy: " + String.format("%.1f", ent.ELvl) + "/" + String.format("%.1f", ent.MaxEnergy) +
-                "\nAge: " + String.format("%.1f", ent.tickAge / 24000.0) + "d" +
+                " | Energy: " + String.format("%.1f", ent.getEnergyLevel()) + "/" + String.format("%.1f", ent.getMaxEnergy()) +
+                "\nAge: " + String.format("%.1f", ent.getTickAge() / 24000.0) + "d" +
                 " | Kills: " + ent.killCount +
                 "\nBreed CD: " + String.format("%.1f", remainingBreedCDTicks / 20.0) + "s" +
                 (ent.isSitting() ? " | Sitting" : "") +
@@ -282,21 +271,37 @@ public class CustomFoxEntity extends FoxEntity {
     }
 
     // --- Energy Management ---
-    // Update energy level, clamping and updating description
-    public void updateEnergyLevel(double newEnergyLevel) {
-        double previousELvl = this.ELvl;
-        // Ensure MaxEnergy has a non-zero value before clamping
-        double currentMaxEnergy = Math.max(1.0, this.MaxEnergy); // Use at least 1.0
-        this.ELvl = Math.max(0.0, Math.min(newEnergyLevel, currentMaxEnergy));
-
-        if (!this.getWorld().isClient && Math.abs(this.ELvl - previousELvl) > 0.01) {
-            updateDescription(this);
-        }
+    public double getMaxHP() {
+        return this.dataTracker.get(MAX_HP).doubleValue();
     }
 
-    // Getter used by breeding logic, potentially external systems
     public double getEnergyLevel() {
-        return this.ELvl;
+        return this.dataTracker.get(E_LVL).doubleValue();
+    }
+
+    public int getTickAge() {
+        return this.dataTracker.get(TICK_AGE).intValue();
+    }
+
+    public void updateTickAge(int age) {
+        this.dataTracker.set(TICK_AGE, age);
+    }
+
+    public float getMaxEnergy() {
+        return this.dataTracker.get(MAX_ENERGY);
+    }
+
+    public void updateMaxHP(double newMaxHP) {
+        this.dataTracker.set(MAX_HP, (float)newMaxHP);
+    }
+
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.dataTracker.set(E_LVL, (float)newEnergyLevel);
+    }
+
+    public void updateMaxEnergy(float newMaxEnergy)
+    {
+        this.dataTracker.set(MAX_ENERGY, newMaxEnergy);
     }
 
     // --- Core Logic Tick ---
@@ -321,23 +326,35 @@ public class CustomFoxEntity extends FoxEntity {
             }
 
             // Dynamic Max Energy based on Age (similar curve to wolf)
-            if (tickAge <= 24000) { MaxEnergy = 10.0 + 90.0 * (tickAge / 24000.0); } // Up to 1 day
-            else if (tickAge <= 72000) { MaxEnergy = 100.0; } // Day 1-3
-            else { MaxEnergy = Math.max(20.0, 100.0 - (tickAge - 72000.0) / 480.0); } // Decline after Day 3
-            tickAge++;
+            if (getTickAge() <= 24000)
+            {
+                updateMaxEnergy((float) (10.0 + 90.0 * (getTickAge() / 24000.0)));
+            } // Up to 1 day
+            else if (getTickAge() <= 72000)
+            {
+                updateMaxEnergy(100.0f);
+            } // Day 1-3
+            else
+            {
+                updateMaxEnergy((float) Math.max(20.0, 100.0 - (getTickAge() - 72000.0) / 480.0));
+            } // Decline after Day 3
+
+            updateTickAge(getTickAge() + 1);
 
             // Grow up check
-            if (tickAge >= 24000 && this.isBaby()) {
+            if (getTickAge() >= 24000 && this.isBaby()) {
                 this.growUp(this.getBreedingAge() * -1, false); // Vanilla grow up
                 updateDescription(this);
             }
 
             // Clamp energy & Handle passive gain/loss
-            if (ELvl > MaxEnergy) updateEnergyLevel(MaxEnergy);
-            else if (ELvl < 0) updateEnergyLevel(0);
+            if (getEnergyLevel() > getMaxEnergy())
+                updateEnergyLevel(getMaxEnergy());
+            else if (getEnergyLevel() < 0)
+                updateEnergyLevel(0);
 
             if (wasRecentlyHit) {
-                updateEnergyLevel(this.ELvl * 0.80); // Lose 20% energy when hit
+                updateEnergyLevel(this.getEnergyLevel() * 0.80); // Lose 20% energy when hit
                 wasRecentlyHit = false;
             }
 
@@ -345,20 +362,20 @@ public class CustomFoxEntity extends FoxEntity {
             double drainMultiplier = (this.isSleeping() || this.isSitting()) ? 0.2 : 1.0;
             // Foxes likely use less passive energy than wolves
             if (Math.random() < 0.3) { // 30% chance
-                updateEnergyLevel(this.ELvl - (0.04 + Math.random() * 0.20) * drainMultiplier);
+                updateEnergyLevel(this.getEnergyLevel() - (0.04 + Math.random() * 0.20) * drainMultiplier);
             }
 
             // Energy gain from environment (eating berries is handled by EatBerriesGoal)
             // Maybe slight gain if sleeping in shade? (Vanilla AvoidDaylightGoal handles finding shade)
             if (this.isSleeping() && !this.getWorld().isSkyVisible(this.getBlockPos())) {
                 if(Math.random() < 0.05) { // 5% chance while sleeping in shade
-                    updateEnergyLevel(this.ELvl + (0.05 + Math.random() * 0.1));
+                    updateEnergyLevel(this.getEnergyLevel() + (0.05 + Math.random() * 0.1));
                 }
             }
 
 
             // Health Regen at high energy (only if safe and not sleeping/sitting)
-            if (!this.isSleeping() && !this.isSitting() && ELvl >= MaxEnergy * 0.9 && this.getHealth() < this.getMaxHealth() && !wasRecentlyHit && this.getAttacker() == null) {
+            if (!this.isSleeping() && !this.isSitting() && getEnergyLevel() >= getMaxEnergy() * 0.9 && this.getHealth() < this.getMaxHealth() && !wasRecentlyHit && this.getAttacker() == null) {
                 this.heal(0.15F); // Slower regen
             }
 
@@ -382,21 +399,21 @@ public class CustomFoxEntity extends FoxEntity {
             }
 
             // Starvation damage
-            if (ELvl <= 0.0) {
+            if (getEnergyLevel() <= 0.0) {
                 this.damage(this.getDamageSources().starve(), 1.0f);
             }
 
             // Update speed based on energy (only if not sleeping/sitting)
             if (!this.isSleeping() && !this.isSitting()) {
                 double currentBaseSpeed = this.Speed * (1.0 + this.bonusSpeed);
-                double energyMultiplier = (this.MaxEnergy > 0) ? Math.max(0.3, this.ELvl / this.MaxEnergy) : 1.0; // Min 30% speed
+                double energyMultiplier = (this.getMaxEnergy() > 0) ? Math.max(0.3, this.getEnergyLevel() / this.getMaxEnergy()) : 1.0; // Min 30% speed
                 this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(currentBaseSpeed * energyMultiplier);
             } else {
                 this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.0); // Ensure no speed if sitting/sleeping
             }
 
             // Periodic description update
-            if (tickAge % 40 == 0) updateDescription(this);
+            if (getTickAge() % 40 == 0) updateDescription(this);
         }
         // Client-side animations handled by super.tick()
     }
@@ -407,7 +424,7 @@ public class CustomFoxEntity extends FoxEntity {
         if (!this.getWorld().isClient) {
             this.killCount++;
             double energyGain = Math.min(25.0, killedEntity.getMaxHealth() * 2.0); // More energy gain for smaller prey
-            updateEnergyLevel(this.ELvl + energyGain);
+            updateEnergyLevel(this.getEnergyLevel() + energyGain);
             this.heal(this.getMaxHealth() * 0.20f); // Heal 20%
 
             // Evolution chance
@@ -461,12 +478,12 @@ public class CustomFoxEntity extends FoxEntity {
         // Breeding item interaction (Sweet Berries / Glow Berries)
         if (this.isBreedingItem(itemStack)) {
             // Check energy level before allowing breeding feed
-            if (this.ELvl < 20.0 && !this.isBaby()) { // Low energy check
+            if (this.getEnergyLevel() < 20.0 && !this.isBaby()) { // Low energy check
                 if(!this.getWorld().isClient) player.sendMessage(Text.of("This fox has low energy and cannot breed."), true);
                 // Still allow feeding for energy gain? Yes.
-                if(this.ELvl < this.MaxEnergy && !this.isBaby()) {
+                if(this.getEnergyLevel() < this.getMaxEnergy() && !this.isBaby()) {
                     if (!player.isCreative()) itemStack.decrement(1);
-                    updateEnergyLevel(this.ELvl + 10.0); // Lower energy gain from berries?
+                    updateEnergyLevel(this.getEnergyLevel() + 10.0); // Lower energy gain from berries?
                     this.playSound(SoundEvents.ENTITY_FOX_EAT, 1.0f, 1.0f);
                     return ActionResult.SUCCESS;
                 }
@@ -511,11 +528,11 @@ public class CustomFoxEntity extends FoxEntity {
         child.mobAttributes = new MobAttributes(new EnumMap<>(Map.of(
             AttributeKey.MOVEMENT_SPEED, childBaseSpeed, AttributeKey.MAX_HEALTH, childBaseMaxHp, AttributeKey.ENERGY, childBaseEnergy
         )));
-        child.MaxHp = childBaseMaxHp;
+        child.updateMaxHP(childBaseMaxHp);
         child.Speed = childBaseSpeed;
-        child.ELvl = 10.0; // Start low
-        child.MaxEnergy = 10.0;
-        child.tickAge = 0;
+        child.updateEnergyLevel(10.0); // Start low
+        child.updateMaxEnergy((float)10.0);
+        child.updateTickAge(0);
 
         // --- Inherit Bonus Stats & Cooldown ---
         double inheritanceFactor = Math.max(0.1, Math.min(parent1.getEnergyLevel(), parent2.getEnergyLevel()) / 100.0);
@@ -566,14 +583,14 @@ public class CustomFoxEntity extends FoxEntity {
         return !this.isBaby() && !this.isSleeping() && !this.isSitting()
             && !this.isChasing() // Added check
             && !this.isInSneakingPose() // Added check
-            && ELvl >= (MaxEnergy * 0.9) && ticksSinceLastBreeding >= breedingCooldown;
+            && getEnergyLevel() >= (getMaxEnergy() * 0.9) && ticksSinceLastBreeding >= breedingCooldown;
     }
     private boolean isValidMate(CustomFoxEntity candidate) {
         // Check if candidate is also ready for auto-breeding
         return candidate != this && !candidate.isBaby() && !candidate.isSleeping() && !candidate.isSitting()
             && !candidate.isChasing() // Added check
             && !candidate.isInSneakingPose() // Added check
-            && candidate.getEnergyLevel() >= (candidate.MaxEnergy * 0.9)
+            && candidate.getEnergyLevel() >= (candidate.getMaxEnergy() * 0.9)
             && !candidate.isInLove() && candidate.ticksSinceLastBreeding >= candidate.breedingCooldown;
     }
     @Nullable
@@ -612,7 +629,7 @@ public class CustomFoxEntity extends FoxEntity {
         public boolean canStart() {
             // Can't hunt if sleeping, sitting, chasing, pouncing, has target, or high energy
             if (this.fox.isSleeping() || this.fox.isSitting() || this.fox.isChasing() || this.fox.isInSneakingPose() || this.fox.getTarget() != null) return false;
-            if (this.fox.ELvl > (this.fox.MaxEnergy * (this.energyThresholdPercent / 100.0))) return false; // Check energy %
+            if (this.fox.getEnergyLevel() > (this.fox.getMaxEnergy() * (this.energyThresholdPercent / 100.0))) return false; // Check energy %
 
             // Cooldown timer
             if (this.checkTimer > 0) { this.checkTimer--; return false; }
@@ -642,7 +659,7 @@ public class CustomFoxEntity extends FoxEntity {
             return this.targetPrey != null && this.targetPrey.isAlive()
                 && !this.fox.isSleeping() && !this.fox.isSitting()
                 && this.fox.squaredDistanceTo(this.targetPrey) < 300.0 // ~17 blocks
-                && this.fox.ELvl <= (this.fox.MaxEnergy * (this.energyThresholdPercent / 100.0));
+                && this.fox.getEnergyLevel() <= (this.fox.getMaxEnergy() * (this.energyThresholdPercent / 100.0));
         }
 
         @Override
@@ -718,7 +735,7 @@ public class CustomFoxEntity extends FoxEntity {
             if (blockState.isOf(Blocks.SWEET_BERRY_BUSH)) pickSweetBerries(blockState);
             else if (CaveVines.hasBerries(blockState)) pickGlowBerries(blockState);
             // Custom: Gain energy from eating berries
-            CustomFoxEntity.this.updateEnergyLevel(CustomFoxEntity.this.ELvl + 5.0); // Gain 5 energy
+            CustomFoxEntity.this.updateEnergyLevel(CustomFoxEntity.this.getEnergyLevel() + 5.0); // Gain 5 energy
         }
         private void pickGlowBerries(BlockState state) { CaveVines.pickBerries(CustomFoxEntity.this, state, CustomFoxEntity.this.getWorld(), this.targetPos); }
         private void pickSweetBerries(BlockState state) {
