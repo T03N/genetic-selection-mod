@@ -46,8 +46,8 @@ public class MobAttributes {
         return get(AttributeKey.MOVEMENT_SPEED);
     }
 
-    public double getMaxHealth() {
-        return get(AttributeKey.MAX_HEALTH);
+    public float getMaxHealth() {
+        return (float) get(AttributeKey.MAX_HEALTH);
     }
 
     public double getEnergyLvl() {

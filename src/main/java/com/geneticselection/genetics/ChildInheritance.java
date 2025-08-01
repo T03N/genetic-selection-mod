@@ -105,8 +105,8 @@ public class ChildInheritance {
         }
 
         if (entity instanceof CustomCowEntity cow) {
-            if (attributes.get(AttributeKey.MAX_MEAT) > 0) cow.setMaxMeat((float) attributes.get(AttributeKey.MAX_MEAT));
-            if (attributes.get(AttributeKey.MAX_LEATHER) > 0) cow.setMaxLeather((float) attributes.get(AttributeKey.MAX_LEATHER));
+            if (attributes.get(AttributeKey.MAX_MEAT) > 0) cow.updateMeat((float) attributes.get(AttributeKey.MAX_MEAT));
+            if (attributes.get(AttributeKey.MAX_LEATHER) > 0) cow.updateLeather((float) attributes.get(AttributeKey.MAX_LEATHER));
         }
         if (entity instanceof CustomSheepEntity sheep) {
             if (attributes.get(AttributeKey.MAX_MEAT) > 0) sheep.setMaxMeat((float) attributes.get(AttributeKey.MAX_MEAT));
