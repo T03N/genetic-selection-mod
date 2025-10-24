@@ -13,7 +13,10 @@ public class MobAttributes {
     }
 
     // Backward compatibility constructor used by mob classes
-    public MobAttributes(double movementSpeed, double maxHealth, double energy, Optional<Double> maxMeat, Optional<Double> maxLeather, Optional<Double> maxWool, Optional<Double> maxRabbitHide, Optional<Double> maxFeathers) {
+    public MobAttributes(double movementSpeed, double maxHealth, double energy,
+                         Optional<Double> maxMeat, Optional<Double> maxLeather,
+                         Optional<Double> maxWool, Optional<Double> maxRabbitHide,
+                         Optional<Double> maxFeathers, Optional<Double> attackDamage) {
         attributes.put(AttributeKey.MOVEMENT_SPEED, movementSpeed);
         attributes.put(AttributeKey.MAX_HEALTH, maxHealth);
         attributes.put(AttributeKey.ENERGY, energy);
@@ -31,6 +34,9 @@ public class MobAttributes {
         }
         if (maxFeathers != null && maxFeathers.isPresent()) {
             attributes.put(AttributeKey.MAX_FEATHERS, maxFeathers.get());
+        }
+        if (attackDamage != null && attackDamage.isPresent()) {
+            attributes.put(AttributeKey.ATTACK_DAMAGE, attackDamage.get());
         }
     }
 
@@ -77,5 +83,9 @@ public class MobAttributes {
 
     public Optional<Double> getMaxFeathers() {
         return Optional.ofNullable(attributes.get(AttributeKey.MAX_FEATHERS));
+    }
+
+    public Optional<Double> getAttackDamage() {
+        return Optional.ofNullable(attributes.get(AttributeKey.ATTACK_DAMAGE));
     }
 }

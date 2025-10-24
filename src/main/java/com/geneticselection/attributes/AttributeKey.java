@@ -8,7 +8,8 @@ public enum AttributeKey {
     MAX_LEATHER("maxLeather"),
     MAX_WOOL("maxWool"),
     MAX_RABBIT_HIDE("maxRabbitHide"),
-    MAX_FEATHERS("maxFeathers");
+    MAX_FEATHERS("maxFeathers"),
+    ATTACK_DAMAGE("attackDamage");
 
     private final String id;
 

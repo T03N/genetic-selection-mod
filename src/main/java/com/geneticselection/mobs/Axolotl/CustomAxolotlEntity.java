@@ -54,7 +54,7 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
             double speed = global.getMovementSpeed() * (0.98 + Math.random() * 0.1);
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
             double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
         }
 
         this.MaxHp = this.mobAttributes.getMaxHealth();
@@ -356,6 +356,7 @@ public class CustomAxolotlEntity extends AxolotlEntity implements AttributeCarri
                 adjustedSpeed,
                 adjustedHealth,
                 childEnergy,
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),

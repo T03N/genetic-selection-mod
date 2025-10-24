@@ -125,7 +125,7 @@ public class CustomCowEntity extends CowEntity {
             this.mobAttributes = new MobAttributes(
                     speed, health, energy,
                     Optional.of(meat), Optional.of(leather),
-                    Optional.empty(), Optional.empty(), Optional.empty()
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
             );
             this.tickAge = 0;
         }

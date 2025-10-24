@@ -17,6 +17,7 @@ import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Chickens.CustomChickenEntity;
 import com.geneticselection.mobs.Wolves.CustomWolfEntity;
+import com.geneticselection.mobs.Zombies.CustomZombieEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
@@ -79,6 +80,7 @@ public class ModEntities{
                     .dimensions(EntityDimensions.fixed(1.0F, 2.0F))
                     .build()
     );
+
     // Register the custom chicken entity
     public static final EntityType<CustomChickenEntity> CUSTOM_CHICKEN = Registry.register(
             Registries.ENTITY_TYPE,
@@ -97,6 +99,7 @@ public class ModEntities{
                     .build()
     );
 
+    // Register the custom ocelot entity
     public static final EntityType<CustomOcelotEntity> CUSTOM_OCELOT = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_ocelot"),
@@ -105,6 +108,7 @@ public class ModEntities{
                     .build()
     );
 
+    // Register the custom hoglin entity
     public static final EntityType<CustomHoglinEntity> CUSTOM_HOGLIN = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_hoglin"),
@@ -112,6 +116,8 @@ public class ModEntities{
                     .dimensions(EntityDimensions.fixed(1.4F, 1.4F))
                     .build()
     );
+
+    // Register the custom zoglin entity
     public static final EntityType<CustomZoglinEntity> CUSTOM_ZOGLIN = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_zoglin"),
@@ -120,6 +126,7 @@ public class ModEntities{
                     .build()
     );
 
+    // Register the custom bee entity
     public static final EntityType<CustomBeeEntity> CUSTOM_BEE = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_bee"),
@@ -128,6 +135,7 @@ public class ModEntities{
                     .build()
     );
 
+    // Register the custom axolotl entity
     public static final EntityType<CustomAxolotlEntity> CUSTOM_AXOLOTL = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_axolotl"),
@@ -136,6 +144,7 @@ public class ModEntities{
                     .build()
     );
 
+    // Register the custom goat entity
     public static final EntityType<CustomGoatEntity> CUSTOM_GOAT = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_goat"),
@@ -144,6 +153,7 @@ public class ModEntities{
                     .build()
     );
 
+    // Register the custom fox entity
     public static final EntityType<CustomFoxEntity> CUSTOM_FOX = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_fox"),
@@ -152,11 +162,21 @@ public class ModEntities{
                     .build()
     );
 
+    // Register the custom mooshroom entity
     public static final EntityType<CustomMooshroomEntity> CUSTOM_MOOSHROOM = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_mooshroom"),
             FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, CustomMooshroomEntity::new)
                     .dimensions(EntityDimensions.fixed(0.9F, 1.4F))
+                    .build()
+    );
+
+    // Register the custom zombie entity
+    public static final EntityType<CustomZombieEntity> CUSTOM_ZOMBIE = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_zombie"),
+            FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, CustomZombieEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.6F, 1.95F))
                     .build()
     );
 }

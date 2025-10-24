@@ -70,7 +70,7 @@ public class CustomCamelEntity extends CamelEntity implements AttributeCarrier {
             double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double leather = global.getMaxLeather().orElse(0.0) * (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.of(leather), Optional.empty(), Optional.empty(), Optional.empty());
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.of(leather), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
             this.tickAge = 0;
             this.waterReserve = (int)(MAX_WATER_RESERVE * 0.5); // Start with half water reserve
             this.humpSize = 50 + (int)(Math.random() * 50); // Random initial hump size

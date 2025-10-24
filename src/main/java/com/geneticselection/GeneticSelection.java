@@ -18,6 +18,7 @@ import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import com.geneticselection.mobs.Wolves.CustomWolfEntity;
+import com.geneticselection.mobs.Zombies.CustomZombieEntity;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -26,6 +27,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.*;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.world.Heightmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -507,6 +509,39 @@ public class GeneticSelection implements ModInitializer {
 						world.getBlockState(pos.down()).isOf(Blocks.MYCELIUM)
 		);
 	}
+	public void zombieMethod(){
+		// Register the default attributes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_ZOMBIE, CustomZombieEntity.createZombieAttributes());
+
+		// Lowers the spawn rate of default vanilla zombies
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.MONSTER,
+				EntityType.ZOMBIE, // Remove the original zombie
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+
+		// Adds custom zombie to natural spawn
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.MONSTER,
+				ModEntities.CUSTOM_ZOMBIE, // Add custom zombie
+				100, // Spawn weight (zombies are common monsters)
+				2,   // Minimum group size
+				4    // Maximum group size
+		);
+
+		// Restricts the zombie spawn to dark areas on solid blocks (standard zombie spawn conditions)
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_ZOMBIE,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				HostileEntity::canSpawnInDark // Uses vanilla zombie spawn logic (requires darkness)
+		);
+	}
+
 
 	@Override
 	public void onInitialize() {
@@ -526,6 +561,7 @@ public class GeneticSelection implements ModInitializer {
 		goatMethod(); 		
 		foxMethod();
 		mooshroomMethod();
+		zombieMethod();
 		GlobalAttributesManager.initializeGlobalMap();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads

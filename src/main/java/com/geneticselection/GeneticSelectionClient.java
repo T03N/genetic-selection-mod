@@ -18,6 +18,7 @@ import com.geneticselection.mobs.Rabbit.CustomRabbitRenderer;
 import com.geneticselection.mobs.Sheep.CustomSheepRenderer;
 import com.geneticselection.mobs.Pigs.CustomPigRenderer;
 import com.geneticselection.mobs.Wolves.CustomWolfRenderer;
+import com.geneticselection.mobs.Zombies.CustomZombieRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -32,6 +33,7 @@ public class GeneticSelectionClient implements ClientModInitializer {
         //register your model layer for your cow
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_COW, CowEntityModel::getTexturedModelData);
     }
+
     public void sheepMethod(){
         EntityRendererRegistry.register(ModEntities.CUSTOM_SHEEP, CustomSheepRenderer::new);
 
@@ -79,7 +81,7 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_WOLF,
                 () -> TexturedModelData.of(WolfEntityModel.getTexturedModelData(new Dilation(0.2F)), 64, 32)); // Apply dilation here
     }
- 
+
     public void hoglinMethod() {
         EntityRendererRegistry.register(ModEntities.CUSTOM_HOGLIN, CustomHoglinRenderer::new);
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_HOGLIN, HoglinEntityModel::getTexturedModelData);
@@ -121,6 +123,12 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_MOOSHROOM, CowEntityModel::getTexturedModelData);
     }
 
+    public void zombieMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_ZOMBIE, CustomZombieRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_ZOMBIE,
+                () -> TexturedModelData.of(ZombieEntityModel.getModelData(Dilation.NONE, 0.0F), 64, 64));
+    }
+
     @Override
     public void onInitializeClient() {
         cowMethod();
@@ -139,5 +147,6 @@ public class GeneticSelectionClient implements ClientModInitializer {
         goatMethod();
         foxMethod();
         mooshroomMethod();
+        zombieMethod();  // Added this line!
     }
 }

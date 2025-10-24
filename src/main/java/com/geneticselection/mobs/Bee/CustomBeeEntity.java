@@ -47,7 +47,7 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
             double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double feathers = global.getMaxFeathers().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(feathers));
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(feathers), Optional.empty());
         }
 
         this.MaxHp = this.mobAttributes.getMaxHealth();

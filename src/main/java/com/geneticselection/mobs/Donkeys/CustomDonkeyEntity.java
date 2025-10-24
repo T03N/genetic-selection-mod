@@ -54,7 +54,7 @@ public class CustomDonkeyEntity extends DonkeyEntity implements AttributeCarrier
             double health = global.getMaxHealth() * (0.98 + Math.random() * 0.1);
             double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
             double leather = global.getMaxLeather().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.empty(), Optional.of(leather), Optional.empty(), Optional.empty(), Optional.empty());
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.empty(), Optional.of(leather), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
         }
 
         this.MaxHp = this.mobAttributes.getMaxHealth();

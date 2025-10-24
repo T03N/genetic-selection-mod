@@ -122,6 +122,13 @@ public class GlobalAttributesManager {
             put(AttributeKey.MAX_LEATHER, 2.0);
         }});
 
+        ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_ZOMBIE, new HashMap<>() {{
+            put(AttributeKey.MOVEMENT_SPEED, 0.23);
+            put(AttributeKey.MAX_HEALTH, 20.0);
+            put(AttributeKey.ENERGY, 100.0);
+            put(AttributeKey.ATTACK_DAMAGE, 3.0);
+        }});
+
         // Initialize the globalAttributes map AFTER registering defaults
         initializeGlobalMap();
     }

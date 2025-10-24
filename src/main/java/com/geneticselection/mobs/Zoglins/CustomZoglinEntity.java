@@ -61,7 +61,7 @@ public class CustomZoglinEntity extends ZoglinEntity implements AttributeCarrier
             double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double leather = global.getMaxLeather().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.of(leather), Optional.empty(), Optional.empty(), Optional.empty());
+            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.of(leather), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
         }
 
         this.MaxHp = this.mobAttributes.getMaxHealth();
