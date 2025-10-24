@@ -10,6 +10,7 @@ import com.geneticselection.mobs.Fox.CustomFoxRenderer;
 import com.geneticselection.mobs.Goat.CustomGoatRenderer;
 import com.geneticselection.mobs.Hoglins.CustomHoglinRenderer;
 import com.geneticselection.mobs.Zoglins.CustomZoglinRenderer;
+import com.geneticselection.mobs.Piglins.CustomPiglinRenderer;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.ModModelLayers;
 import com.geneticselection.mobs.Mooshroom.CustomMooshroomRenderer;
@@ -128,6 +129,11 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_ZOMBIE,
                 () -> TexturedModelData.of(ZombieEntityModel.getModelData(Dilation.NONE, 0.0F), 64, 64));
     }
+    public void piglinMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_PIGLIN, CustomPiglinRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_PIGLIN,
+                () -> TexturedModelData.of(PiglinEntityModel.getModelData(Dilation.NONE), 64, 64));
+    }
 
     @Override
     public void onInitializeClient() {
@@ -147,6 +153,8 @@ public class GeneticSelectionClient implements ClientModInitializer {
         goatMethod();
         foxMethod();
         mooshroomMethod();
-        zombieMethod();  // Added this line!
+        zombieMethod();
+        piglinMethod();
+
     }
 }

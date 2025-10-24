@@ -9,6 +9,7 @@ import com.geneticselection.mobs.Donkeys.CustomDonkeyEntity;
 import com.geneticselection.mobs.Fox.CustomFoxEntity;
 import com.geneticselection.mobs.Goat.CustomGoatEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
+import com.geneticselection.mobs.Piglins.CustomPiglinEntity;
 import com.geneticselection.mobs.Zoglins.CustomZoglinEntity;
 import com.geneticselection.mobs.Mooshroom.CustomMooshroomEntity;
 import com.geneticselection.mobs.Ocelots.CustomOcelotEntity;
@@ -179,4 +180,13 @@ public class ModEntities{
                     .dimensions(EntityDimensions.fixed(0.6F, 1.95F))
                     .build()
     );
+    // Register the custom piglin entity
+    public static final EntityType<CustomPiglinEntity> CUSTOM_PIGLIN = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_piglin"),
+            FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, CustomPiglinEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.6F, 1.95F))
+                    .build()
+    );
+
 }

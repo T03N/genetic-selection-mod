@@ -19,6 +19,7 @@ import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import com.geneticselection.mobs.Wolves.CustomWolfEntity;
 import com.geneticselection.mobs.Zombies.CustomZombieEntity;
+import com.geneticselection.mobs.Piglins.CustomPiglinEntity;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -542,6 +543,38 @@ public class GeneticSelection implements ModInitializer {
 		);
 	}
 
+	public void piglinMethod() {
+		// Register the default attributes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_PIGLIN, CustomPiglinEntity.createPiglinAttributes());
+
+		// Lower the spawn rate of default vanilla piglins
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInTheNether(),
+				SpawnGroup.MONSTER,
+				EntityType.PIGLIN, // Remove the original piglin
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+
+		// Add custom piglin to natural spawn in the Nether
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInTheNether(),
+				SpawnGroup.MONSTER,
+				ModEntities.CUSTOM_PIGLIN, // Add custom piglin
+				15, // Spawn weight (piglins are common in the Nether)
+				2,  // Minimum group size
+				4   // Maximum group size
+		);
+
+		// Restrict the piglin spawn to nether wastes and crimson forests
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_PIGLIN,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				HostileEntity::canSpawnInDark // Standard hostile mob spawn logic
+		);
+	}
 
 	@Override
 	public void onInitialize() {
@@ -558,10 +591,11 @@ public class GeneticSelection implements ModInitializer {
 		beeMethod();
 		axolotlMethod();
 		ocelotMethod();
-		goatMethod(); 		
+		goatMethod();
 		foxMethod();
 		mooshroomMethod();
 		zombieMethod();
+		piglinMethod();  // Added this line!
 		GlobalAttributesManager.initializeGlobalMap();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads
