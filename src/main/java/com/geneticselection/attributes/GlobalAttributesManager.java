@@ -83,7 +83,9 @@ public class GlobalAttributesManager {
             put(AttributeKey.MOVEMENT_SPEED, 0.3);
             put(AttributeKey.MAX_HEALTH, 40.0);
             put(AttributeKey.ENERGY, 100.0);
+            put(AttributeKey.ATTACK_DAMAGE, 6.0);
         }});
+
         ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_ZOGLIN, new HashMap<>() {{
             put(AttributeKey.MOVEMENT_SPEED, 0.3);
             put(AttributeKey.MAX_HEALTH, 40.0);

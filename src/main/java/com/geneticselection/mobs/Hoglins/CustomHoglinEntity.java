@@ -42,12 +42,17 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
     private double ELvl;
     private double MaxMeat;
     private double MaxLeather;
+    private double baseAttackDamage; // Base damage that improves through breeding
     private int transformationTimer = 300; // 15 seconds at 20 ticks per second
 
     private int panicTicks = 0;
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 2.0;
     private boolean wasRecentlyHit = false;
+
+    // Damage scaling constants
+    private static final double MAX_ATTACK_DAMAGE_CAP = 12.0; // 2x vanilla (6.0 is vanilla)
+    private static final double BREEDING_DAMAGE_BONUS = 0.1; // 10% improvement per generation
 
     public CustomHoglinEntity(EntityType<? extends HoglinEntity> entityType, World world) {
         super(entityType, world);
@@ -59,15 +64,27 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
             double energy = global.getEnergyLvl() * (0.9 + Math.random() * 0.1);
             double meat = global.getMaxMeat().orElse(0.0) + (0.98 + Math.random() * 0.1);
             double leather = global.getMaxLeather().orElse(0.0) + (0.98 + Math.random() * 0.1);
-            this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.of(leather), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+            double attackDamage = global.getAttackDamage().orElse(6.0) * (0.98 + Math.random() * 0.1);
+
+            this.mobAttributes = new MobAttributes(
+                    speed, health, energy,
+                    Optional.of(meat), Optional.of(leather),
+                    Optional.of(attackDamage), Optional.empty(), Optional.empty(), Optional.empty()
+            );
         }
 
         this.MaxHp = this.mobAttributes.getMaxHealth();
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
         this.setHealth((float)this.MaxHp);
+
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
+
         this.ELvl = this.mobAttributes.getEnergyLvl();
+
+        // Initialize base attack damage
+        this.baseAttackDamage = this.mobAttributes.getAttackDamage().orElse(6.0);
+        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(this.baseAttackDamage);
 
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
@@ -100,10 +117,15 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
     }
 
     private void updateDescription(CustomHoglinEntity ent) {
+        // Calculate current effective damage (scaled by energy)
+        double effectiveDamage = ent.baseAttackDamage * (ent.ELvl / 100.0);
+
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.2f", ent.Speed) +
                 "\nEnergy: " + String.format("%.1f", ent.ELvl) +
+                "\nBase Damage: " + String.format("%.1f", ent.baseAttackDamage) +
+                "\nCurrent Damage: " + String.format("%.1f", effectiveDamage) +
                 "\nMax Meat: " + String.format("%.1f", ent.MaxMeat) +
                 "\nMax Leather: " + String.format("%.1f", ent.MaxLeather)));
     }
@@ -187,8 +209,6 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
                 }
             }
         }
-
-
     }
 
     @Override
@@ -238,9 +258,9 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
                 double searchRadius = 32.0;
 
                 List<CustomHoglinEntity> mateCandidates = this.getWorld().getEntitiesByClass(
-                    CustomHoglinEntity.class,
-                    this.getBoundingBox().expand(searchRadius),
-                    candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
+                        CustomHoglinEntity.class,
+                        this.getBoundingBox().expand(searchRadius),
+                        candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
                 );
 
                 // Find the nearest candidate
@@ -274,14 +294,28 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
             if (ELvl <= 0.0) {
                 this.kill();
             } else {
-                // Update speed
+                // Update speed based on energy
                 if (panicTicks == 0) {
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
                             .setBaseValue(Speed * (ELvl / 100.0));
                 }
+
+                // Update attack damage based on energy
+                updateDamageBasedOnEnergy();
+
                 updateDescription(this);
             }
         }
+    }
+
+    /**
+     * Scales attack damage based on current energy level.
+     * Higher energy = full damage, lower energy = reduced damage.
+     */
+    private void updateDamageBasedOnEnergy() {
+        double energyRatio = ELvl / 100.0;
+        double effectiveDamage = baseAttackDamage * energyRatio;
+        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(effectiveDamage);
     }
 
     @Override
@@ -323,6 +357,16 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
 
         MobAttributes childAttributes = inheritAttributes(attr1, attr2);
 
+        // Apply breeding bonus to attack damage (incremental improvement)
+        double parentAvgDamage = (parent1.baseAttackDamage + parent2.baseAttackDamage) / 2.0;
+        double improvedDamage = parentAvgDamage * (1.0 + BREEDING_DAMAGE_BONUS);
+
+        // Cap at maximum to prevent infinite scaling
+        improvedDamage = Math.min(improvedDamage, MAX_ATTACK_DAMAGE_CAP);
+
+        // Update the child's attack damage attribute
+        childAttributes.set(AttributeKey.ATTACK_DAMAGE, improvedDamage);
+
         CustomHoglinEntity child = new CustomHoglinEntity(ModEntities.CUSTOM_HOGLIN, serverWorld);
 
         child.mobAttributes = childAttributes;
@@ -332,8 +376,11 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
         child.ELvl = childAttributes.getEnergyLvl();
         child.MaxMeat = childAttributes.get(AttributeKey.MAX_MEAT);
         child.MaxLeather = childAttributes.get(AttributeKey.MAX_LEATHER);
+        child.baseAttackDamage = improvedDamage; // Set the improved damage
+
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
         child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
+        child.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(child.baseAttackDamage * (child.ELvl / 100.0));
 
         parent1.ELvl -= parent1.ELvl * 0.4F;
         parent2.ELvl -= parent2.ELvl * 0.4F;
@@ -362,5 +409,6 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
     public void applyCustomAttributes(MobAttributes attributes) {
         attributes.getMaxMeat().ifPresent(maxMeat -> this.MaxMeat = maxMeat);
         attributes.getMaxLeather().ifPresent(maxLeather -> this.MaxLeather = maxLeather);
+        attributes.getAttackDamage().ifPresent(attackDamage -> this.baseAttackDamage = attackDamage);
     }
 }
