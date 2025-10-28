@@ -15,6 +15,7 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -31,11 +32,16 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
     private double MaxHp;
     private double Speed;
     private double ELvl;
+    private double BaseAttack;
+    private int generation = 0;
 
     private int panicTicks = 0;
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 2.0;
     private boolean wasRecentlyHit = false;
+
+    // Base bee attack damage (vanilla is 2.0)
+    private static final double VANILLA_BEE_ATTACK = 2.0;
 
     public CustomBeeEntity(EntityType<? extends BeeEntity> entityType, World world) {
         super(entityType, world);
@@ -56,19 +62,46 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
         this.ELvl = this.mobAttributes.getEnergyLvl();
+        this.BaseAttack = VANILLA_BEE_ATTACK;
+        this.generation = 0;
+
+        // Initialize attack damage
+        applyAttackDamageScaling();
 
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
 
+    // Apply attack damage scaling based on energy and generation
+    private void applyAttackDamageScaling() {
+        // Generation bonus: +0.05 attack per generation (capped at +2.0)
+        double generationBonus = Math.min(this.generation * 0.05, 2.0);
+
+        // Energy scaling: 40% to 100% of base damage based on energy
+        double energyRatio = (this.ELvl / 100.0);
+        double energyMultiplier = 0.4 + (energyRatio * 0.6); // Ranges from 0.4 to 1.0
+
+        // Calculate final attack damage
+        double scaledAttack = (this.BaseAttack + generationBonus) * energyMultiplier;
+
+        // Apply to entity attribute
+        if (this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE) != null) {
+            this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(scaledAttack);
+        }
+    }
+
     public void updateEnergyLevel(double newEnergyLevel) {
         this.ELvl = newEnergyLevel;
+
+        // Update attack damage when energy changes
+        applyAttackDamageScaling();
 
         // Sync energy level with server if needed
         if (!this.getWorld().isClient) {
             this.syncEnergyLevelToClient();
         }
     }
+
     public double getEnergyLevel(){
         return this.ELvl;
     }
@@ -80,10 +113,17 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
     }
 
     private void updateDescription(CustomBeeEntity ent) {
+        double currentAttack = 0.0;
+        if (ent.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE) != null) {
+            currentAttack = ent.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        }
+
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
                 "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
                 "\nSpeed: " + String.format("%.2f", ent.Speed) +
-                "\nEnergy: " + String.format("%.1f", ent.ELvl)));
+                "\nEnergy: " + String.format("%.1f", ent.ELvl) +
+                "\nAttack: " + String.format("%.2f", currentAttack) +
+                "\nGen: " + ent.generation));
     }
 
     @Override
@@ -143,6 +183,7 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
             // Handle energy loss from damage
             if (wasRecentlyHit) {
                 ELvl = Math.max(0.0, ELvl * 0.8);
+                applyAttackDamageScaling(); // Update attack after energy loss
                 wasRecentlyHit = false;
             }
 
@@ -151,8 +192,10 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
 
             if (isOnEnergySource) {
                 ELvl = Math.min(100.0, ELvl + 0.1);
+                applyAttackDamageScaling(); // Update attack as energy increases
             } else {
                 ELvl = Math.max(0.0, ELvl - 0.05);
+                applyAttackDamageScaling(); // Update attack as energy decreases
             }
 
             // Health regeneration at max energy
@@ -164,9 +207,9 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
                 double searchRadius = 32.0;
 
                 List<CustomBeeEntity> mateCandidates = this.getWorld().getEntitiesByClass(
-                    CustomBeeEntity.class,
-                    this.getBoundingBox().expand(searchRadius),
-                    candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
+                        CustomBeeEntity.class,
+                        this.getBoundingBox().expand(searchRadius),
+                        candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
                 );
 
                 // Find the nearest candidate
@@ -182,12 +225,12 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
 
                 // If we found a mate candidate, move towards it
                 if (nearestMate != null) {
-                    // Start moving towards the nearest cow; adjust speed as needed
+                    // Start moving towards the nearest bee; adjust speed as needed
                     this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / 100.0));
 
                     // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
                     if (minDistanceSquared < 4.0) {
-                        // Only start breeding if both cows are not already in love
+                        // Only start breeding if both bees are not already in love
                         if (!this.isInLove() && !nearestMate.isInLove()) {
                             this.setLoveTicks(100);
                             nearestMate.setLoveTicks(100);
@@ -234,14 +277,33 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
         child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
         child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
 
+        // Inherit generation (higher of parents + 1)
+        child.generation = Math.max(parent1.generation, parent2.generation) + 1;
+
+        // Inherit base attack with slight improvement
+        double avgBaseAttack = (parent1.BaseAttack + parent2.BaseAttack) / 2.0;
+        double inheritanceFactor = Math.max(0.3, Math.min(parent1.getEnergyLevel(), parent2.getEnergyLevel()) / 100.0);
+        child.BaseAttack = avgBaseAttack * (0.98 + Math.random() * 0.04); // Slight variation
+
+        // Apply attack damage scaling for child
+        child.applyAttackDamageScaling();
+
         parent1.ELvl -= parent1.ELvl * 0.4F;
         parent2.ELvl -= parent2.ELvl * 0.4F;
+
+        // Update attack damage for parents after energy loss
+        parent1.applyAttackDamageScaling();
+        parent2.applyAttackDamageScaling();
+
         this.resetLoveTicks();
 
         influenceGlobalAttributes(child.getType());
 
-        if (!this.getWorld().isClient)
+        if (!this.getWorld().isClient) {
             updateDescription(child);
+            updateDescription(parent1);
+            updateDescription(parent2);
+        }
 
         return child;
     }
@@ -259,5 +321,38 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
 
     @Override
     public void applyCustomAttributes(MobAttributes attributes) {
+    }
+
+    // NBT data saving
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putDouble("ELvl", this.ELvl);
+        nbt.putDouble("BaseAttack", this.BaseAttack);
+        nbt.putInt("Generation", this.generation);
+        nbt.putInt("PanicTicks", this.panicTicks);
+    }
+
+    // NBT data loading
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        if (nbt.contains("ELvl")) {
+            this.ELvl = nbt.getDouble("ELvl");
+        }
+        if (nbt.contains("BaseAttack")) {
+            this.BaseAttack = nbt.getDouble("BaseAttack");
+        } else {
+            this.BaseAttack = VANILLA_BEE_ATTACK;
+        }
+        if (nbt.contains("Generation")) {
+            this.generation = nbt.getInt("Generation");
+        }
+        if (nbt.contains("PanicTicks")) {
+            this.panicTicks = nbt.getInt("PanicTicks");
+        }
+
+        // Reapply attack damage scaling after loading
+        applyAttackDamageScaling();
     }
 }
