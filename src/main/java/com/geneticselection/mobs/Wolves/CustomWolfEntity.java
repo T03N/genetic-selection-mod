@@ -57,6 +57,7 @@ public class CustomWolfEntity extends WolfEntity
     private double bonusHealth = 0.0;
     private double bonusSpeed = 0.0; // Multiplier bonus
     private int killCount = 0;
+    private int generation = 0; // Breeding generation counter
 
     // State variable (Instance Specific)
     private boolean wasRecentlyHit = false;
@@ -67,15 +68,15 @@ public class CustomWolfEntity extends WolfEntity
         EntityType<?> entityType = entity.getType();
         // Target your custom entities
         return entityType == ModEntities.CUSTOM_SHEEP
-            || entityType == ModEntities.CUSTOM_RABBIT
-            || entityType == ModEntities.CUSTOM_FOX
-            || entityType == ModEntities.CUSTOM_CHICKEN
-            || entityType == ModEntities.CUSTOM_PIG
-            || entityType == ModEntities.CUSTOM_COW
-            || entityType == ModEntities.CUSTOM_CAMEL
-            || entityType == ModEntities.CUSTOM_DONKEY
-            || entityType == ModEntities.CUSTOM_MOOSHROOM
-            || entityType == ModEntities.CUSTOM_OCELOT; // Ocelots might be too fast?
+                || entityType == ModEntities.CUSTOM_RABBIT
+                || entityType == ModEntities.CUSTOM_FOX
+                || entityType == ModEntities.CUSTOM_CHICKEN
+                || entityType == ModEntities.CUSTOM_PIG
+                || entityType == ModEntities.CUSTOM_COW
+                || entityType == ModEntities.CUSTOM_CAMEL
+                || entityType == ModEntities.CUSTOM_DONKEY
+                || entityType == ModEntities.CUSTOM_MOOSHROOM
+                || entityType == ModEntities.CUSTOM_OCELOT; // Ocelots might be too fast?
         // Add vanilla turtles if desired: || entityType == EntityType.TURTLE;
     };
     // Predicate for hunting goal to prevent attacking own species/tamed animals/owner
@@ -128,6 +129,7 @@ public class CustomWolfEntity extends WolfEntity
         this.bonusHealth = 0.0;
         this.bonusSpeed = 0.0;
         this.killCount = 0;
+        this.generation = 0;
 
         // Apply initial attributes (applies base + bonuses + taming)
         this.applyBonuses();
@@ -180,7 +182,7 @@ public class CustomWolfEntity extends WolfEntity
         this.targetSelector.add(5, new UntamedActiveTargetGoal<>(this, AnimalEntity.class, false, FOLLOW_TAMED_PREDICATE));
         this.targetSelector.add(6, new UntamedActiveTargetGoal<>(this, TurtleEntity.class, false, TurtleEntity.BABY_TURTLE_ON_LAND_FILTER));
         this.targetSelector.add(7, new ActiveTargetGoal<>(this, AbstractSkeletonEntity.class, false));
-        this.targetSelector.add(8, new UniversalAngerGoal<>(this, true));
+        this.goalSelector.add(8, new UniversalAngerGoal<>(this, true));
     }
 
     // Apply inherent base attributes (from mobAttributes) + bonuses + taming modifications
@@ -201,12 +203,16 @@ public class CustomWolfEntity extends WolfEntity
         double effectiveMaxHp = inherentMaxHp + this.bonusHealth;
         double speedMultiplier = Math.max(0.0, 1.0 + this.bonusSpeed); // Prevent negative multiplier
         double effectiveSpeed = inherentSpeed * (1.0 + this.bonusSpeed);
-        double effectiveAttack = inherentAttack + this.bonusAttack;
+
+        // Base attack includes generation bonus (0.1 attack damage per generation, capped at 5.0 bonus)
+        double generationAttackBonus = Math.min(this.generation * 0.1, 5.0);
+        double effectiveAttack = inherentAttack + this.bonusAttack + generationAttackBonus;
 
         // Apply vanilla taming boost logic *after* calculating effective base from inheritance+bonus
         // Tamed wolves get a base of 40 + bonus health. Wild wolves get inherent + bonus.
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.isTamed() ? 40.0 + this.bonusHealth : effectiveMaxHp);
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(effectiveSpeed);
+        // Attack damage will be scaled by energy in tick(), so we set the base here
         this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(effectiveAttack);
 
         // Clamp current health to new max health
@@ -262,6 +268,7 @@ public class CustomWolfEntity extends WolfEntity
         nbt.putDouble("BonusHealth", this.bonusHealth);
         nbt.putDouble("BonusSpeed", this.bonusSpeed);
         nbt.putInt("KillCount", this.killCount);
+        nbt.putInt("Generation", this.generation);
         // Do NOT save inherited base attributes (MaxHp, Speed) - they come from mobAttributes/GlobalManager
     }
 
@@ -291,6 +298,7 @@ public class CustomWolfEntity extends WolfEntity
         this.bonusHealth = nbt.getDouble("BonusHealth");
         this.bonusSpeed = nbt.getDouble("BonusSpeed");
         this.killCount = nbt.getInt("KillCount");
+        this.generation = nbt.getInt("Generation");
         // Do NOT load inherited base attributes or reconstruct mobAttributes here
 
         // Re-apply attributes after loading instance data and vanilla data (which sets isTamed)
@@ -309,15 +317,16 @@ public class CustomWolfEntity extends WolfEntity
         long remainingBreedCDTicks = Math.max(0, ent.breedingCooldown - ent.ticksSinceLastBreeding);
 
         DescriptionRenderer.setDescription(ent, Text.of(
-            "HP: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", currentMaxHp) +
-                " | Atk: " + String.format("%.2f", currentAttack) +
-                "\nSpd: " + String.format("%.3f", currentSpeed) +
-                " | Energy: " + String.format("%.1f", ent.ELvl) + "/" + String.format("%.1f", ent.MaxEnergy) +
-                "\nAge: " + ent.tickAge +
-                " | Kills: " + ent.killCount +
-                "\nBreed CD: " + String.format("%.1f", remainingBreedCDTicks / 20.0) + "s" +
-                (ent.isTamed() ? " | Owner: " + (ent.getOwner() != null ? ent.getOwner().getName().getString() : "?") : " | (Wild)") +
-                (ent.hasAngerTime() ? " | !!ANGRY!!" : "") // Use hasAngerTime()
+                "HP: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", currentMaxHp) +
+                        " | Atk: " + String.format("%.2f", currentAttack) +
+                        "\nSpd: " + String.format("%.3f", currentSpeed) +
+                        " | Energy: " + String.format("%.1f", ent.ELvl) + "/" + String.format("%.1f", ent.MaxEnergy) +
+                        "\nAge: " + ent.tickAge +
+                        " | Kills: " + ent.killCount +
+                        " | Gen: " + ent.generation +
+                        "\nBreed CD: " + String.format("%.1f", remainingBreedCDTicks / 20.0) + "s" +
+                        (ent.isTamed() ? " | Owner: " + (ent.getOwner() != null ? ent.getOwner().getName().getString() : "?") : " | (Wild)") +
+                        (ent.hasAngerTime() ? " | !!ANGRY!!" : "") // Use hasAngerTime()
         ));
     }
 
@@ -505,9 +514,9 @@ public class CustomWolfEntity extends WolfEntity
                 double searchRadius = 64.0;
 
                 List<CustomWolfEntity> mateCandidates = this.getWorld().getEntitiesByClass(
-                    CustomWolfEntity.class,
-                    this.getBoundingBox().expand(searchRadius),
-                    candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
+                        CustomWolfEntity.class,
+                        this.getBoundingBox().expand(searchRadius),
+                        candidate -> candidate != this && candidate.getEnergyLevel() >= 90.0 && !candidate.isBaby()
                 );
 
                 // Find the nearest candidate
@@ -547,19 +556,26 @@ public class CustomWolfEntity extends WolfEntity
                 this.damage(this.getDamageSources().starve(), 1.0f);
             }
 
-            // Update speed based on energy (if not sitting/angry) - applied in applyBonuses? Re-apply here too?
-            // applyBonuses handles base speed + bonus. We need to factor in energy here.
+            // Update speed and attack damage based on energy
             if (!this.isSitting()) {
                 double currentBaseSpeed = this.Speed * (1.0 + this.bonusSpeed);
                 double energyMultiplier = (this.MaxEnergy > 0) ? (this.ELvl / this.MaxEnergy) : 1.0;
+
+                // Speed scaling with energy
                 double calculatedSpeed = currentBaseSpeed * energyMultiplier;
-                // Ensure the speed is never below the vanilla wolf speed stored in this.Speed
-                double newSpeed = Math.max(calculatedSpeed, this.Speed);
+                double newSpeed = Math.max(calculatedSpeed, this.Speed * 0.5); // Minimum 50% of base speed
                 Objects.requireNonNull(
-					this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(newSpeed);
+                        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(newSpeed);
+
+                // Attack damage scaling with energy (50% - 100% based on energy level)
+                double baseAttack = 4.0 + this.bonusAttack + Math.min(this.generation * 0.1, 5.0);
+                double attackMultiplier = 0.5 + (energyMultiplier * 0.5); // Ranges from 0.5 to 1.0
+                double scaledAttack = baseAttack * attackMultiplier;
+                Objects.requireNonNull(
+                        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(scaledAttack);
             } else {
                 Objects.requireNonNull(
-                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.0);
+                        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.0);
             }
 
             // Periodic description update
@@ -596,10 +612,10 @@ public class CustomWolfEntity extends WolfEntity
 
         // Create MobAttributes for the child
         child.mobAttributes = new MobAttributes(new EnumMap<>(Map.of(
-            AttributeKey.MOVEMENT_SPEED, childBaseSpeed,
-            AttributeKey.MAX_HEALTH, childBaseMaxHp,
-            AttributeKey.ENERGY, childBaseEnergy // Store base energy default here
-            // Add other relevant AttributeKeys if needed, ensure no drops for wolf
+                AttributeKey.MOVEMENT_SPEED, childBaseSpeed,
+                AttributeKey.MAX_HEALTH, childBaseMaxHp,
+                AttributeKey.ENERGY, childBaseEnergy // Store base energy default here
+                // Add other relevant AttributeKeys if needed, ensure no drops for wolf
         )));
         child.MaxHp = childBaseMaxHp; // Update field
         child.Speed = childBaseSpeed; // Update field
@@ -607,8 +623,11 @@ public class CustomWolfEntity extends WolfEntity
         child.MaxEnergy = 10.0; // Baby starts with low max energy capacity
         child.tickAge = 0;
 
-        // --- Inherit Bonus Stats & Cooldown ---
-        double inheritanceFactor = Math.max(0.1, Math.min(parent1.getEnergyLevel(), parent2.getEnergyLevel()) / 100.0);
+        // --- Inherit Generation (higher of parents + 1) ---
+        child.generation = Math.max(parent1.generation, parent2.generation) + 1;
+
+        // --- Inherit Bonus Stats & Cooldown with improved breeding bonus ---
+        double inheritanceFactor = Math.max(0.3, Math.min(parent1.getEnergyLevel(), parent2.getEnergyLevel()) / 100.0);
         double randomFactor = 0.85 + random.nextDouble() * 0.3;
 
         double avgBonusAttack = (parent1.bonusAttack + parent2.bonusAttack) / 2.0;
@@ -616,7 +635,8 @@ public class CustomWolfEntity extends WolfEntity
         double avgBonusSpeed = (parent1.bonusSpeed + parent2.bonusSpeed) / 2.0;
         int avgKillCount = (parent1.killCount + parent2.killCount) / 2;
 
-        child.bonusAttack = Math.max(0, avgBonusAttack * inheritanceFactor * randomFactor);
+        // Improved inheritance - bonus attack gets a small breeding boost
+        child.bonusAttack = Math.max(0, avgBonusAttack * inheritanceFactor * randomFactor * 1.05); // 5% breeding bonus
         child.bonusHealth = Math.max(0, avgBonusHealth * inheritanceFactor * randomFactor);
         child.bonusSpeed = Math.max(0, avgBonusSpeed * inheritanceFactor * randomFactor);
         child.killCount = (int)(avgKillCount * inheritanceFactor);
@@ -624,7 +644,7 @@ public class CustomWolfEntity extends WolfEntity
         // Calculate child breeding cooldown
         double inverseFactor = (inheritanceFactor > 0.1) ? (1 / inheritanceFactor) : 10.0;
         int childBreedingCooldown = (int) ((
-			(double) (parent1.breedingCooldown + parent2.breedingCooldown) / 2) * inverseFactor * (0.9 + random.nextDouble() * 0.2));
+                (double) (parent1.breedingCooldown + parent2.breedingCooldown) / 2) * inverseFactor * (0.9 + random.nextDouble() * 0.2));
         child.breedingCooldown = Math.max(1200, childBreedingCooldown); // Min 1 min cooldown
         child.ticksSinceLastBreeding = 0;
 
@@ -704,11 +724,11 @@ public class CustomWolfEntity extends WolfEntity
 
             // Target custom entities using the predicate
             this.targetPrey = this.wolf.getWorld().getClosestEntity(
-                LivingEntity.class,
-                TargetPredicate.DEFAULT.setPredicate(HUNT_TARGET_PREDICATE),
-                this.wolf,
-                this.wolf.getX(), this.wolf.getY(), this.wolf.getZ(),
-                this.wolf.getBoundingBox().expand(16.0, 8.0, 16.0)
+                    LivingEntity.class,
+                    TargetPredicate.DEFAULT.setPredicate(HUNT_TARGET_PREDICATE),
+                    this.wolf,
+                    this.wolf.getX(), this.wolf.getY(), this.wolf.getZ(),
+                    this.wolf.getBoundingBox().expand(16.0, 8.0, 16.0)
             );
 
             randomFactor = 0.7 + (Math.random() * (0.92 - 0.7));
@@ -719,9 +739,9 @@ public class CustomWolfEntity extends WolfEntity
         @Override
         public boolean shouldContinue() {
             return this.targetPrey != null && this.targetPrey.isAlive()
-                && !this.wolf.isSitting() && !this.wolf.hasAngerTime()
-                && this.wolf.squaredDistanceTo(this.targetPrey) < 256.0 // 16*16
-                && this.wolf.ELvl <= this.energyThreshold;
+                    && !this.wolf.isSitting() && !this.wolf.hasAngerTime()
+                    && this.wolf.squaredDistanceTo(this.targetPrey) < 256.0 // 16*16
+                    && this.wolf.ELvl <= this.energyThreshold;
         }
 
         @Override
@@ -749,7 +769,7 @@ public class CustomWolfEntity extends WolfEntity
 
             // Apply a boost factor to the speed for hunting.
 
-			// Only move if not within attack distance.
+            // Only move if not within attack distance.
             if (this.wolf.squaredDistanceTo(this.targetPrey) > this.getSquaredAttackDistance(this.targetPrey)) {
                 this.wolf.getNavigation().startMovingTo(this.targetPrey, this.speed);
             } else {
