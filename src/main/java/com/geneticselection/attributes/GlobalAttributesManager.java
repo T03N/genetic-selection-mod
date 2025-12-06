@@ -130,6 +130,26 @@ public class GlobalAttributesManager {
             put(AttributeKey.ENERGY, 100.0);
             put(AttributeKey.ATTACK_DAMAGE, 3.0);
         }});
+        ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_PILLAGER, new HashMap<>() {{
+            put(AttributeKey.MOVEMENT_SPEED, 0.35);
+            put(AttributeKey.MAX_HEALTH, 24.0);
+            put(AttributeKey.ENERGY, 100.0);
+            put(AttributeKey.ATTACK_DAMAGE, 5.0);
+        }});
+
+        ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_VINDICATOR, new HashMap<>() {{
+            put(AttributeKey.MOVEMENT_SPEED, 0.35);
+            put(AttributeKey.MAX_HEALTH, 24.0);
+            put(AttributeKey.ENERGY, 100.0);
+            put(AttributeKey.ATTACK_DAMAGE, 13.0);
+        }});
+
+        ENTITY_ATTRIBUTE_DEFAULTS.put(ModEntities.CUSTOM_EVOKER, new HashMap<>() {{
+            put(AttributeKey.MOVEMENT_SPEED, 0.5);
+            put(AttributeKey.MAX_HEALTH, 24.0);
+            put(AttributeKey.ENERGY, 100.0);
+            put(AttributeKey.ATTACK_DAMAGE, 6.0);
+        }});
 
         // Initialize the globalAttributes map AFTER registering defaults
         initializeGlobalMap();
