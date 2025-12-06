@@ -10,6 +10,7 @@ import com.geneticselection.mobs.Fox.CustomFoxEntity;
 import com.geneticselection.mobs.Goat.CustomGoatEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.Piglins.CustomPiglinEntity;
+import com.geneticselection.mobs.Pillagers.CustomVindicatorEntity;
 import com.geneticselection.mobs.Zoglins.CustomZoglinEntity;
 import com.geneticselection.mobs.Mooshroom.CustomMooshroomEntity;
 import com.geneticselection.mobs.Ocelots.CustomOcelotEntity;
@@ -194,6 +195,14 @@ public class ModEntities{
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_pillager"),
             FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, CustomPillagerEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.6F, 1.95F))
+                    .build()
+    );
+
+    public static final EntityType<CustomVindicatorEntity> CUSTOM_VINDICATOR = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_vindicator"),
+            FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, CustomVindicatorEntity::new)
                     .dimensions(EntityDimensions.fixed(0.6F, 1.95F))
                     .build()
     );

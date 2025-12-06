@@ -15,6 +15,7 @@ import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.Mooshroom.CustomMooshroomEntity;
 import com.geneticselection.mobs.Ocelots.CustomOcelotEntity;
 import com.geneticselection.mobs.Pigs.CustomPigEntity;
+import com.geneticselection.mobs.Pillagers.CustomVindicatorEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import com.geneticselection.mobs.Wolves.CustomWolfEntity;
@@ -610,6 +611,39 @@ public class GeneticSelection implements ModInitializer {
 				PatrolEntity::canSpawn // Uses vanilla patrol spawn logic
 		);
 	}
+
+	public void vindicatorMethod() {
+		// Register the default attributes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_VINDICATOR, CustomVindicatorEntity.createHostileAttributes());
+
+		// Remove vanilla vindicators
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.MONSTER,
+				EntityType.VINDICATOR,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+
+		// Add custom vindicators
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.MONSTER,
+				ModEntities.CUSTOM_VINDICATOR,
+				8,  // Spawn weight (rarer than pillagers)
+				1,  // Minimum group size
+				3   // Maximum group size
+		);
+
+		// Spawn restriction - vindicators can spawn in light or dark on solid ground
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_VINDICATOR,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				PatrolEntity::canSpawn // Uses vanilla patrol spawn logic
+		);
+	}
 	@Override
 	public void onInitialize() {
 		cowMethod();
@@ -631,6 +665,7 @@ public class GeneticSelection implements ModInitializer {
 		zombieMethod();
 		piglinMethod();
 		pillagerMethod();
+		vindicatorMethod();
 		GlobalAttributesManager.initializeGlobalMap();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads
