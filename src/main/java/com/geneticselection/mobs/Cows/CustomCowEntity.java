@@ -134,7 +134,6 @@ public class CustomCowEntity extends CowEntity {
     private double calculateVariance(double baseValue, double min, double range) {
         return baseValue * (min + Math.random() * range);
     }
-
     private void applyAttributesToEntity() {
         this.maxHp = this.mobAttributes.getMaxHealth();
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.maxHp);
