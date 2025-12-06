@@ -20,6 +20,8 @@ import com.geneticselection.mobs.Sheep.CustomSheepEntity;
 import com.geneticselection.mobs.Wolves.CustomWolfEntity;
 import com.geneticselection.mobs.Zombies.CustomZombieEntity;
 import com.geneticselection.mobs.Piglins.CustomPiglinEntity;
+import com.geneticselection.mobs.Pillagers.CustomPillagerEntity;
+
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -29,6 +31,7 @@ import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRe
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.*;
 import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.mob.PatrolEntity;
 import net.minecraft.world.Heightmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -575,7 +578,38 @@ public class GeneticSelection implements ModInitializer {
 				HostileEntity::canSpawnInDark // Standard hostile mob spawn logic
 		);
 	}
+	public void pillagerMethod() {
+		// Register the default attributes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_PILLAGER, CustomPillagerEntity.createHostileAttributes());
 
+		// Remove vanilla pillagers
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.MONSTER,
+				EntityType.PILLAGER,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+
+		// Add custom pillagers
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.MONSTER,
+				ModEntities.CUSTOM_PILLAGER,
+				15, // Spawn weight (moderate spawn rate)
+				2,  // Minimum group size
+				5   // Maximum group size
+		);
+
+		// Spawn restriction - pillagers can spawn in light or dark on solid ground
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_PILLAGER,
+				SpawnLocationTypes.ON_GROUND,
+				Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+				PatrolEntity::canSpawn // Uses vanilla patrol spawn logic
+		);
+	}
 	@Override
 	public void onInitialize() {
 		cowMethod();
@@ -595,7 +629,8 @@ public class GeneticSelection implements ModInitializer {
 		foxMethod();
 		mooshroomMethod();
 		zombieMethod();
-		piglinMethod();  // Added this line!
+		piglinMethod();
+		pillagerMethod();
 		GlobalAttributesManager.initializeGlobalMap();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads
