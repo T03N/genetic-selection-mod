@@ -40,5 +40,6 @@ public class ModModelLayers {
 
     public static final EntityModelLayer CUSTOM_ZOMBIE = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID, "custom_zombie"), "main");
     public static final EntityModelLayer CUSTOM_PIGLIN = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID, "custom_piglin"), "main");
+    public static final EntityModelLayer CUSTOM_PILLAGER = new EntityModelLayer(Identifier.of(GeneticSelection.MOD_ID, "custom_pillager"), "main");
 
 }

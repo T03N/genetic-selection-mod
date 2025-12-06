@@ -19,6 +19,7 @@ import com.geneticselection.mobs.Pigs.CustomPigEntity;
 import com.geneticselection.mobs.Chickens.CustomChickenEntity;
 import com.geneticselection.mobs.Wolves.CustomWolfEntity;
 import com.geneticselection.mobs.Zombies.CustomZombieEntity;
+import com.geneticselection.mobs.Pillagers.CustomPillagerEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
@@ -189,4 +190,11 @@ public class ModEntities{
                     .build()
     );
 
+    public static final EntityType<CustomPillagerEntity> CUSTOM_PILLAGER = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_pillager"),
+            FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, CustomPillagerEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.6F, 1.95F))
+                    .build()
+    );
 }
