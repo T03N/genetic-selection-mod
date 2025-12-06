@@ -19,6 +19,7 @@ import com.geneticselection.mobs.Pillagers.CustomEvokerEntity;
 import com.geneticselection.mobs.Pillagers.CustomVindicatorEntity;
 import com.geneticselection.mobs.Rabbit.CustomRabbitEntity;
 import com.geneticselection.mobs.Sheep.CustomSheepEntity;
+import com.geneticselection.mobs.Squids.CustomSquidEntity;
 import com.geneticselection.mobs.Wolves.CustomWolfEntity;
 import com.geneticselection.mobs.Zombies.CustomZombieEntity;
 import com.geneticselection.mobs.Piglins.CustomPiglinEntity;
@@ -34,6 +35,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.*;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.PatrolEntity;
+import net.minecraft.entity.passive.SquidEntity;
 import net.minecraft.world.Heightmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -677,6 +679,38 @@ public class GeneticSelection implements ModInitializer {
 				PatrolEntity::canSpawn // Uses vanilla patrol spawn logic
 		);
 	}
+	public void squidMethod() {
+		// Register the default attributes to your mob
+		FabricDefaultAttributeRegistry.register(ModEntities.CUSTOM_SQUID, CustomSquidEntity.createMobAttributes());
+
+		// Remove vanilla squids
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.WATER_CREATURE,
+				EntityType.SQUID,
+				0, // Spawn weight (higher = more frequent)
+				0, // No minimum group size
+				0  // No maximum group size
+		);
+
+		// Add custom squids
+		BiomeModifications.addSpawn(
+				BiomeSelectors.foundInOverworld(),
+				SpawnGroup.WATER_CREATURE,
+				ModEntities.CUSTOM_SQUID,
+				8,  // Spawn weight (moderate spawn rate in water)
+				3,  // Minimum group size
+				6   // Maximum group size
+		);
+
+		// Spawn restriction - squids only spawn in water
+		SpawnRestriction.register(
+				ModEntities.CUSTOM_SQUID,
+				SpawnLocationTypes.IN_WATER,
+				Heightmap.Type.OCEAN_FLOOR,
+				SquidEntity::canSpawn // Uses vanilla squid spawn logic (water, correct depth)
+		);
+	}
 	@Override
 	public void onInitialize() {
 		cowMethod();
@@ -700,6 +734,7 @@ public class GeneticSelection implements ModInitializer {
 		pillagerMethod();
 		vindicatorMethod();
 		evokerMethod();
+		squidMethod();
 		GlobalAttributesManager.initializeGlobalMap();
 		ServerWorldEvents.LOAD.register((server, world) -> {
 			GlobalAttributesSavedData.fromWorld(world); // Load your global attributes when the world loads
