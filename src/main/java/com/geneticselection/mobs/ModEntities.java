@@ -10,6 +10,7 @@ import com.geneticselection.mobs.Fox.CustomFoxEntity;
 import com.geneticselection.mobs.Goat.CustomGoatEntity;
 import com.geneticselection.mobs.Hoglins.CustomHoglinEntity;
 import com.geneticselection.mobs.Piglins.CustomPiglinEntity;
+import com.geneticselection.mobs.Pillagers.CustomEvokerEntity;
 import com.geneticselection.mobs.Pillagers.CustomVindicatorEntity;
 import com.geneticselection.mobs.Zoglins.CustomZoglinEntity;
 import com.geneticselection.mobs.Mooshroom.CustomMooshroomEntity;
@@ -203,6 +204,14 @@ public class ModEntities{
             Registries.ENTITY_TYPE,
             Identifier.of(GeneticSelection.MOD_ID, "custom_vindicator"),
             FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, CustomVindicatorEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.6F, 1.95F))
+                    .build()
+    );
+
+    public static final EntityType<CustomEvokerEntity> CUSTOM_EVOKER = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(GeneticSelection.MOD_ID, "custom_evoker"),
+            FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, CustomEvokerEntity::new)
                     .dimensions(EntityDimensions.fixed(0.6F, 1.95F))
                     .build()
     );
