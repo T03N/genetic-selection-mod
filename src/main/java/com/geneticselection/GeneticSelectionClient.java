@@ -20,6 +20,10 @@ import com.geneticselection.mobs.Sheep.CustomSheepRenderer;
 import com.geneticselection.mobs.Pigs.CustomPigRenderer;
 import com.geneticselection.mobs.Wolves.CustomWolfRenderer;
 import com.geneticselection.mobs.Zombies.CustomZombieRenderer;
+import com.geneticselection.mobs.Pillagers.CustomPillagerRenderer;
+import com.geneticselection.mobs.Pillagers.CustomVindicatorRenderer;
+import com.geneticselection.mobs.Pillagers.CustomEvokerRenderer;
+import com.geneticselection.mobs.Squids.CustomSquidRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -134,7 +138,26 @@ public class GeneticSelectionClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_PIGLIN,
                 () -> TexturedModelData.of(PiglinEntityModel.getModelData(Dilation.NONE), 64, 64));
     }
+    public void pillagerMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_PILLAGER, CustomPillagerRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_PILLAGER, IllagerEntityModel::getTexturedModelData);
+    }
 
+    public void vindicatorMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_VINDICATOR, CustomVindicatorRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_VINDICATOR, IllagerEntityModel::getTexturedModelData);
+    }
+
+    public void evokerMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_EVOKER, CustomEvokerRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_EVOKER, IllagerEntityModel::getTexturedModelData);
+    }
+
+    // NEW: Squid method
+    public void squidMethod() {
+        EntityRendererRegistry.register(ModEntities.CUSTOM_SQUID, CustomSquidRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.CUSTOM_SQUID, SquidEntityModel::getTexturedModelData);
+    }
     @Override
     public void onInitializeClient() {
         cowMethod();
