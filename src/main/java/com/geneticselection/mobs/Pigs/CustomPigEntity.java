@@ -26,6 +26,10 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.nbt.NbtCompound;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,8 +37,6 @@ import java.util.Optional;
 public class CustomPigEntity extends PigEntity {
     private MobAttributes mobAttributes;
     private double MaxHp;
-    private double ELvl;
-    private double MaxEnergy;
     private double Speed;
     private double MinMeat;
     private double MaxMeat;
@@ -50,6 +52,11 @@ public class CustomPigEntity extends PigEntity {
     private static final int PANIC_DURATION = 100; // 5 seconds at 20 ticks per second
     private static final double PANIC_SPEED_MULTIPLIER = 2.0;
 
+    private static final TrackedData<Float> MAX_HP = DataTracker.registerData(CustomPigEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> ELVL = DataTracker.registerData(CustomPigEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomPigEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomPigEntity.class, TrackedDataHandlerRegistry.INTEGER);
+
     public CustomPigEntity(EntityType<? extends PigEntity> entityType, World world) {
         super(entityType, world);
 
@@ -62,29 +69,60 @@ public class CustomPigEntity extends PigEntity {
             this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
         }
 
-        this.MaxHp = this.mobAttributes.getMaxHealth();
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
-        this.ELvl = this.mobAttributes.getEnergyLvl();
 
+        if (!world.isClient) {
+            this.dataTracker.set(MAX_HP, (float)this.mobAttributes.getMaxHealth());
+            this.dataTracker.set(ELVL, (float)this.mobAttributes.getEnergyLvl());
+        }
         this.mobAttributes.getMaxMeat().ifPresent(maxMeat -> {
             this.MaxMeat = maxMeat;
         });
-        this.breedingCooldown = 3000 + (int)((1 - (ELvl / 100.0)) * 2000) + random.nextInt(2001);
+        this.breedingCooldown = 3000 + (int)((getEnergyLevel() / 100.0) * 2000) + random.nextInt(2001);
         this.setMinMeat(1.0);
+    }
 
-        if (!this.getWorld().isClient) {
-            updateDescription(this);
-        }
+    @Override
+    protected void initDataTracker(DataTracker.Builder builder) {
+        super.initDataTracker(builder);
+        builder.add(MAX_HP, 10.0f);
+        builder.add(ELVL, 100.0f);
+        builder.add(MAX_ENERGY, 100.0f);
+        builder.add(TICK_AGE, 0);
+    }
+
+    public float getMaxHpTracked() { return this.dataTracker.get(MAX_HP); }
+    public float getEnergyLevel() { return this.dataTracker.get(ELVL); }
+    public float getMaxEnergy() { return this.dataTracker.get(MAX_ENERGY); }
+    public int getTickAge() { return this.dataTracker.get(TICK_AGE); }
+    public double getSpeed() { return this.Speed; }
+    public double getMaxMeat() { return this.MaxMeat; }
+    public int getBreedingCooldown() { return this.breedingCooldown; }
+
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putDouble("MaxMeat", this.MaxMeat);
+        nbt.putFloat("MaxHp", this.getMaxHpTracked());
+        nbt.putFloat("ELvl", this.getEnergyLevel());
+        nbt.putFloat("MaxEnergy", this.getMaxEnergy());
+        nbt.putInt("TickAge", this.getTickAge());
+    }
+
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        this.MaxMeat = nbt.getDouble("MaxMeat");
+        this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
+        this.dataTracker.set(ELVL, nbt.getFloat("ELvl"));
+        this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
+        this.dataTracker.set(TICK_AGE, nbt.getInt("TickAge"));
     }
 
     public void updateEnergyLevel(double newEnergyLevel) {
-        this.ELvl = newEnergyLevel;
-
-        // Sync energy level with server if needed
         if (!this.getWorld().isClient) {
-            this.syncEnergyLevelToClient();
+            this.dataTracker.set(ELVL, (float)newEnergyLevel);
         }
     }
 
@@ -111,10 +149,6 @@ public class CustomPigEntity extends PigEntity {
 
     public void setMaxMeat(double maxMeat) {
         this.MaxMeat = maxMeat;
-    }
-
-    public double getEnergyLevel() {
-        return this.ELvl;
     }
 
     @Override
@@ -326,6 +360,11 @@ public class CustomPigEntity extends PigEntity {
 
         // Only perform energy adjustments on the server side
         if (!this.getWorld().isClient) {
+            int currentTickAge = this.getTickAge();
+            float currentMaxEnergy = 100.0f;
+            this.dataTracker.set(TICK_AGE, currentTickAge + 1);
+            this.dataTracker.set(MAX_ENERGY, currentMaxEnergy);
+
             // Increment age
             tickAge++;
 
@@ -460,5 +499,7 @@ public class CustomPigEntity extends PigEntity {
                 updateDescription(this);
             }
         }
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getMaxHpTracked());
     }
 }
+

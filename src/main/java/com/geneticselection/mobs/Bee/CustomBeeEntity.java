@@ -3,6 +3,8 @@ package com.geneticselection.mobs.Bee;
 import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
+import com.geneticselection.mobs.Cows.CustomCowEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.utils.DescriptionRenderer;
 import io.netty.buffer.Unpooled;
@@ -10,11 +12,15 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.passive.BeeEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -28,14 +34,18 @@ import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
-    private double MaxHp;
     private double Speed;
-    private double ELvl;
 
     private int panicTicks = 0;
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 2.0;
     private boolean wasRecentlyHit = false;
+
+    private static final TrackedData<Float>
+        MAX_HP = DataTracker.registerData(CustomBeeEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomBeeEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomBeeEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomBeeEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public CustomBeeEntity(EntityType<? extends BeeEntity> entityType, World world) {
         super(entityType, world);
@@ -49,41 +59,64 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
             double feathers = global.getMaxFeathers().orElse(0.0) + (0.98 + Math.random() * 0.1);
             this.mobAttributes = new MobAttributes(speed, health, energy, Optional.of(meat), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(feathers));
         }
-
-        this.MaxHp = this.mobAttributes.getMaxHealth();
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.MaxHp);
-        this.setHealth((float)this.MaxHp);
+        updateMaxHP(this.mobAttributes.getMaxHealth());
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.dataTracker.get(MAX_ENERGY));
+        this.setHealth(getMaxHealth());
+        updateEnergyLevel(this.mobAttributes.getEnergyLvl());
         this.Speed = this.mobAttributes.getMovementSpeed();
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(this.Speed);
-        this.ELvl = this.mobAttributes.getEnergyLvl();
 
         if (!this.getWorld().isClient)
             updateDescription(this);
     }
 
-    public void updateEnergyLevel(double newEnergyLevel) {
-        this.ELvl = newEnergyLevel;
-
-        // Sync energy level with server if needed
-        if (!this.getWorld().isClient) {
-            this.syncEnergyLevelToClient();
-        }
-    }
-    public double getEnergyLevel(){
-        return this.ELvl;
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putFloat("MaxHp", this.dataTracker.get(MAX_HP));
+        nbt.putFloat("ELvl", this.dataTracker.get(E_LVL));
+        nbt.putFloat("MaxEnergy", this.dataTracker.get(MAX_ENERGY));
+        nbt.putInt("tickAge", this.dataTracker.get(TICK_AGE));
     }
 
-    private void syncEnergyLevelToClient() {
-        PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
-        data.writeInt(this.getId());  // Send entity ID
-        data.writeDouble(this.ELvl);  // Send the updated energy level
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
+        this.dataTracker.set(E_LVL, nbt.getFloat("ELvl"));
+        this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
+        this.dataTracker.set(TICK_AGE, nbt.getInt("tickAge"));
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.dataTracker.get(MAX_HP));
     }
 
     private void updateDescription(CustomBeeEntity ent) {
         DescriptionRenderer.setDescription(ent, Text.of("Attributes\n" +
-                "Max Hp: " + String.format("%.1f", ent.getHealth()) + "/" + String.format("%.1f", ent.MaxHp) +
-                "\nSpeed: " + String.format("%.2f", ent.Speed) +
-                "\nEnergy: " + String.format("%.1f", ent.ELvl)));
+            "Max Hp: " + String.format("%.3f", ent.getHealth()) + "/"+ String.format("%.3f", getMaxHP()) +
+            "\nSpeed: " + String.format("%.3f", ent.Speed) +
+            "\nEnergy: " + String.format("%.3f", ent.getEnergyLevel()) +
+            // "\nBreeding Cooldown: " + ent.breedingCooldown+
+            "\nAge: " + getTickAge())
+        );
+    }
+
+    public double getMaxHP() {
+        return this.dataTracker.get(MAX_HP).doubleValue();
+    }
+
+    public double getEnergyLevel() {
+        return this.dataTracker.get(E_LVL).doubleValue();
+    }
+
+    public int getTickAge() {
+        return this.dataTracker.get(TICK_AGE).intValue();
+    }
+
+    public void updateEnergyLevel(double newEnergyLevel) {
+        this.dataTracker.set(E_LVL, (float)newEnergyLevel);
+    }
+
+    public void updateMaxHP(double newMaxHP) {
+        this.dataTracker.set(MAX_HP, (float)newMaxHP);
     }
 
     @Override
@@ -91,7 +124,7 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
         ItemStack itemStack = player.getStackInHand(hand);
 
         if (itemStack.isOf(Items.POPPY)) {
-            if (ELvl < 20.0) {
+            if (getEnergyLevel() < 20.0) {
                 player.sendMessage(Text.of("This bee cannot breed because it has low energy."), true);
                 return ActionResult.FAIL;
             }
@@ -114,7 +147,7 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
             return;
         }
 
-        if (ELvl <= 0.0) {
+        if (getEnergyLevel() <= 0.0) {
             // Zero energy drops (e.g., bone or honeycomb as default)
             this.dropStack(new ItemStack(Items.HONEYCOMB, 1));
         } else {
@@ -136,13 +169,13 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
                 panicTicks--;
                 if (panicTicks == 0) {
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
+                        .setBaseValue(Speed * (getEnergyLevel() / 100.0));
                 }
             }
 
             // Handle energy loss from damage
             if (wasRecentlyHit) {
-                ELvl = Math.max(0.0, ELvl * 0.8);
+                updateEnergyLevel(Math.max(0.0, getEnergyLevel() * 0.8));
                 wasRecentlyHit = false;
             }
 
@@ -150,17 +183,17 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
             boolean isOnEnergySource = this.getWorld().getBlockState(this.getBlockPos().down()).isOf(Blocks.BEE_NEST);
 
             if (isOnEnergySource) {
-                ELvl = Math.min(100.0, ELvl + 0.1);
+                updateEnergyLevel(Math.min(100.0, getEnergyLevel() + 0.1));
             } else {
-                ELvl = Math.max(0.0, ELvl - 0.05);
+                updateEnergyLevel(Math.max(0.0, getEnergyLevel() - 0.05));
             }
 
             // Health regeneration at max energy
-            if (ELvl == 100.0 && this.getHealth() < this.getMaxHealth()) {
+            if (getEnergyLevel() == 100.0 && this.getHealth() < this.getMaxHealth()) {
                 this.setHealth(Math.min(this.getMaxHealth(), this.getHealth() + 0.5F));
             }
 
-            if (ELvl >= 90.0) {
+            if (getEnergyLevel() >= 90.0) {
                 double searchRadius = 32.0;
 
                 List<CustomBeeEntity> mateCandidates = this.getWorld().getEntitiesByClass(
@@ -183,7 +216,7 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
                 // If we found a mate candidate, move towards it
                 if (nearestMate != null) {
                     // Start moving towards the nearest cow; adjust speed as needed
-                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.ELvl / 100.0));
+                    this.getNavigation().startMovingTo(nearestMate, this.Speed * 5.0F * (this.getEnergyLevel() / 100.0));
 
                     // If close enough (e.g., within 2 blocks; adjust the threshold as needed)
                     if (minDistanceSquared < 4.0) {
@@ -197,13 +230,13 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
             }
 
             // Kill if energy is 0
-            if (ELvl <= 0.0) {
+            if (getEnergyLevel() <= 0.0) {
                 this.kill();
             } else {
                 // Update speed
                 if (panicTicks == 0) {
                     this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                            .setBaseValue(Speed * (ELvl / 100.0));
+                        .setBaseValue(Speed * (getEnergyLevel() / 100.0));
                 }
                 updateDescription(this);
             }
@@ -229,13 +262,13 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
         child.mobAttributes = childAttributes;
         applyAttributes(child, childAttributes);
 
-        child.MaxHp = childAttributes.getMaxHealth();
-        child.ELvl = childAttributes.getEnergyLvl();
-        child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.MaxHp);
-        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.ELvl / 100.0));
+        child.updateMaxHP(childAttributes.getMaxHealth());
+        child.updateEnergyLevel(childAttributes.getEnergyLvl());
+        child.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(child.dataTracker.get(MAX_ENERGY));
+        child.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(child.Speed * (child.getEnergyLevel() / 100.0));
 
-        parent1.ELvl -= parent1.ELvl * 0.4F;
-        parent2.ELvl -= parent2.ELvl * 0.4F;
+        parent1.updateEnergyLevel(getEnergyLevel() - parent1.getEnergyLevel() * 0.4F);
+        parent2.updateEnergyLevel( getEnergyLevel() - parent2.getEnergyLevel() * 0.4F);
         this.resetLoveTicks();
 
         influenceGlobalAttributes(child.getType());
@@ -252,7 +285,7 @@ public class CustomBeeEntity extends BeeEntity implements AttributeCarrier {
         wasRecentlyHit = true;
         panicTicks = PANIC_DURATION;
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                .setBaseValue(Speed * (ELvl / 100.0) * PANIC_SPEED_MULTIPLIER);
+            .setBaseValue(Speed * (getEnergyLevel() / 100.0) * PANIC_SPEED_MULTIPLIER);
         if (!this.getWorld().isClient)
             updateDescription(this);
     }

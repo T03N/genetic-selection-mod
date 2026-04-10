@@ -15,12 +15,16 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.RabbitEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
@@ -51,6 +55,12 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
     private boolean wasRecentlyHit = false;
     private int tickAge = 0;
     private int ticksSinceLastBreeding = 0;
+
+    private static final TrackedData<Float>
+        MAX_HP = DataTracker.registerData(CustomRabbitEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> ELVL = DataTracker.registerData(CustomRabbitEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomRabbitEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomRabbitEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public CustomRabbitEntity(EntityType<? extends RabbitEntity> entityType, World world) {
         super(entityType, world);
@@ -97,17 +107,19 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
         this.rabbitHide = rabbitHide;
     }
 
+    public float getMaxHpTracked() { return this.dataTracker.get(MAX_HP); }
+    public float getEnergyLevel() { return this.dataTracker.get(ELVL); }
+    public float getMaxEnergy() { return this.dataTracker.get(MAX_ENERGY); }
+    public int getTickAge() { return this.dataTracker.get(TICK_AGE); }
+    public double getSpeed() { return this.Speed; }
+    public double getMaxMeat() { return this.MaxMeat; }
+    public double getRabbitHide() { return this.rabbitHide; }
+    public int getBreedingCooldown() { return this.breedingCooldown; }
+
     public void updateEnergyLevel(double newEnergyLevel) {
-        this.ELvl = newEnergyLevel;
-
-        // Sync energy level with server if needed
         if (!this.getWorld().isClient) {
-            this.syncEnergyLevelToClient();
+            this.dataTracker.set(ELVL, (float)newEnergyLevel);
         }
-    }
-
-    public double getEnergyLevel(){
-        return this.ELvl;
     }
 
     private void syncEnergyLevelToClient() {
@@ -125,6 +137,37 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
                 "\nRabbit Hide: " + String.format("%.3f", ent.rabbitHide)+
                 "\nBreeding Cooldown: " + ent.breedingCooldown+
                 "\nAge: " + ent.tickAge));
+    }
+
+    @Override
+    protected void initDataTracker(DataTracker.Builder builder) {
+        super.initDataTracker(builder);
+        builder.add(MAX_HP, 3.0f);
+        builder.add(ELVL, 100.0f);
+        builder.add(MAX_ENERGY, 100.0f);
+        builder.add(TICK_AGE, 0);
+    }
+
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putDouble("MaxMeat", this.MaxMeat);
+        nbt.putDouble("RabbitHide", this.rabbitHide);
+        nbt.putFloat("MaxHp", this.getMaxHpTracked());
+        nbt.putFloat("ELvl", this.getEnergyLevel());
+        nbt.putFloat("MaxEnergy", this.getMaxEnergy());
+        nbt.putInt("TickAge", this.getTickAge());
+    }
+
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        this.MaxMeat = nbt.getDouble("MaxMeat");
+        this.rabbitHide = nbt.getDouble("RabbitHide");
+        this.dataTracker.set(MAX_HP, nbt.getFloat("MaxHp"));
+        this.dataTracker.set(ELVL, nbt.getFloat("ELvl"));
+        this.dataTracker.set(MAX_ENERGY, nbt.getFloat("MaxEnergy"));
+        this.dataTracker.set(TICK_AGE, nbt.getInt("TickAge"));
     }
 
     @Override
@@ -267,6 +310,10 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
 
         // Only perform energy adjustments on the server side
         if (!this.getWorld().isClient) {
+            int currentTickAge = this.getTickAge();
+            float currentMaxEnergy = 100.0f;
+            this.dataTracker.set(TICK_AGE, currentTickAge + 1);
+            this.dataTracker.set(MAX_ENERGY, currentMaxEnergy);
 
             // Max energy is determined by age
             if(tickAge <= 957){
@@ -377,5 +424,6 @@ public class CustomRabbitEntity extends RabbitEntity implements AttributeCarrier
                 updateDescription(this);
             }
         }
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getMaxHpTracked());
     }
 }

@@ -37,13 +37,13 @@ public class DescriptionRenderer {
 
     // Main render method, based on Minecraft's EntityRenderer plus modifications to clone name tag to be description
     public static <T extends Entity> void renderDescription(
-            T entity,
-            MatrixStack matrices,
-            VertexConsumerProvider vertexConsumers,
-            int light,
-            EntityRenderDispatcher dispatcher,
-            TextRenderer textRenderer,
-            float tickDelta
+        T entity,
+        MatrixStack matrices,
+        VertexConsumerProvider vertexConsumers,
+        int light,
+        EntityRenderDispatcher dispatcher,
+        TextRenderer textRenderer,
+        float tickDelta
     ) {
         // Ensure we're on the client side
         if (!entity.getWorld().isClient) return;
@@ -75,31 +75,31 @@ public class DescriptionRenderer {
                 for (int i = 0; i < descriptionLines.length; i++) {
                     Text lineText = Text.literal(descriptionLines[i]);
                     textRenderer.draw(
-                            lineText,
-                            xOffset,
-                            yOffset + (i * 10f),
-                            553648127,
-                            false,
-                            matrix4f,
-                            vertexConsumers,
-                            isVisibleThroughBlocks ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL,
-                            backgroundAlpha,
-                            light
+                        lineText,
+                        xOffset,
+                        yOffset + (i * 10f),
+                        553648127,
+                        false,
+                        matrix4f,
+                        vertexConsumers,
+                        isVisibleThroughBlocks ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL,
+                        backgroundAlpha,
+                        light
                     );
 
                     // Render white text overlay if visible through blocks
                     if (isVisibleThroughBlocks) {
                         textRenderer.draw(
-                                lineText,
-                                xOffset,
-                                yOffset + (i * 10f),
-                                Colors.WHITE,
-                                false,
-                                matrix4f,
-                                vertexConsumers,
-                                TextRenderer.TextLayerType.NORMAL,
-                                0,
-                                light
+                            lineText,
+                            xOffset,
+                            yOffset + (i * 10f),
+                            Colors.WHITE,
+                            false,
+                            matrix4f,
+                            vertexConsumers,
+                            TextRenderer.TextLayerType.NORMAL,
+                            0,
+                            light
                         );
                     }
                 }

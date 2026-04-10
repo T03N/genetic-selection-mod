@@ -4,6 +4,7 @@ import com.geneticselection.attributes.AttributeCarrier;
 import com.geneticselection.attributes.AttributeKey;
 import com.geneticselection.attributes.GlobalAttributesManager;
 import com.geneticselection.attributes.MobAttributes;
+import com.geneticselection.mobs.Camels.CustomCamelEntity;
 import com.geneticselection.mobs.ModEntities;
 import com.geneticselection.mobs.Zoglins.CustomZoglinEntity;
 import com.geneticselection.utils.DescriptionRenderer;
@@ -16,6 +17,9 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.HoglinEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -37,9 +41,7 @@ import static com.geneticselection.genetics.ChildInheritance.*;
 
 public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier {
     private MobAttributes mobAttributes;
-    private double MaxHp;
     private double Speed;
-    private double ELvl;
     private double MaxMeat;
     private double MaxLeather;
     private int transformationTimer = 300; // 15 seconds at 20 ticks per second
@@ -48,6 +50,12 @@ public class CustomHoglinEntity extends HoglinEntity implements AttributeCarrier
     private static final int PANIC_DURATION = 100;
     private static final double PANIC_SPEED_MULTIPLIER = 2.0;
     private boolean wasRecentlyHit = false;
+
+    private static final TrackedData<Float>
+        MAX_HP = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> E_LVL = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> MAX_ENERGY = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> TICK_AGE = DataTracker.registerData(CustomCamelEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public CustomHoglinEntity(EntityType<? extends HoglinEntity> entityType, World world) {
         super(entityType, world);

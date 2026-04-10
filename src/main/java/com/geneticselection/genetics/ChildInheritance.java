@@ -105,22 +105,22 @@ public class ChildInheritance {
         }
 
         if (entity instanceof CustomCowEntity cow) {
-            if(attributes.get(AttributeKey.MAX_MEAT) > 0) cow.setMaxMeat(attributes.get(AttributeKey.MAX_MEAT));
-            if(attributes.get(AttributeKey.MAX_LEATHER) > 0) cow.setMaxLeather(attributes.get(AttributeKey.MAX_LEATHER));
+            if (attributes.get(AttributeKey.MAX_MEAT) > 0) cow.updateMeat((float) attributes.get(AttributeKey.MAX_MEAT));
+            if (attributes.get(AttributeKey.MAX_LEATHER) > 0) cow.updateLeather((float) attributes.get(AttributeKey.MAX_LEATHER));
         }
         if (entity instanceof CustomSheepEntity sheep) {
-            if(attributes.get(AttributeKey.MAX_MEAT) > 0) sheep.setMaxMeat(attributes.get(AttributeKey.MAX_MEAT));
-            if(attributes.get(AttributeKey.MAX_WOOL) > 0) sheep.setMaxWool(attributes.get(AttributeKey.MAX_WOOL));
+            if (attributes.get(AttributeKey.MAX_MEAT) > 0) sheep.setMaxMeat((float) attributes.get(AttributeKey.MAX_MEAT));
+            if (attributes.get(AttributeKey.MAX_WOOL) > 0) sheep.setMaxWool((float) attributes.get(AttributeKey.MAX_WOOL));
         }
         if (entity instanceof CustomDonkeyEntity donkey) {
-            if(attributes.get(AttributeKey.MAX_LEATHER) > 0) donkey.setMaxLeather(attributes.get(AttributeKey.MAX_LEATHER));
+            if (attributes.get(AttributeKey.MAX_LEATHER) > 0) donkey.setMaxLeather((float) attributes.get(AttributeKey.MAX_LEATHER));
         }
         if (entity instanceof CustomPigEntity pig) {
-            if(attributes.get(AttributeKey.MAX_MEAT) > 0) pig.setMaxMeat(attributes.get(AttributeKey.MAX_MEAT));
+            if (attributes.get(AttributeKey.MAX_MEAT) > 0) pig.setMaxMeat((float) attributes.get(AttributeKey.MAX_MEAT));
         }
         if (entity instanceof CustomRabbitEntity rabbit) {
-            if(attributes.get(AttributeKey.MAX_MEAT) > 0) rabbit.setMaxMeat(attributes.get(AttributeKey.MAX_MEAT));
-            if(attributes.get(AttributeKey.MAX_RABBIT_HIDE) > 0) rabbit.setRabbitHide(attributes.get(AttributeKey.MAX_RABBIT_HIDE));
+            if (attributes.get(AttributeKey.MAX_MEAT) > 0) rabbit.setMaxMeat((float) attributes.get(AttributeKey.MAX_MEAT));
+            if (attributes.get(AttributeKey.MAX_RABBIT_HIDE) > 0) rabbit.setRabbitHide((float) attributes.get(AttributeKey.MAX_RABBIT_HIDE));
         }
         if (entity instanceof CustomCamelEntity camel) {
             // Camel-specific attributes can be applied here if needed.
